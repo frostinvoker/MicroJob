@@ -3,11 +3,9 @@ node_modules/
 /venv
 __pycache__/
 
-client/node_modules/
-client/.env
 
 server/node_modules/
-server/.env
+server/.env/
 
 # OS Generated Files
 .DS_Store
