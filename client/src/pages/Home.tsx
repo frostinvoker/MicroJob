@@ -13,6 +13,10 @@ import musicIcon from "../assets/musicIcon.png";
 import baggyIcon from "../assets/baggyIcon.png";
 import camIcon from "../assets/camIcon.png";
 import wrenchIcon from "../assets/wrenchIcon.png";
+import peopleNumberIcon from "../assets/peoplenumIcon.png";
+import docuIcon from "../assets/docuIcon.png";
+import energyIcon from "../assets/energyIcon.png";
+import shieldIcon from "../assets/shieldIcon.png";
 
 const Home: React.FC = () => {
   return (
@@ -33,9 +37,9 @@ const Home: React.FC = () => {
 
         {/* Headline */}
         <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4 text-center">
-          Find the perfect{" "} <br></br>
-          <span className="bg-gradient-to-b from-sky-400 to-indigo-600 bg-clip-text text-transparent">freelance services</span>{" "} <br></br>
-          for your business
+          Find the Perfect{" "} <br></br>
+          <span className="bg-gradient-to-b from-sky-400 to-indigo-600 bg-clip-text text-transparent">Freelance Services</span>{" "} <br></br>
+          For your Business
         </h1>
 
         {/* Description */}
@@ -166,9 +170,213 @@ const Home: React.FC = () => {
               <h3 className="text-lg font-bold text-gray-900 mb-2">Home Services</h3>
               <p className="text-gray-600 text-sm">2,112 services</p>
             </div>
+        
           </div>
         </div>
       </section>
+
+      {/* how it works part */}
+      <section className="bg-gray-50 py-20 px-4">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4 text-center">How It Works</h2>
+          <p className="text-gray-600 text-lg max-w-2xl mx-auto mb-12 text-center">Getting started is easy!</p>
+          
+          {/* Steps Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Step 1 */}
+            <div className="bg-white p-8 rounded-2xl hover:shadow-lg transition text-center">
+              <div className="relative mb-6 flex justify-center">
+                <div className="w-25 h-25   items-center justify-center">
+                  <img src={docuIcon} alt="Post Your Job" className="w-15 h-15" />
+                </div>
+                <span className="absolute -top-2 -right-2 w-8 h-8 bg-white border-2 border-gray-200 rounded-full flex items-center justify-center font-bold text-gray-900">1</span>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-3">Post Your Job</h3>
+              <p className="text-gray-600 text-sm">Describe your project needs and budget. Get matched with qualified professionals.</p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="bg-white p-8 rounded-2xl hover:shadow-lg transition text-center">
+              <div className="relative mb-6 flex justify-center">
+                <div className="w-20 h-20  flex items-center justify-center">
+                  <img src={peopleNumberIcon} alt="Review Proposals" className="w-15 h-15" />
+                </div>
+                <span className="absolute -top-2 -right-2 w-8 h-8 bg-white border-2 border-gray-200 rounded-full flex items-center justify-center font-bold text-gray-900">2</span>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-3">Review Proposals</h3>
+              <p className="text-gray-600 text-sm">Receive proposals from talented freelancers. Compare profiles, portfolios, and rates.</p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="bg-white p-8  hover:shadow-lg transition text-center">
+              <div className="relative mb-6 flex justify-center">
+                <div className="w-20 h-20  flex items-center justify-center">
+                  <img src={energyIcon} alt="Hire & Collaborate" className="w-15 h-15" />
+                </div>
+                <span className="absolute -top-2 -right-2 w-8 h-8 bg-white border-2 border-gray-200 rounded-full flex items-center justify-center font-bold text-gray-900">3</span>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-3">Hire & Collaborate</h3>
+              <p className="text-gray-600 text-sm">Choose the perfect freelancer and start working together with built-in tools.</p>
+            </div>
+
+            {/* Step 4 */}
+            <div className="bg-white p-8 rounded-2xl hover:shadow-lg transition text-center">
+              <div className="relative mb-6 flex justify-center">
+                <div className="w-20 h-20 b flex items-center justify-center">
+                  <img src={shieldIcon} alt="Pay Securely" className="w-15 h-15" />
+                </div>
+                <span className="absolute -top-2 -right-2 w-8 h-8 bg-white border-2 border-gray-200 rounded-full flex items-center justify-center font-bold text-gray-900">4</span>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-3">Pay Securely</h3>
+              <p className="text-gray-600 text-sm">Release payments safely with our escrow system. Rate and review when complete.</p>
+            </div>
+          </div>
+        </div>
+        
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="bg-white py-20 px-4">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-4xl font-bold text-gray-900 text-center mb-4">Loved by professionals</h2>
+          <p className="text-gray-600 text-center text-lg max-w-2xl mx-auto mb-12">See what our users have to say</p>
+          
+          {/* Testimonials Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Testimonial 1 */}
+            <div className="bg-gray-50 p-8 rounded-xl">
+              <div className="flex gap-1 mb-4">
+                <img src= {starIcon} alt="Star" className="w-25 h-5"/>
+              </div>
+              <p className="text-gray-700 text-sm mb-6">
+                "The level of talent on this platform made hiring so easy and secure for our startup."
+              </p>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">SJ</div>
+                <div>
+                  <p className="font-bold text-gray-900">Sarah Johnson</p>
+                  <p className="text-gray-600 text-sm">CEO, TechStart Inc.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonial 2 */}
+            <div className="bg-gray-50 p-8 rounded-xl">
+              <div className="flex gap-1 mb-4">
+                <img src= {starIcon} alt="Star" className="w-25 h-5"/>
+              </div>
+              <p className="text-gray-700 text-sm mb-6">
+                "We've found amazing designers through this platform for listing quality clients consistently."
+              </p>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold">MC</div>
+                <div>
+                  <p className="font-bold text-gray-900">Michael Chen</p>
+                  <p className="text-gray-600 text-sm">Lead Designer, Creative Studio</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonial 3 */}
+            <div className="bg-gray-50 p-8 rounded-xl">
+              <div className="flex gap-1 mb-4">
+                <img src= {starIcon} alt="Star" className="w-25 h-5"/>
+              </div>
+              <p className="text-gray-700 text-sm mb-6">
+                "Using this we managed the projects with multiple freelancers monthly. Absolutely key to success."
+              </p>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">EW</div>
+                <div>
+                  <p className="font-bold text-gray-900">Emma Williams</p>
+                  <p className="text-gray-600 text-sm">Marketing Director, Global Marketing</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="bg-slate-900 py-24 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-5xl font-bold text-white mb-4">Ready to get started?</h2>
+          <p className="text-gray-300 text-lg mb-12">Join thousands of professionals growing their business today</p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button className="bg-white text-slate-900 hover:bg-gray-100 font-bold py-3 px-8 rounded-full transition flex items-center justify-center gap-2">
+              Get Started Free <span>→</span>
+            </button>
+            <button className="bg-transparent border-2 border-gray-400 text-white hover:border-white hover:bg-gray-800 font-bold py-3 px-8 rounded-full transition">
+              Learn More
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-200 py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          {/* Footer Content */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+            {/* Brand */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-10 h-10 bg-blue-500 rounded flex items-center justify-center text-white font-bold">JC</div>
+                <span className="text-xl font-bold text-gray-900">MicroJobs</span>
+              </div>
+              <p className="text-gray-600 text-sm">
+                The world's marketplace for professional services.
+              </p>
+            </div>
+
+            {/* For Clients */}
+            <div>
+              <h4 className="font-bold text-gray-900 mb-4">For Clients</h4>
+              <ul className="space-y-3">
+                <li><a href="#" className="text-gray-600 hover:text-gray-900 text-sm">How to Hire</a></li>
+                <li><a href="#" className="text-gray-600 hover:text-gray-900 text-sm">Talent Marketplace</a></li>
+                <li><a href="#" className="text-gray-600 hover:text-gray-900 text-sm">Project Catalog</a></li>
+                <li><a href="#" className="text-gray-600 hover:text-gray-900 text-sm">Enterprise</a></li>
+              </ul>
+            </div>
+
+            {/* For Talent */}
+            <div>
+              <h4 className="font-bold text-gray-900 mb-4">For Talent</h4>
+              <ul className="space-y-3">
+                <li><a href="#" className="text-gray-600 hover:text-gray-900 text-sm">How to Find Work</a></li>
+                <li><a href="#" className="text-gray-600 hover:text-gray-900 text-sm">Direct Contracts</a></li>
+                <li><a href="#" className="text-gray-600 hover:text-gray-900 text-sm">Find Jobs</a></li>
+              </ul>
+            </div>
+
+            {/* Company */}
+            <div>
+              <h4 className="font-bold text-gray-900 mb-4">Company</h4>
+              <ul className="space-y-3">
+                <li><a href="#" className="text-gray-600 hover:text-gray-900 text-sm">About Us</a></li>
+                <li><a href="#" className="text-gray-600 hover:text-gray-900 text-sm">Careers</a></li>
+                <li><a href="#" className="text-gray-600 hover:text-gray-900 text-sm">Trust & Safety</a></li>
+                <li><a href="#" className="text-gray-600 hover:text-gray-900 text-sm">Help Center</a></li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Footer Bottom */}
+          <div className="border-t border-gray-200 pt-8 flex flex-col md:flex-row justify-between items-center">
+            <p className="text-gray-600 text-sm mb-4 md:mb-0">
+              © 2026 MicroJobs. All rights reserved.
+            </p>
+            <div className="flex gap-6">
+              <a href="#" className="text-gray-600 hover:text-gray-900 text-sm">Privacy</a>
+              <a href="#" className="text-gray-600 hover:text-gray-900 text-sm">Terms</a>
+              <a href="#" className="text-gray-600 hover:text-gray-900 text-sm">Cookies</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+      
     </div>
   );
 };
