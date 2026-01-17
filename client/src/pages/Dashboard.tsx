@@ -1,6 +1,18 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
+import analyticsIcon from "../assets/analyticsIcon.png";
+import moneyIcon from "../assets/moneyIcon.png";
+import bagIcon from "../assets/bagIcon.png";
+import starIcon from "../assets/dashboard/starIcon.png";
+import bagtransIcon from "../assets/dashboard/bagtransIcon.png";
+import bagIcon1 from "../assets/dashboard/bagIcon1.png";
+import clockIcon from "../assets/dashboard/clockIcon.png";
+import walletIcon from "../assets/dashboard/walletIcon.png";
+import walletIcon1 from "../assets/dashboard/walletIcon1.png";
+import messageIcon from "../assets/dashboard/messageIcon.png";
+import messageIcon1 from "../assets/dashboard/messageIcon1.png";
+
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -38,8 +50,7 @@ const Dashboard: React.FC = () => {
             {/* Total Earnings */}
             <div className="bg-white rounded-xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                </div>
+                <img src={moneyIcon} alt="Money Icon" className="w-15 h-15"/>
                 <span className="text-green-500 text-sm font-semibold">+12.5%</span>
               </div>
               <p className="text-gray-600 text-sm mb-2">Total Earnings</p>
@@ -49,8 +60,7 @@ const Dashboard: React.FC = () => {
             {/* Active Jobs */}
             <div className="bg-white rounded-xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                </div>
+                <img src={bagIcon} alt="Bag Icon" className="w-12 h-12"/>
                 <span className="text-blue-500 text-sm font-semibold">+3 this week</span>
               </div>
               <p className="text-gray-600 text-sm mb-2">Active Jobs</p>
@@ -58,25 +68,23 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* Success Rate */}
-            <div className="bg-white rounded-xl p-6 shadow-sm">
+           <div className="bg-white rounded-xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-                </div>
-                <span className="text-emerald-500 text-sm font-semibold">+2% this month</span>
+                <img src={analyticsIcon} alt="Analytics Icon" className="w-12 h-12"/>
+                <span className="text-blue-500 text-sm font-semibold">+3 this week</span>
               </div>
               <p className="text-gray-600 text-sm mb-2">Success Rate</p>
-              <p className="text-3xl font-bold text-gray-900">98%</p>
+              <p className="text-3xl font-bold text-gray-900">8</p>
             </div>
 
             {/* Rating */}
-            <div className="bg-white rounded-xl p-6 shadow-sm">
+             <div className="bg-white rounded-xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                </div>
-                <span className="text-yellow-500 text-sm font-semibold">88 reviews</span>
+                <img src={starIcon} alt="Star Icon" className="w-12 h-12"/>
+                <span className="text-blue-500 text-sm font-semibold">89 reviews</span>
               </div>
               <p className="text-gray-600 text-sm mb-2">Rating</p>
-              <p className="text-3xl font-bold text-gray-900">4.9</p>
+              <p className="text-3xl font-bold text-gray-900">8</p>
             </div>
 
             {/* Profile Strength */}
@@ -95,22 +103,22 @@ const Dashboard: React.FC = () => {
             {/* Quick Actions */}
             <div className="lg:col-span-2 bg-white rounded-xl p-8 shadow-sm">
               <h3 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <button className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl p-6 flex flex-col items-center gap-3 transition">
-                  <div className="w-8 h-8"></div>
-                  <span className="font-semibold text-sm">Browse Jobs</span>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <button className="text-gray-900 rounded-2xl px-6 py-8 flex flex-col items-center gap-3 transition">
+                  <img src={bagIcon1} alt="Browse Jobs" className="w-20 h-20"/>
+                  <span className="font-semibold text-sm text-center">Browse<br/>Jobs</span>
                 </button>
-                <button className="bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl p-6 flex flex-col items-center gap-3 transition">
-                  <div className="w-8 h-8"></div>
-                  <span className="font-semibold text-sm">My Applications</span>
+                <button className="text-gray-900 rounded-2xl px-6 py-8 flex flex-col items-center gap-3 transition">
+                  <img src={clockIcon} alt="My Applications" className="w-20 h-20"/>
+                  <span className="font-semibold text-sm text-center">My<br/>Applications</span>
                 </button>
-                <button className="bg-green-500 hover:bg-green-600 text-white rounded-xl p-6 flex flex-col items-center gap-3 transition">
-                  <div className="w-8 h-8"></div>
-                  <span className="font-semibold text-sm">Wallet</span>
+                <button className="text-gray-900 rounded-2xl px-6 py-8 flex flex-col items-center gap-3 transition">
+                  <img src={walletIcon1} alt="Wallet" className="w-20 h-20"/>
+                  <span className="font-semibold text-sm text-center">Wallet</span>
                 </button>
-                <button className="bg-purple-500 hover:bg-purple-600 text-white rounded-xl p-6 flex flex-col items-center gap-3 transition">
-                  <div className="w-8 h-8"></div>
-                  <span className="font-semibold text-sm">Messages</span>
+                <button className="text-gray-900 rounded-2xl px-6 py-8 flex flex-col items-center gap-3 transition">
+                  <img src={messageIcon1} alt="Messages" className="w-20 h-20"/>
+                  <span className="font-semibold text-sm text-center">Messages</span>
                 </button>
               </div>
             </div>
@@ -150,7 +158,7 @@ const Dashboard: React.FC = () => {
               <div className="border border-gray-200 rounded-xl p-6 hover:shadow-md transition">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h4 className="text-lg font-bold text-gray-900 mb-1">Design Modern Logo for Tech Startup</h4>
+                    <h4 className="text-lg font-bold text-gray-900 mb-1">Taga baril ng mga Bading</h4>
                     <p className="text-gray-600 text-sm">Tech Solutions Inc.</p>
                   </div>
                   <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">Design</span>
@@ -174,7 +182,7 @@ const Dashboard: React.FC = () => {
               <div className="border border-gray-200 rounded-xl p-6 hover:shadow-md transition">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h4 className="text-lg font-bold text-gray-900 mb-1">Build Responsive E-commerce Website</h4>
+                    <h4 className="text-lg font-bold text-gray-900 mb-1">Rally sa bahay ni Marcos</h4>
                     <p className="text-gray-600 text-sm">Fashion Brand Co.</p>
                   </div>
                   <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-semibold">Development</span>
@@ -198,7 +206,7 @@ const Dashboard: React.FC = () => {
               <div className="border border-gray-200 rounded-xl p-6 hover:shadow-md transition">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h4 className="text-lg font-bold text-gray-900 mb-1">Social Media Marketing Campaign</h4>
+                    <h4 className="text-lg font-bold text-gray-900 mb-1">Suntukan sa Tondaligan Beach</h4>
                     <p className="text-gray-600 text-sm">StartUp Ventures</p>
                   </div>
                   <span className="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-xs font-semibold">Marketing</span>
