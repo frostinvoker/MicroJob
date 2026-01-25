@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import analyticsIcon from "../assets/analyticsIcon.png";
@@ -16,12 +16,26 @@ import messageIcon1 from "../assets/dashboard/messageIcon1.png";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [userName, setUserName] = useState("User");
+  const [userEmail, setUserEmail] = useState("you@example.com");
+
+  useEffect(() => {
+    const stored = localStorage.getItem("auth_user");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed?.username) setUserName(parsed.username);
+        if (parsed?.email) setUserEmail(parsed.email);
+      } catch (err) {
+        console.warn("Failed to parse auth_user", err);
+      }
+    }
+  }, []);
 
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <Sidebar userName="Jonas Enriquez" userEmail="joserizal@gmail.com" balance="₱67.67" messageCount={2} />
+      <Sidebar userName={userName} userEmail={userEmail} balance="₱67.67" messageCount={2} />
 
       {/* Main Content */}
       <div className="flex-1 overflow-auto ml-64">
@@ -30,8 +44,8 @@ const Dashboard: React.FC = () => {
           <div className="bg-gradient-to-r from-blue-500 to-cyan-400 rounded-3xl p-8 mb-8 text-white">
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-4xl font-bold mb-2">Welcome back, Jonas Enriquez!</h2>
-                <p className="text-blue-100">Track your performance and manage your work</p>
+                <h2 className="text-4xl font-bold mb-2">Welcome back, {userName}!</h2>
+                <p className="text-blue-100">Signed in with {userEmail}</p>
               </div>
               <div className="bg-white bg-opacity-20 rounded-2xl p-4 text-center">
                 <p className="text-sm text-blue-100 mb-1">Level</p>

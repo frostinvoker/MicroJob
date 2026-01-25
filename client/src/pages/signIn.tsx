@@ -3,17 +3,31 @@ import { useNavigate } from "react-router-dom";
 import bagIcon from "../assets/bagIcon.png";
 import lockIcon from "../assets/lockIcon.png";
 import mailIcon from "../assets/mailIcon.png";
+import { loginUser } from "../api/auth";
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSignIn = (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle sign in logic here
-    console.log("Sign in with:", { email, password, rememberMe });
+    setError(null);
+    setLoading(true);
+    try {
+      const { token, user } = await loginUser({ emailOrUsername: email, password });
+      // persist user info for dashboard display
+      localStorage.setItem("auth_user", JSON.stringify(user));
+      if (rememberMe) localStorage.setItem("auth_token", token);
+      navigate("/dashboard");
+    } catch (err: any) {
+      setError(err?.message || "Unable to sign in");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -103,6 +117,7 @@ const SignIn: React.FC = () => {
           <p className="text-gray-600 mb-8">Sign in to continue your journey</p>
 
           <form onSubmit={handleSignIn} className="space-y-6">
+            {error && <p className="text-red-600 text-sm">{error}</p>}
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-2">
@@ -160,9 +175,10 @@ const SignIn: React.FC = () => {
             {/* Sign In Button */}
             <button
               type="submit"
-              className="w-full bg-gradient-to-t from-cyan-500 to-indigo-900 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 mt-8"
+              disabled={loading}
+              className="w-full bg-gradient-to-t from-cyan-500 to-indigo-900 hover:from-blue-600 hover:to-blue-700 disabled:opacity-70 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 mt-8"
             >
-              Sign In <span>→</span>
+              {loading ? "Signing in..." : "Sign In"} <span>→</span>
             </button>
           </form>
 

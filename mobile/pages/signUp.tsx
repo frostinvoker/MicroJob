@@ -1,5 +1,6 @@
-import { View, Text, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ActivityIndicator } from 'react-native';
 import { useState } from 'react';
+import { registerUser } from '../api/auth';
 
 export default function SignUp({ onBack, onNavigateToSignIn, onNavigateToSuccess }: { onBack: () => void; onNavigateToSignIn: () => void; onNavigateToSuccess: () => void }) {
   const [fullName, setFullName] = useState('');
@@ -9,6 +10,36 @@ export default function SignUp({ onBack, onNavigateToSignIn, onNavigateToSuccess
   const [selectedRole, setSelectedRole] = useState('Hire');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const handleSignUp = async () => {
+    if (!fullName || !email || !password || !confirmPassword) {
+      setError('All fields are required');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords must match');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+    setError(null);
+    setSuccess(null);
+    setLoading(true);
+    try {
+      await registerUser({ username: fullName.trim(), email: email.trim(), password });
+      setSuccess('Account created!');
+      onNavigateToSuccess();
+    } catch (err: any) {
+      setError(err?.message || 'Unable to sign up');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -22,6 +53,9 @@ export default function SignUp({ onBack, onNavigateToSignIn, onNavigateToSuccess
         {/* Title */}
         <Text style={styles.title}>Start your Journey</Text>
         <Text style={styles.subtitle}>Create an account to get started</Text>
+
+        {error && <Text style={styles.errorText}>{error}</Text>}
+        {success && <Text style={styles.successText}>{success}</Text>}
 
         {/* Full Name Input */}
         <TextInput
@@ -105,8 +139,8 @@ export default function SignUp({ onBack, onNavigateToSignIn, onNavigateToSuccess
         </View>
 
         {/* Sign Up Button */}
-        <TouchableOpacity style={styles.signUpButton} onPress={onNavigateToSuccess}>
-          <Text style={styles.signUpButtonText}>SIGN UP</Text>
+        <TouchableOpacity style={[styles.signUpButton, loading && styles.signUpButtonDisabled]} disabled={loading} onPress={handleSignUp}>
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.signUpButtonText}>SIGN UP</Text>}
         </TouchableOpacity>
 
         {/* Login Link */}
@@ -226,6 +260,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
+  signUpButtonDisabled: {
+    opacity: 0.7,
+  },
   signUpButtonText: {
     color: '#fff',
     fontSize: 16,
@@ -245,5 +282,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#0066cc',
     fontWeight: '600',
+  },
+  errorText: {
+    color: '#e11d48',
+    marginBottom: 8,
+    fontSize: 13,
+    textAlign: 'center',
+  },
+  successText: {
+    color: '#16a34a',
+    marginBottom: 8,
+    fontSize: 13,
+    textAlign: 'center',
   },
 });

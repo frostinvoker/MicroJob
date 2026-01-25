@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import starIcon from "../assets/star.png";
 import Navbar from "../components/navbar";
 import peopleIcon from "../assets/peopleIcon.png";
@@ -19,6 +20,7 @@ import energyIcon from "../assets/energyIcon.png";
 import shieldIcon from "../assets/shieldIcon.png";
 
 const Home: React.FC = () => {
+  const navigate = useNavigate();
   return (
     <div>
       <Navbar />
@@ -304,7 +306,10 @@ const Home: React.FC = () => {
           <p className="text-gray-300 text-lg mb-12">Join thousands of professionals growing their business today</p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-white text-slate-900 hover:bg-gray-100 font-bold py-3 px-8 rounded-full transition flex items-center justify-center gap-2">
+            <button
+              className="bg-white text-slate-900 hover:bg-gray-100 font-bold py-3 px-8 rounded-full transition flex items-center justify-center gap-2"
+              onClick={() => navigate("/signup")}
+            >
               Get Started Free <span>→</span>
             </button>
             <button className="bg-transparent border-2 border-gray-400 text-white hover:border-white hover:bg-gray-800 font-bold py-3 px-8 rounded-full transition">

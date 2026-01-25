@@ -7,17 +7,41 @@ import shieilddIcon from "../assets/shielddIcon.png";
 import peopleTransparent from "../assets/peopletransIcon.png";
 import bagtransIcon from "../assets/bagtransIcon.png";
 import peopletrans from "../assets/peopletransIcon1.png";
+import { registerUser } from "../api/auth";
 
 const SignUp: React.FC = () => {
   const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [userType, setUserType] = useState("both");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  const handleSignUp = (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Sign up with:", { fullName, email, password, userType });
+    setError(null);
+    setSuccess(null);
+    if (password !== confirmPassword) {
+      setError("Passwords must match");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+    setLoading(true);
+    try {
+      await registerUser({ username: fullName.trim(), email: email.trim(), password });
+      setSuccess("Account created! You can now sign in.");
+      setTimeout(() => navigate("/signin"), 500);
+    } catch (err: any) {
+      setError(err?.message || "Unable to sign up");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -107,6 +131,8 @@ const SignUp: React.FC = () => {
           <p className="text-gray-600 mb-8 text-center">Create your account today</p>
 
           <form onSubmit={handleSignUp} className="space-y-5">
+            {error && <p className="text-red-600 text-sm">{error}</p>}
+            {success && <p className="text-green-600 text-sm">{success}</p>}
             {/* Full Name Field */}
             <div>
               <label htmlFor="fullname" className="block text-sm font-semibold text-gray-900 mb-2">
@@ -162,6 +188,25 @@ const SignUp: React.FC = () => {
                   required
                 />
               </div>
+
+              {/* Confirm Password Field */}
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-900 mb-2">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <img src={lockIcon} alt="Lock Icon" className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5" />
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter your password"
+                    className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+              </div>
             </div>
 
             {/* I want to section */}
@@ -215,9 +260,10 @@ const SignUp: React.FC = () => {
             {/* Create Account Button */}
             <button
               type="submit"
-              className="w-full bg-gradient-to-t from-cyan-500 to-indigo-900 hover:from-cyan-600 hover:to-blue-600 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 mt-8"
+              disabled={loading}
+              className="w-full bg-gradient-to-t from-cyan-500 to-indigo-900 hover:from-cyan-600 hover:to-blue-600 disabled:opacity-70 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 mt-8"
             >
-              Create Account <span>→</span>
+              {loading ? "Creating..." : "Create Account"} <span>→</span>
             </button>
           </form>
 

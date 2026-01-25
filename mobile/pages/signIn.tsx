@@ -1,5 +1,6 @@
-import { View, Text, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ActivityIndicator } from 'react-native';
 import { useState } from 'react';
+import { loginUser } from '../api/auth';
 
 export default function SignIn({
   onBack,
@@ -15,6 +16,25 @@ export default function SignIn({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSignIn = async () => {
+    if (!email || !password) {
+      setError('Email and password are required');
+      return;
+    }
+    setError(null);
+    setLoading(true);
+    try {
+      await loginUser({ emailOrUsername: email.trim(), password });
+      onLogin?.();
+    } catch (err: any) {
+      setError(err?.message || 'Unable to sign in');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -30,6 +50,8 @@ export default function SignIn({
         {/* Title */}
         <Text style={styles.title}>Welcome Back</Text>
         <Text style={styles.subtitle}>Sign in to your account</Text>
+
+        {error && <Text style={styles.errorText}>{error}</Text>}
 
         {/* Email Input */}
         <View style={styles.inputContainer}>
@@ -66,8 +88,8 @@ export default function SignIn({
         </TouchableOpacity>
 
         {/* Sign In Button */}
-        <TouchableOpacity style={styles.signInButton} onPress={onLogin}>
-          <Text style={styles.signInButtonText}>Sign in</Text>
+        <TouchableOpacity style={[styles.signInButton, loading && styles.signInButtonDisabled]} disabled={loading} onPress={handleSignIn}>
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.signInButtonText}>Sign in</Text>}
         </TouchableOpacity>
 
         {/* Sign Up Link */}
@@ -175,6 +197,9 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 16,
   },
+  signInButtonDisabled: {
+    opacity: 0.7,
+  },
   signInButtonText: {
     color: '#fff',
     fontSize: 16,
@@ -194,5 +219,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#0066cc',
     fontWeight: '600',
+  },
+  errorText: {
+    color: '#e11d48',
+    marginBottom: 8,
+    fontSize: 13,
+    textAlign: 'center',
   },
 });
