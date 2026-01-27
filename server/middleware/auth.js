@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-const auth = (req, res, next) => {
+const verifyToken = (req, res, next) => {
     const token = req.cookies.token;
     if(!token) {
         return res.status(401).json({message: "Authentication required."});
@@ -10,8 +10,8 @@ const auth = (req, res, next) => {
         req.user = decoded;
         next();
     } catch(error){
-        res.status(401).json({message: "Invalid token."});
+        res.status(401).json({message: "Invalid or expired token."});
     }
 }
 
-export default auth;
+export default verifyToken;

@@ -2,18 +2,31 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
 const UserSchema = new mongoose.Schema(
-    {
-        email: {
+    {   
+        phoneNumber: {
             type: String,
             required: true,
+            unique: true,
+            minlength: 11,
+            maxlength: 11,
+        },
+        email: {
+            type: String,
             unique: true,
             lowercase: true,
             trim: true,
         },
-        username: {
+        firstName: {
             type: String,
             required: true,
             trim: true,
+            maxlength: 30,
+        },
+        lastName: {
+            type: String,
+            required: true,
+            trim: true,
+            maxLength: 30,
         },
         role: {
             type: String,
@@ -38,4 +51,4 @@ UserSchema.methods.validatePassword = async function (password) {
     return bcrypt.compare(password, this.passwordHashed);
 }
 
-export default mongoose.model("User", userSchema)
+export default mongoose.model("User", UserSchema)
