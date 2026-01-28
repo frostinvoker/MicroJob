@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const CategorySchema = new mongoose.Schema(
     {
         name: {
-            type: string,
+            type: String,
             unique: true,
             required: true,
             trim: true,
@@ -11,4 +11,4 @@ const CategorySchema = new mongoose.Schema(
     }
 )
 
-export default models.mongoose('Category', CategorySchema);
+export default mongoose.model('Category', CategorySchema);

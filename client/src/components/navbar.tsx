@@ -1,6 +1,5 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import bagIcon from "../assets/bagIcon.png";
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
@@ -11,7 +10,6 @@ const Navbar: React.FC = () => {
         {/* Logo on the left */}
         <div className="flex flex-col cursor-pointer" onClick={() => navigate("/")}>
           <div className="flex items-center gap-2">
-            <img src={bagIcon} alt="Bag Icon" className="w-12 h-12"/>
             <h1 className="text-4xl font-bold text-blue-600">MicroJob</h1>
           </div>
           <p className="text-black text-sm">Professional Marketplace</p>

@@ -7,17 +7,13 @@ import shieilddIcon from "../assets/shielddIcon.png";
 import peopleTransparent from "../assets/peopletransIcon.png";
 import bagtransIcon from "../assets/bagtransIcon.png";
 import peopletrans from "../assets/peopletransIcon1.png";
-<<<<<<< HEAD
 import { registerUser } from "../api/auth";
-=======
->>>>>>> Backend_Niko
 
 const SignUp: React.FC = () => {
   const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-<<<<<<< HEAD
   const [confirmPassword, setConfirmPassword] = useState("");
   const [userType, setUserType] = useState("both");
   const [loading, setLoading] = useState(false);
@@ -46,13 +42,6 @@ const SignUp: React.FC = () => {
     } finally {
       setLoading(false);
     }
-=======
-  const [userType, setUserType] = useState("both");
-
-  const handleSignUp = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Sign up with:", { fullName, email, password, userType });
->>>>>>> Backend_Niko
   };
 
   return (
@@ -142,12 +131,10 @@ const SignUp: React.FC = () => {
           <p className="text-gray-600 mb-8 text-center">Create your account today</p>
 
           <form onSubmit={handleSignUp} className="space-y-5">
-<<<<<<< HEAD
             {error && <p className="text-red-600 text-sm">{error}</p>}
             {success && <p className="text-green-600 text-sm">{success}</p>}
-=======
->>>>>>> Backend_Niko
-            {/* Full Name Field */}
+            
+            {/* Full Name Field */
             <div>
               <label htmlFor="fullname" className="block text-sm font-semibold text-gray-900 mb-2">
                 Full Name
@@ -166,7 +153,7 @@ const SignUp: React.FC = () => {
               </div>
             </div>
 
-            {/* Email Field */}
+            /* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-2">
                 Email Address
@@ -202,28 +189,25 @@ const SignUp: React.FC = () => {
                   required
                 />
               </div>
-<<<<<<< HEAD
+            </div>
 
-              {/* Confirm Password Field */}
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-900 mb-2">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <img src={lockIcon} alt="Lock Icon" className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5" />
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Re-enter your password"
-                    className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                </div>
+            {/* Confirm Password Field */}
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-900 mb-2">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <img src={lockIcon} alt="Lock Icon" className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5" />
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Re-enter your password"
+                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
               </div>
-=======
->>>>>>> Backend_Niko
             </div>
 
             {/* I want to section */}
@@ -277,16 +261,10 @@ const SignUp: React.FC = () => {
             {/* Create Account Button */}
             <button
               type="submit"
-<<<<<<< HEAD
               disabled={loading}
               className="w-full bg-gradient-to-t from-cyan-500 to-indigo-900 hover:from-cyan-600 hover:to-blue-600 disabled:opacity-70 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 mt-8"
             >
               {loading ? "Creating..." : "Create Account"} <span>→</span>
-=======
-              className="w-full bg-gradient-to-t from-cyan-500 to-indigo-900 hover:from-cyan-600 hover:to-blue-600 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 mt-8"
-            >
-              Create Account <span>→</span>
->>>>>>> Backend_Niko
             </button>
           </form>
 

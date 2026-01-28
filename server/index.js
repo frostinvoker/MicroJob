@@ -32,6 +32,23 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
 }))
 
+// Routes
+import CategoryRoute from './routes/CategoryRoute.js';
+import JobRoute from './routes/JobRoute.js';
+import UserRoute from './routes/UserRoute.js';
+import authRoutes from './src/routes/authRoutes.js';
+
+app.get('/', (req, res) => {
+    res.json({ message: 'Backend server is running' });
+});
+
+// Auth routes (includes login, register, logout)
+app.use('/api/auth', authRoutes);
+
+// Other routes
+app.use('/api/categories', CategoryRoute);
+app.use('/api/jobs', JobRoute);
+app.use('/api/users', UserRoute);
 
 //Error handler
 app.use((err, req, res, next) => {

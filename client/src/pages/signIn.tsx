@@ -3,17 +3,13 @@ import { useNavigate } from "react-router-dom";
 import bagIcon from "../assets/bagIcon.png";
 import lockIcon from "../assets/lockIcon.png";
 import mailIcon from "../assets/mailIcon.png";
-<<<<<<< HEAD
 import { loginUser } from "../api/auth";
-=======
->>>>>>> Backend_Niko
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-<<<<<<< HEAD
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,13 +28,6 @@ const SignIn: React.FC = () => {
     } finally {
       setLoading(false);
     }
-=======
-
-  const handleSignIn = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle sign in logic here
-    console.log("Sign in with:", { email, password, rememberMe });
->>>>>>> Backend_Niko
   };
 
   return (
@@ -128,11 +117,9 @@ const SignIn: React.FC = () => {
           <p className="text-gray-600 mb-8">Sign in to continue your journey</p>
 
           <form onSubmit={handleSignIn} className="space-y-6">
-<<<<<<< HEAD
             {error && <p className="text-red-600 text-sm">{error}</p>}
-=======
->>>>>>> Backend_Niko
-            {/* Email Field */}
+            
+            {/* Email Field */
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-2">
                 Email Address
@@ -151,7 +138,7 @@ const SignIn: React.FC = () => {
               </div>
             </div>
 
-            {/* Password Field */}
+            /* Password Field */}
             <div>
               <label htmlFor="password" className="block text-sm font-semibold text-gray-900 mb-2">
                 Password
@@ -189,16 +176,10 @@ const SignIn: React.FC = () => {
             {/* Sign In Button */}
             <button
               type="submit"
-<<<<<<< HEAD
               disabled={loading}
               className="w-full bg-gradient-to-t from-cyan-500 to-indigo-900 hover:from-blue-600 hover:to-blue-700 disabled:opacity-70 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 mt-8"
             >
               {loading ? "Signing in..." : "Sign In"} <span>→</span>
-=======
-              className="w-full bg-gradient-to-t from-cyan-500 to-indigo-900 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 mt-8"
-            >
-              Sign In <span>→</span>
->>>>>>> Backend_Niko
             </button>
           </form>
 
