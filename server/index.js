@@ -27,7 +27,7 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true}));
 
 app.use(cors({
-    origin: config.ORIGIN,
+    origin: '*', // Allow all origins for mobile development
     credentials:true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
 }))
@@ -64,8 +64,9 @@ const startServer = async () => {
         await mongoose.connect(config.MONGO_URI, { dbName: config.DB_NAME});
         console.log('Connected to DB');
 
-        app.listen(config.PORT, () => {
+        app.listen(config.PORT, '0.0.0.0', () => {
             console.log(`Server is running on http://localhost:${config.PORT}`);
+            console.log(`Mobile can access: http://192.168.1.20:${config.PORT}`);
         });
     } catch (error) {
         console.error('Failed to connect to DB: ', error);
