@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import React, { useEffect, useState } from "react";
+=======
+import React, { useState } from "react";
+>>>>>>> Backend_Niko
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import analyticsIcon from "../assets/analyticsIcon.png";
@@ -16,6 +20,7 @@ import messageIcon1 from "../assets/dashboard/messageIcon1.png";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+<<<<<<< HEAD
   const [userName, setUserName] = useState("User");
   const [userEmail, setUserEmail] = useState("you@example.com");
 
@@ -31,11 +36,18 @@ const Dashboard: React.FC = () => {
       }
     }
   }, []);
+=======
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+>>>>>>> Backend_Niko
 
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
+<<<<<<< HEAD
       <Sidebar userName={userName} userEmail={userEmail} balance="₱67.67" messageCount={2} />
+=======
+      <Sidebar userName="Jonas Enriquez" userEmail="joserizal@gmail.com" balance="₱67.67" messageCount={2} />
+>>>>>>> Backend_Niko
 
       {/* Main Content */}
       <div className="flex-1 overflow-auto ml-64">
@@ -44,8 +56,13 @@ const Dashboard: React.FC = () => {
           <div className="bg-gradient-to-r from-blue-500 to-cyan-400 rounded-3xl p-8 mb-8 text-white">
             <div className="flex items-start justify-between">
               <div>
+<<<<<<< HEAD
                 <h2 className="text-4xl font-bold mb-2">Welcome back, {userName}!</h2>
                 <p className="text-blue-100">Signed in with {userEmail}</p>
+=======
+                <h2 className="text-4xl font-bold mb-2">Welcome back, Jonas Enriquez!</h2>
+                <p className="text-blue-100">Track your performance and manage your work</p>
+>>>>>>> Backend_Niko
               </div>
               <div className="bg-white bg-opacity-20 rounded-2xl p-4 text-center">
                 <p className="text-sm text-blue-100 mb-1">Level</p>

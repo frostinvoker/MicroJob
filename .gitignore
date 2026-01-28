@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+/venv
+__pycache__/
+
+
+server/node_modules/
+server/.env/
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
+
+# Environment Variables (SENSITIVE DATA)
+.env
+.env.local
+
+# Logs and Build output
+*.log
+dist/
+build/
