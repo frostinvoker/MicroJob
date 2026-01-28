@@ -36,7 +36,7 @@ app.use(cors({
 import CategoryRoute from './routes/CategoryRoute.js';
 import JobRoute from './routes/JobRoute.js';
 import UserRoute from './routes/UserRoute.js';
-import authRoutes from './src/routes/authRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 
 app.get('/', (req, res) => {
     res.json({ message: 'Backend server is running' });
