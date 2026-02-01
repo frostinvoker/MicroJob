@@ -17,8 +17,8 @@ const Navbar: React.FC = () => {
 
         {/* Menu on the right */}
         <ul className="flex space-x-4">
-          <li><button onClick={() => navigate("/signin")} className="text-gray-700 hover:text-blue-600">Sign In</button></li>
-          <li><button onClick={() => navigate("/")} className="text-gray-700 hover:text-blue-600 bg-[#111827] text-white px-4 py-2 rounded-md cursor-pointer border-none">Get Started</button></li>
+          <li><button onClick={() => navigate("/signin")} className="text-gray-700 hover:text-blue-600 px-4 py-2 rounded-md cursor-pointer border-none transition-all duration-300 transform hover:scale-105 hover:bg-gray-100">Sign In</button></li>
+          <li><button onClick={() => navigate("/signin")} className="text-gray-700 hover:text-blue-600 bg-[#111827] text-white px-4 py-2 rounded-md cursor-pointer border-none transition-all duration-300 transform hover:scale-105 hover:shadow-lg">Get Started</button></li>
         </ul>
       </div>
     </nav>

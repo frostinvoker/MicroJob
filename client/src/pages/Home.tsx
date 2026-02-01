@@ -39,14 +39,14 @@ const Home: React.FC = () => {
 
         {/* Headline */}
         <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4 text-center">
-          Find the Perfect{" "} <br></br>
-          <span className="bg-gradient-to-b from-sky-400 to-indigo-600 bg-clip-text text-transparent">Freelance Services</span>{" "} <br></br>
-          For your Business
+          Connect with Your{" "} <br></br>
+          <span className="bg-gradient-to-b from-sky-400 to-indigo-600 bg-clip-text text-transparent">Community's Skilled Workers</span>{" "} <br></br>
+          for Micro-Jobs
         </h1>
 
         {/* Description */}
         <p className="text-gray-600 text-lg md:text-xl max-w-2xl text-center mb-8">
-          Work with talented freelancers from around the world. Post your project and get competitive proposals within minutes.
+          Join our community marketplace to post micro-jobs, connect with skilled workers, and manage payments securely with our integrated e-wallet system.
         </p>
 
         <form className="w-full lg:max-w-3xl mx-auto px-10">
@@ -55,7 +55,7 @@ const Home: React.FC = () => {
             <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
               <svg className="w-5 h-5 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeLinecap="round" strokeWidth="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/></svg>
             </div>
-            <input type="search" id="search" className="block w-full p-4 pl-12 bg-white border border-gray-200 text-gray-900 text-base rounded-xl focus:ring-2 focus:ring-gray-800 focus:border-gray-800 shadow-sm placeholder:text-gray-500" placeholder="Try 'logo design' or 'web development'" required />
+            <input type="search" id="search" className="block w-full p-4 pl-12 bg-white border border-gray-200 text-gray-900 text-base rounded-xl focus:ring-2 focus:ring-gray-800 focus:border-gray-800 shadow-sm placeholder:text-gray-500" placeholder="Try 'Vacumm Cleaner'" required />
             <button type="button" className="absolute right-2 bottom-2.5 text-white bg-gray-900 hover:bg-black focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-6 py-2 focus:outline-none flex items-center gap-2">Search <span>→</span></button>
           </div>
         </form>
@@ -112,8 +112,8 @@ const Home: React.FC = () => {
       {/* Explore by Category Section */}
       <section className="bg-white py-20 px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold text-gray-900 text-center mb-4">Explore by category</h2>
-          <p className="text-gray-600 text-center text-lg max-w-2xl mx-auto mb-12">Get work done in over 8 different categories</p>
+          <h2 className="text-4xl font-bold text-gray-900 text-center mb-4">Explore Micro-Job Categories</h2>
+          <p className="text-gray-600 text-center text-lg max-w-2xl mx-auto mb-12">Find the perfect micro-job across 8+ categories in your community</p>
           
           {/* Categories Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -180,8 +180,8 @@ const Home: React.FC = () => {
       {/* how it works part */}
       <section className="bg-gray-50 py-20 px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4 text-center">How It Works</h2>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto mb-12 text-center">Getting started is easy!</p>
+          <h2 className="text-4xl font-bold text-gray-900 mb-4 text-center">How Our Community Marketplace Works</h2>
+          <p className="text-gray-600 text-lg max-w-2xl mx-auto mb-12 text-center">Post jobs, connect with workers, and pay securely in 4 simple steps</p>
           
           {/* Steps Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -191,7 +191,6 @@ const Home: React.FC = () => {
                 <div className="w-25 h-25   items-center justify-center">
                   <img src={docuIcon} alt="Post Your Job" className="w-15 h-15" />
                 </div>
-                <span className="absolute -top-2 -right-2 w-8 h-8 bg-white border-2 border-gray-200 rounded-full flex items-center justify-center font-bold text-gray-900">1</span>
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-3">Post Your Job</h3>
               <p className="text-gray-600 text-sm">Describe your project needs and budget. Get matched with qualified professionals.</p>
@@ -203,7 +202,7 @@ const Home: React.FC = () => {
                 <div className="w-20 h-20  flex items-center justify-center">
                   <img src={peopleNumberIcon} alt="Review Proposals" className="w-15 h-15" />
                 </div>
-                <span className="absolute -top-2 -right-2 w-8 h-8 bg-white border-2 border-gray-200 rounded-full flex items-center justify-center font-bold text-gray-900">2</span>
+                
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-3">Review Proposals</h3>
               <p className="text-gray-600 text-sm">Receive proposals from talented freelancers. Compare profiles, portfolios, and rates.</p>
@@ -215,7 +214,7 @@ const Home: React.FC = () => {
                 <div className="w-20 h-20  flex items-center justify-center">
                   <img src={energyIcon} alt="Hire & Collaborate" className="w-15 h-15" />
                 </div>
-                <span className="absolute -top-2 -right-2 w-8 h-8 bg-white border-2 border-gray-200 rounded-full flex items-center justify-center font-bold text-gray-900">3</span>
+                
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-3">Hire & Collaborate</h3>
               <p className="text-gray-600 text-sm">Choose the perfect freelancer and start working together with built-in tools.</p>
@@ -227,10 +226,10 @@ const Home: React.FC = () => {
                 <div className="w-20 h-20 b flex items-center justify-center">
                   <img src={shieldIcon} alt="Pay Securely" className="w-15 h-15" />
                 </div>
-                <span className="absolute -top-2 -right-2 w-8 h-8 bg-white border-2 border-gray-200 rounded-full flex items-center justify-center font-bold text-gray-900">4</span>
+                
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-3">Pay Securely</h3>
-              <p className="text-gray-600 text-sm">Release payments safely with our escrow system. Rate and review when complete.</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-3">Pay Securely with E-Wallet</h3>
+              <p className="text-gray-600 text-sm">Release payments safely using our integrated e-wallet system. Rate and review when complete.</p>
             </div>
           </div>
         </div>
@@ -302,8 +301,8 @@ const Home: React.FC = () => {
       {/* CTA Section */}
       <section className="bg-slate-900 py-24 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-5xl font-bold text-white mb-4">Ready to get started?</h2>
-          <p className="text-gray-300 text-lg mb-12">Join thousands of professionals growing their business today</p>
+          <h2 className="text-5xl font-bold text-white mb-4">Ready to Join the Community?</h2>
+          <p className="text-gray-300 text-lg mb-12">Post micro-jobs or find work in your community with secure payments today</p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
@@ -331,7 +330,7 @@ const Home: React.FC = () => {
                 <span className="text-xl font-bold text-gray-900">MicroJobs</span>
               </div>
               <p className="text-gray-600 text-sm">
-                The world's marketplace for professional services.
+                The Local marketplace for services.
               </p>
             </div>
 
