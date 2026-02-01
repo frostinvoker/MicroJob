@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MessageSquare, Mail, Phone, HelpCircle, Book, Video, Send, Search, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 interface FAQ {
   id: string;
@@ -73,6 +74,8 @@ const faqs: FAQ[] = [
 ];
 
 export function Support() {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [openFAQ, setOpenFAQ] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<"all" | "account" | "payments" | "jobs" | "technical">("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -82,6 +85,11 @@ export function Support() {
     subject: "",
     message: "",
   });
+
+  useEffect(() => {
+    const query = searchParams.get("q") || "";
+    setSearchQuery(query);
+  }, [searchParams]);
 
   const handleSubmitTicket = (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,7 +140,7 @@ export function Support() {
             Chat with our support team in real-time
           </p>
           <button
-            onClick={() => toast.info("Opening live chat...")}
+            onClick={() => navigate("/dashboard/messages?contact=support")}
             className="w-full bg-[#1C4D8D] text-white font-medium py-2 rounded-[8px] hover:bg-[#0F2954] transition-all text-[14px]"
           >
             Start Chat
@@ -216,7 +224,11 @@ export function Support() {
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSearchQuery(value);
+              setSearchParams(value ? { q: value } : {});
+            }}
             placeholder="Search FAQs..."
             className="w-full pl-10 pr-4 py-3 border border-[#E5E7EB] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#1C4D8D] focus:border-transparent"
           />

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Search, Filter, Calendar, FileText, User as UserIcon, Mail, ExternalLink } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Search, Filter, Calendar, FileText, User as UserIcon, Mail, ExternalLink, ArrowLeft, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 type ApplicationStatus = "all" | "under-review" | "pending" | "reviewing" | "interviewed" | "accepted" | "rejected";
@@ -221,6 +221,8 @@ export function ApplicationsManagement() {
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus>("all");
   const [jobFilter, setJobFilter] = useState("all");
   const [applications, setApplications] = useState<Application[]>(mockApplications);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 4;
 
   const handleStatusChange = (id: string, newStatus: Exclude<ApplicationStatus, "all">) => {
     const oldStatus = applications.find(app => app.id === id)?.status;
@@ -250,9 +252,30 @@ export function ApplicationsManagement() {
       app.position.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus = statusFilter === "all" || app.status === statusFilter;
+    const matchesJob =
+      jobFilter === "all" ||
+      (jobFilter === "frontend" && app.position.toLowerCase().includes("frontend")) ||
+      (jobFilter === "backend" && app.position.toLowerCase().includes("backend")) ||
+      (jobFilter === "fullstack" && app.position.toLowerCase().includes("full stack"));
 
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesJob;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredApplications.length / pageSize));
+  const pagedApplications = filteredApplications.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, jobFilter]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   return (
     <div className="max-w-[1200px] mx-auto space-y-6">
@@ -317,8 +340,8 @@ export function ApplicationsManagement() {
 
       {/* Applications List */}
       <div className="space-y-4">
-        {filteredApplications.length > 0 ? (
-          filteredApplications.map((application) => (
+        {pagedApplications.length > 0 ? (
+          pagedApplications.map((application) => (
             <ApplicationCard
               key={application.id}
               application={application}
@@ -332,6 +355,59 @@ export function ApplicationsManagement() {
           </div>
         )}
       </div>
+
+      {filteredApplications.length > 0 && (
+        <div className="bg-white rounded-[12px] border border-[#E5E7EB] px-6 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <button
+            onClick={() => setCurrentPage(1)}
+            disabled={currentPage === 1}
+            className="flex items-center gap-3 text-[14px] text-[#4F46E5] hover:text-[#4338CA] font-semibold disabled:text-[#94A3B8]"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Go to page {String(1).padStart(2, "0")}
+          </button>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              disabled={currentPage === 1}
+              className="w-11 h-11 rounded-full border border-[#4F46E5] flex items-center justify-center text-[#4F46E5] hover:bg-[#EEF2FF] disabled:border-[#E5E7EB] disabled:text-[#94A3B8]"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+              disabled={currentPage === totalPages}
+              className="flex items-center gap-3 px-6 py-2.5 rounded-full bg-[#4F46E5] text-white text-[14px] font-semibold hover:bg-[#4338CA] disabled:opacity-50"
+            >
+              Next Page
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3 text-[14px] text-[#6B7280]">
+            <span>Page</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={String(currentPage).padStart(2, "0")}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/[^0-9]/g, "");
+                if (!raw) {
+                  setCurrentPage(1);
+                  return;
+                }
+                const value = Number(raw);
+                if (!Number.isNaN(value)) {
+                  setCurrentPage(Math.min(Math.max(1, value), totalPages));
+                }
+              }}
+              className="w-[72px] text-center border border-[#E5E7EB] rounded-full px-3 py-2 text-[14px] text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+            />
+            <span>of {String(totalPages).padStart(2, "0")}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

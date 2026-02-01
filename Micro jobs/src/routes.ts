@@ -25,6 +25,9 @@ import { Support } from "./components/Support";
 import { AdminDashboard } from "./components/AdminDashboard";
 import { ComingSoon } from "./components/ComingSoon";
 import { LogoShowcase } from "./components/LogoShowcase";
+import { TermsAndConditions } from "./components/TermsAndConditions";
+import { PrivacyPolicy } from "./components/PrivacyPolicy";
+import { CookiePolicy } from "./components/CookiePolicy";
 
 export const router = createBrowserRouter([
   {
@@ -50,6 +53,18 @@ export const router = createBrowserRouter([
   {
     path: "/reset-password",
     Component: ResetPassword,
+  },
+  {
+    path: "/terms",
+    Component: TermsAndConditions,
+  },
+  {
+    path: "/privacy",
+    Component: PrivacyPolicy,
+  },
+  {
+    path: "/cookie-policy",
+    Component: CookiePolicy,
   },
   {
     path: "/dashboard",

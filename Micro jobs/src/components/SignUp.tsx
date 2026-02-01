@@ -73,19 +73,24 @@ export function SignUp() {
         {/* Left Side - Branding */}
         <div className="text-white space-y-8 flex flex-col justify-center">
           <div className="space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-14 h-14 rounded-[16px] bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/40">
-                <Briefcase className="w-8 h-8 text-white" />
+            <div className="grid grid-cols-[48px_1fr] gap-4 items-center pl-4 mb-6">
+              <div className="w-12 h-12 rounded-[12px] bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/40">
+                <Briefcase className="w-7 h-7 text-white" />
               </div>
               <h1 className="text-[32px] font-bold">Micro - Jobs</h1>
             </div>
             
-            <h2 className="text-[28px] font-bold leading-tight">
-              Connect with Top Talent<br />& Rewarding Opportunities
-            </h2>
-            <p className="text-[16px] opacity-90 leading-relaxed">
-              Join thousands of professionals finding their dream jobs and companies discovering exceptional talent.
-            </p>
+            <div className="grid grid-cols-[48px_1fr] gap-4 pl-4">
+              <div aria-hidden="true" />
+              <div>
+                <h2 className="text-[28px] font-bold leading-tight">
+                  Connect with Top Talent<br />& Rewarding Opportunities
+                </h2>
+                <p className="text-[16px] opacity-90 leading-relaxed">
+                  Join thousands of professionals finding their dream jobs and companies discovering exceptional talent.
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -303,13 +308,13 @@ export function SignUp() {
               />
               <label className="text-[13px] text-[#6B7280]">
                 I agree to the{" "}
-                <button type="button" className="text-[#1C4D8D] hover:text-[#0F2954] font-medium">
+                <Link to="/terms" className="text-[#1C4D8D] hover:text-[#0F2954] font-medium">
                   Terms and Conditions
-                </button>{" "}
+                </Link>{" "}
                 and{" "}
-                <button type="button" className="text-[#1C4D8D] hover:text-[#0F2954] font-medium">
+                <Link to="/privacy" className="text-[#1C4D8D] hover:text-[#0F2954] font-medium">
                   Privacy Policy
-                </button>
+                </Link>
               </label>
             </div>
 

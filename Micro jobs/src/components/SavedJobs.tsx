@@ -1,6 +1,7 @@
 import { MapPin, Building2, Briefcase, Clock, Users, Bookmark, Trash2, ExternalLink, DollarSign, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 interface Job {
   id: string;
@@ -112,6 +113,9 @@ const initialJobs: Job[] = [
 ];
 
 export function SavedJobs() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const searchQuery = (searchParams.get("q") || "").trim().toLowerCase();
   const [jobs, setJobs] = useState<Job[]>(initialJobs);
   const [filter, setFilter] = useState<"all" | "Remote" | "Hybrid" | "On-site">("all");
 
@@ -120,23 +124,32 @@ export function SavedJobs() {
     toast.success("Job removed from saved list");
   };
 
-  const handleApply = (jobTitle: string) => {
-    toast.success(`Opening application for: ${jobTitle}`);
+  const handleApply = (jobId: string, jobTitle: string) => {
+    toast.info(`Starting application for: ${jobTitle}`);
+    navigate(`/dashboard/job-details-new/${jobId}`);
   };
 
-  const handleViewDetails = (jobTitle: string) => {
-    toast.info(`Viewing full details: ${jobTitle}`);
+  const handleViewDetails = (jobId: string) => {
+    navigate(`/dashboard/job-details-new/${jobId}`);
   };
 
-  const filteredJobs = filter === "all" ? jobs : jobs.filter(job => job.type === filter);
+  const filteredJobs = jobs.filter(job => {
+    if (filter !== "all" && job.type !== filter) {
+      return false;
+    }
+    if (!searchQuery) {
+      return true;
+    }
+    const combined = `${job.title} ${job.company} ${job.location} ${job.requirements.join(" ")}`.toLowerCase();
+    return combined.includes(searchQuery);
+  });
 
   return (
     <div className="max-w-[1341px] mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-semibold text-[28px] text-[#111827]">Saved Jobs</h1>
-          <p className="text-[14px] text-[#6B7280] mt-1">
+          <p className="text-[14px] text-[#6B7280]">
             You have {jobs.length} saved job{jobs.length !== 1 ? 's' : ''}
           </p>
         </div>
@@ -279,14 +292,14 @@ export function SavedJobs() {
             {/* Action Buttons */}
             <div className="flex items-center gap-2 mt-4">
               <button
-                onClick={() => handleApply(job.title)}
+                onClick={() => handleApply(job.id, job.title)}
                 className="flex-1 bg-gradient-to-br from-[#4988C4] to-[#1C4D8D] text-white font-semibold py-3 px-4 rounded-[10px] hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
               >
                 <Briefcase className="w-4 h-4" />
                 Apply Now
               </button>
               <button
-                onClick={() => handleViewDetails(job.title)}
+                onClick={() => handleViewDetails(job.id)}
                 className="px-4 py-3 border border-[#E5E7EB] text-[#6B7280] font-semibold rounded-[10px] hover:bg-[#F9FAFB] transition-colors"
                 title="View Details"
               >

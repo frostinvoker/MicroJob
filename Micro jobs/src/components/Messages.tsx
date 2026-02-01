@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, Send, Paperclip, MoreVertical, Phone, Video, Star } from "lucide-react";
 import { toast } from "sonner";
+import { useSearchParams } from "react-router-dom";
 
 interface Message {
   id: string;
@@ -22,6 +23,16 @@ interface Contact {
 }
 
 const contacts: Contact[] = [
+  {
+    id: "support",
+    name: "Micro Jobs Support",
+    company: "Support Team",
+    avatar: "MJ",
+    lastMessage: "Hi! How can we help you today?",
+    lastMessageTime: "now",
+    unread: 0,
+    online: true,
+  },
   {
     id: "1",
     name: "Sarah Chen",
@@ -75,6 +86,9 @@ const contacts: Contact[] = [
 ];
 
 const messageHistory: { [key: string]: Message[] } = {
+  support: [
+    { id: "1", senderId: "support", text: "Welcome to Micro Jobs live chat! How can we help?", time: "Now", isOwn: false },
+  ],
   "1": [
     { id: "1", senderId: "1", text: "Hi Jonas! I reviewed your application for the Senior React Developer position.", time: "10:30 AM", isOwn: false },
     { id: "2", senderId: "me", text: "Hello Sarah! Thank you for reaching out.", time: "10:32 AM", isOwn: true },
@@ -90,9 +104,22 @@ const messageHistory: { [key: string]: Message[] } = {
 };
 
 export function Messages() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedContact, setSelectedContact] = useState<Contact>(contacts[0]);
   const [messageText, setMessageText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    const query = searchParams.get("q") || "";
+    setSearchQuery(query);
+    const contactId = searchParams.get("contact");
+    if (contactId) {
+      const match = contacts.find((contact) => contact.id === contactId);
+      if (match) {
+        setSelectedContact(match);
+      }
+    }
+  }, [searchParams]);
 
   const handleSendMessage = () => {
     if (messageText.trim()) {
@@ -113,6 +140,14 @@ export function Messages() {
     toast.info(`Starting video call with ${selectedContact.name}...`);
   };
 
+  const handleStarConversation = () => {
+    toast.success("Conversation starred");
+  };
+
+  const handleMoreOptions = () => {
+    toast.info("Opening more options...");
+  };
+
   const filteredContacts = contacts.filter(contact =>
     contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     contact.company.toLowerCase().includes(searchQuery.toLowerCase())
@@ -121,12 +156,10 @@ export function Messages() {
   const currentMessages = messageHistory[selectedContact.id] || [];
 
   return (
-    <div className="max-w-[1341px] mx-auto h-[calc(100vh-100px)]">
-      <h1 className="font-semibold text-[28px] text-[#111827] mb-6">Messages</h1>
-      
-      <div className="bg-white rounded-[16px] border border-[#E5E7EB] overflow-hidden shadow-sm h-[calc(100%-80px)] flex">
+    <div className="max-w-[1341px] mx-auto h-[calc(100vh-160px)] min-h-[640px]">
+      <div className="bg-white rounded-[16px] border border-[#E5E7EB] overflow-hidden shadow-sm h-full flex">
         {/* Contacts Sidebar */}
-        <div className="w-[340px] border-r border-[#E5E7EB] flex flex-col">
+        <div className="w-[340px] border-r border-[#E5E7EB] flex flex-col min-h-0">
           {/* Search */}
           <div className="p-4 border-b border-[#E5E7EB]">
             <div className="relative">
@@ -135,18 +168,33 @@ export function Messages() {
                 type="text"
                 placeholder="Search messages..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSearchQuery(value);
+                  const nextParams = new URLSearchParams(searchParams);
+                  if (value) {
+                    nextParams.set("q", value);
+                  } else {
+                    nextParams.delete("q");
+                  }
+                  setSearchParams(nextParams);
+                }}
                 className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-[10px] pl-10 pr-4 py-2.5 text-[14px] text-[#111827] placeholder-[#9CA3AF] outline-none focus:ring-2 focus:ring-[#1C4D8D] focus:border-transparent"
               />
             </div>
           </div>
 
           {/* Contacts List */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto min-h-0">
             {filteredContacts.map((contact) => (
               <div
                 key={contact.id}
-                onClick={() => setSelectedContact(contact)}
+                onClick={() => {
+                  setSelectedContact(contact);
+                  const nextParams = new URLSearchParams(searchParams);
+                  nextParams.set("contact", contact.id);
+                  setSearchParams(nextParams);
+                }}
                 className={`p-4 border-b border-[#E5E7EB] cursor-pointer transition-colors hover:bg-[#F9FAFB] ${
                   selectedContact.id === contact.id ? "bg-[#E8F2F8]" : ""
                 }`}
@@ -182,7 +230,7 @@ export function Messages() {
         </div>
 
         {/* Chat Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-0">
           {/* Chat Header */}
           <div className="p-4 border-b border-[#E5E7EB] flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -212,23 +260,29 @@ export function Messages() {
               >
                 <Video className="w-5 h-5 text-[#6B7280]" />
               </button>
-              <button className="p-2 hover:bg-[#F9FAFB] rounded-lg transition-colors">
+              <button
+                onClick={handleStarConversation}
+                className="p-2 hover:bg-[#F9FAFB] rounded-lg transition-colors"
+              >
                 <Star className="w-5 h-5 text-[#6B7280]" />
               </button>
-              <button className="p-2 hover:bg-[#F9FAFB] rounded-lg transition-colors">
+              <button
+                onClick={handleMoreOptions}
+                className="p-2 hover:bg-[#F9FAFB] rounded-lg transition-colors"
+              >
                 <MoreVertical className="w-5 h-5 text-[#6B7280]" />
               </button>
             </div>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#F9FAFB]">
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#F9FAFB] min-h-0">
             {currentMessages.map((message) => (
               <div
                 key={message.id}
                 className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}
               >
-                <div className={`max-w-[60%] ${message.isOwn ? "order-2" : "order-1"}`}>
+                <div className={`max-w-[80%] md:max-w-[60%] ${message.isOwn ? "order-2" : "order-1"}`}>
                   <div
                     className={`rounded-[16px] px-4 py-3 ${
                       message.isOwn

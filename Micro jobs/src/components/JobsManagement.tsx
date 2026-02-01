@@ -1,17 +1,13 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
-  LayoutDashboard, 
-  Briefcase, 
   Users, 
   MessageSquare, 
-  Calendar,
-  User,
-  ChevronDown,
   MoreVertical,
   MapPin,
   CalendarDays,
-  TrendingUp
+  TrendingUp,
+  Plus,
+  ArrowRight
 } from "lucide-react";
 
 interface JobPosting {
@@ -160,28 +156,6 @@ const mockJobPostings: JobPosting[] = [
 
 export function JobsManagement() {
   const navigate = useNavigate();
-  const [activeMenu, setActiveMenu] = useState<string>("Jobs");
-  const [jobsExpanded, setJobsExpanded] = useState(true);
-  const [employeeExpanded, setEmployeeExpanded] = useState(false);
-
-  const menuItems = [
-    { icon: <LayoutDashboard className="w-4 h-4" />, label: "Dashboard", hasSubmenu: false },
-    { 
-      icon: <Briefcase className="w-4 h-4" />, 
-      label: "Jobs", 
-      hasSubmenu: true,
-      submenu: ["Dashboard", "Jobs", "Matches", "Candidates"]
-    },
-    { icon: <MessageSquare className="w-4 h-4" />, label: "Message", hasSubmenu: false, badge: true },
-    { 
-      icon: <Users className="w-4 h-4" />, 
-      label: "Employee", 
-      hasSubmenu: true,
-      submenu: ["Overview", "Team Members"]
-    },
-    { icon: <Calendar className="w-4 h-4" />, label: "Schedule", hasSubmenu: false },
-    { icon: <User className="w-4 h-4" />, label: "Profile", hasSubmenu: false },
-  ];
 
   const getStatusStyle = (status: string) => {
     switch (status) {
@@ -203,89 +177,38 @@ export function JobsManagement() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Left Sidebar */}
-      <div className="w-[200px] bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-6">
-          <h2 className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider mb-1">MENU</h2>
+    <div className="max-w-[1341px] mx-auto space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="font-semibold text-[20px] text-[#111827]">Jobs Management</h2>
+          <p className="text-[14px] text-[#6B7280] mt-1">
+            Track job postings, candidate matches, and hiring progress.
+          </p>
         </div>
-
-        <nav className="flex-1 px-3">
-          {menuItems.map((item) => (
-            <div key={item.label}>
-              <button
-                onClick={() => {
-                  setActiveMenu(item.label);
-                  if (item.label === "Jobs") setJobsExpanded(!jobsExpanded);
-                  if (item.label === "Employee") setEmployeeExpanded(!employeeExpanded);
-                }}
-                className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg text-[14px] transition-colors mb-1 ${
-                  activeMenu === item.label
-                    ? "bg-purple-600 text-white"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  {item.icon}
-                  <span>{item.label}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  {item.badge && (
-                    <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                  )}
-                  {item.hasSubmenu && (
-                    <ChevronDown 
-                      className={`w-4 h-4 transition-transform ${
-                        (item.label === "Jobs" && jobsExpanded) || 
-                        (item.label === "Employee" && employeeExpanded) 
-                          ? "rotate-180" 
-                          : ""
-                      }`} 
-                    />
-                  )}
-                </div>
-              </button>
-
-              {/* Submenu */}
-              {item.hasSubmenu && item.label === "Jobs" && jobsExpanded && (
-                <div className="ml-6 mb-2">
-                  {item.submenu?.map((subItem) => (
-                    <button
-                      key={subItem}
-                      className="w-full text-left px-3 py-2 text-[13px] text-gray-600 hover:text-purple-600 transition-colors"
-                    >
-                      {subItem}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {item.hasSubmenu && item.label === "Employee" && employeeExpanded && (
-                <div className="ml-6 mb-2">
-                  {item.submenu?.map((subItem) => (
-                    <button
-                      key={subItem}
-                      className="w-full text-left px-3 py-2 text-[13px] text-gray-600 hover:text-purple-600 transition-colors"
-                    >
-                      {subItem}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </nav>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => navigate("/dashboard/employer/applications")}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-[#E5E7EB] text-[#1F2937] font-medium text-[13px] rounded-[10px] hover:bg-gray-50 transition-all"
+          >
+            <Users className="w-4 h-4" />
+            View Applications
+          </button>
+          <button
+            onClick={() => navigate("/dashboard/employer/post-job")}
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#1C4D8D] text-white font-semibold text-[13px] rounded-[10px] hover:bg-[#0F2954] transition-all shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Post New Job
+          </button>
+        </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-8">
-          <div className="grid grid-cols-3 gap-6">
-            {mockJobPostings.map((job) => (
-              <div
-                key={job.id}
-                className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all"
-              >
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {mockJobPostings.map((job) => (
+          <div
+            key={job.id}
+            className="bg-white rounded-[16px] border border-[#E5E7EB] p-6 hover:shadow-lg transition-all"
+          >
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-2">
@@ -303,7 +226,7 @@ export function JobsManagement() {
                 {/* Job Title */}
                 <div className="mb-4">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#4988C4] to-[#1C4D8D] flex items-center justify-center flex-shrink-0">
                       <span className="text-white text-[18px]">⚛</span>
                     </div>
                     <div>
@@ -354,7 +277,7 @@ export function JobsManagement() {
                   </div>
                   <div className="text-right">
                     <p className="text-[13px] font-semibold text-gray-900">{job.matchQuality}</p>
-                    <p className="text-[12px] text-gray-500">Candidates</p>
+                    <p className="text-[12px] text-gray-500">Match quality</p>
                   </div>
                 </div>
 
@@ -362,21 +285,21 @@ export function JobsManagement() {
                 <div className="space-y-3 mb-4 pb-4 border-b border-gray-100">
                   <div className="flex items-center justify-between">
                     <span className="text-[12px] text-gray-600 flex items-center gap-2">
-                      <span className="w-4 h-4 text-gray-400">💰</span>
+                      <TrendingUp className="w-4 h-4 text-[#9CA3AF]" />
                       Salary
                     </span>
                     <span className="text-[13px] font-semibold text-gray-900">{job.salary}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-[12px] text-gray-600 flex items-center gap-2">
-                      <span className="w-4 h-4 text-gray-400">👥</span>
+                      <Users className="w-4 h-4 text-[#9CA3AF]" />
                       Candidates Applied
                     </span>
                     <span className="text-[13px] font-semibold text-gray-900">{job.candidatesApplied}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-[12px] text-gray-600 flex items-center gap-2">
-                      <span className="w-4 h-4 text-gray-400">✅</span>
+                      <MessageSquare className="w-4 h-4 text-[#9CA3AF]" />
                       Completed Interview
                     </span>
                     <span className="text-[13px] font-semibold text-gray-900">{job.completedInterviews}</span>
@@ -404,14 +327,16 @@ export function JobsManagement() {
                   <span className="text-[12px] text-gray-500">
                     Created by <span className="font-semibold text-gray-900">{job.createdBy}</span>
                   </span>
-                  <button className="text-[13px] text-purple-600 hover:text-purple-700 font-semibold">
-                    View details →
+                  <button
+                    onClick={() => navigate("/dashboard/employer/applications")}
+                    className="text-[13px] text-[#1C4D8D] hover:text-[#0F2954] font-semibold inline-flex items-center gap-1"
+                  >
+                    View details
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
-              </div>
-            ))}
           </div>
-        </div>
+        ))}
       </div>
     </div>
   );

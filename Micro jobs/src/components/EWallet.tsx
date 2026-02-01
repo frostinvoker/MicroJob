@@ -165,8 +165,6 @@ export function EWallet() {
 
   return (
     <div className="max-w-[1341px] mx-auto space-y-6">
-      <h1 className="font-semibold text-[28px] text-[#111827]">E-Wallet</h1>
-
       {/* Balance Card */}
       <div className="bg-gradient-to-br from-[#0F2954] via-[#1C4D8D] to-[#4988C4] rounded-[20px] p-8 text-white shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>

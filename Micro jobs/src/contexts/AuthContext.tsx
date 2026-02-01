@@ -167,20 +167,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 800));
 
+    const trimmedEmail = email.trim();
     const users = getMockUsers();
-    const foundUser = users.find(u => u.email === email);
-
-    if (!foundUser) {
-      setIsLoading(false);
-      throw new Error("User not found");
-    }
+    let foundUser = users.find(u => u.email === trimmedEmail);
 
     // Check password
     const passwords = JSON.parse(localStorage.getItem("mock_passwords") || "{}");
-    const storedPassword = passwords[email];
+    const storedPassword = passwords[trimmedEmail];
+
+    if (!foundUser) {
+      setIsLoading(false);
+      throw new Error("Account not found. Please create an account and verify your email first.");
+    }
 
     // Admin default password
-    if (email === "admin@microjobs.ph" && password === "admin123") {
+    if (trimmedEmail === "admin@microjobs.ph" && password === "admin123") {
       setUser(foundUser);
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(foundUser));
       setIsLoading(false);

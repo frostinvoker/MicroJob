@@ -5,16 +5,14 @@ export function EmployerDashboard() {
   const navigate = useNavigate();
 
   return (
-    <div className="max-w-[1200px] mx-auto space-y-6">
+    <div className="max-w-[1341px] mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-semibold text-[28px] text-[#111827]">
-            Employer Dashboard
-          </h1>
+          <h2 className="font-semibold text-[20px] text-[#111827]">Overview</h2>
           <p className="text-[#6B7280] text-[14px] mt-1">Manage your job postings and candidate applications</p>
         </div>
         <button
-          onClick={() => navigate("/employer/post-job")}
+          onClick={() => navigate("/dashboard/employer/post-job")}
           className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold text-[14px] rounded-lg hover:bg-blue-700 transition-all shadow-sm hover:shadow-md"
         >
           <Plus className="w-4 h-4" />
@@ -69,6 +67,9 @@ export function EmployerDashboard() {
             <p className="font-bold text-[32px] text-[#111827]">6</p>
           </div>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         <div className="bg-white rounded-[12px] border border-[#E5E7EB] p-6 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
@@ -107,7 +108,7 @@ export function EmployerDashboard() {
         <h2 className="font-semibold text-[18px] text-[#111827] mb-4">Quick Actions</h2>
         <div className="flex flex-wrap gap-3">
           <button
-            onClick={() => navigate("/employer/applications")}
+            onClick={() => navigate("/dashboard/employer/applications")}
             className="bg-[#4F46E5] text-white px-6 py-3 rounded-[8px] font-medium text-[14px] hover:bg-[#4338CA] transition-colors inline-flex items-center gap-2"
           >
             <Users className="w-4 h-4" />
@@ -115,7 +116,7 @@ export function EmployerDashboard() {
             <ArrowRight className="w-4 h-4" />
           </button>
           <button 
-            onClick={() => navigate("/employer/jobs")}
+            onClick={() => navigate("/dashboard/employer/jobs")}
             className="bg-white border border-[#D1D5DB] text-[#374151] px-6 py-3 rounded-[8px] font-medium text-[14px] hover:bg-gray-50 transition-colors inline-flex items-center gap-2"
           >
             <Briefcase className="w-4 h-4" />

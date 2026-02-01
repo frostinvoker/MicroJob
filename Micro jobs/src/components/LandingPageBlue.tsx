@@ -177,35 +177,22 @@ export function LandingPageBlue() {
             </div>
 
             <div className="flex items-center gap-3">
-              {isAuthenticated ? (
-                <motion.button
-                  whileHover={{ scale: 1.05, boxShadow: "0 10px 30px rgba(73, 136, 196, 0.3)" }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => navigate("/dashboard")}
-                  className="text-[14px] font-semibold text-white px-6 py-2.5 rounded-full bg-gradient-to-r from-[#4988C4] to-[#1C4D8D] hover:shadow-lg transition-all"
-                >
-                  Go to Dashboard
-                </motion.button>
-              ) : (
-                <>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => navigate(isAuthenticated ? "/dashboard" : "/sign-in")}
-                    className="text-[14px] font-semibold text-gray-700 px-5 py-2 rounded-full hover:bg-gray-100 transition-colors"
-                  >
-                    Sign In
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05, boxShadow: "0 10px 30px rgba(73, 136, 196, 0.3)" }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => navigate(isAuthenticated ? "/dashboard" : "/sign-up")}
-                    className="text-[14px] font-semibold text-white px-6 py-2.5 rounded-full bg-gradient-to-r from-[#4988C4] to-[#1C4D8D] hover:shadow-lg transition-all"
-                  >
-                    Get Started
-                  </motion.button>
-                </>
-              )}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate(isAuthenticated ? "/dashboard" : "/sign-in")}
+                className="text-[14px] font-semibold text-gray-700 px-5 py-2 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                Sign In
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05, boxShadow: "0 10px 30px rgba(73, 136, 196, 0.3)" }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate("/sign-up")}
+                className="text-[14px] font-semibold text-white px-6 py-2.5 rounded-full bg-gradient-to-r from-[#4988C4] to-[#1C4D8D] hover:shadow-lg transition-all"
+              >
+                Get Started
+              </motion.button>
             </div>
           </div>
         </div>
@@ -316,7 +303,8 @@ export function LandingPageBlue() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8 }}
-                className="mt-12"
+                id="employers"
+                className="mt-12 scroll-mt-24"
               >
                 <p className="text-[13px] text-gray-500 mb-4">Trusted by leading companies:</p>
                 <div className="flex items-center gap-4">
@@ -476,7 +464,7 @@ export function LandingPageBlue() {
       </section>
 
       {/* Why Mirco Jobs Section with 3D Effect */}
-      <section className="py-20 px-6 relative" id="features">
+      <section className="py-20 px-6 relative scroll-mt-24" id="features">
         <div className="max-w-7xl mx-auto">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
@@ -606,7 +594,7 @@ export function LandingPageBlue() {
       </section>
 
       {/* Three Steps Section with Parallax */}
-      <section className="py-20 px-6 bg-gradient-to-br from-[#4988C4] via-[#3570A8] to-[#1C4D8D] relative overflow-hidden">
+      <section className="py-20 px-6 bg-gradient-to-br from-[#4988C4] via-[#3570A8] to-[#1C4D8D] relative overflow-hidden scroll-mt-24" id="help">
         <FloatingParticles />
         
         <motion.div 
@@ -680,7 +668,7 @@ export function LandingPageBlue() {
       </section>
 
       {/* Find Your Match Jobs with Stagger Animation */}
-      <section className="py-20 px-6" id="jobs">
+      <section className="py-20 px-6 scroll-mt-24" id="jobs">
         <div className="max-w-7xl mx-auto">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
@@ -889,7 +877,7 @@ export function LandingPageBlue() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12 px-6">
+      <footer className="bg-gray-900 text-white py-12 px-6 scroll-mt-24" id="contact">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <motion.div
@@ -917,9 +905,9 @@ export function LandingPageBlue() {
             >
               <h4 className="text-[14px] font-semibold mb-4">Resources</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="text-[13px] text-gray-400 hover:text-white transition-colors">Jobs</a></li>
-                <li><a href="#" className="text-[13px] text-gray-400 hover:text-white transition-colors">Employers</a></li>
-                <li><a href="#" className="text-[13px] text-gray-400 hover:text-white transition-colors">Companies</a></li>
+                <li><a href="#jobs" className="text-[13px] text-gray-400 hover:text-white transition-colors">Jobs</a></li>
+                <li><a href="#employers" className="text-[13px] text-gray-400 hover:text-white transition-colors">Employers</a></li>
+                <li><a href="#features" className="text-[13px] text-gray-400 hover:text-white transition-colors">Companies</a></li>
               </ul>
             </motion.div>
 
@@ -931,9 +919,18 @@ export function LandingPageBlue() {
             >
               <h4 className="text-[14px] font-semibold mb-4">Company</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="text-[13px] text-gray-400 hover:text-white transition-colors">About Us</a></li>
-                <li><a href="#" className="text-[13px] text-gray-400 hover:text-white transition-colors">Contact</a></li>
-                <li><a href="#" className="text-[13px] text-gray-400 hover:text-white transition-colors">Help</a></li>
+                <li><a href="#features" className="text-[13px] text-gray-400 hover:text-white transition-colors">About Us</a></li>
+                <li><a href="#contact" className="text-[13px] text-gray-400 hover:text-white transition-colors">Contact</a></li>
+                <li><a href="#help" className="text-[13px] text-gray-400 hover:text-white transition-colors">Help</a></li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => navigate(isAuthenticated ? "/dashboard/admin-dashboard" : "/sign-in")}
+                    className="text-[13px] text-gray-400 hover:text-white transition-colors"
+                  >
+                    Admin Dashboard
+                  </button>
+                </li>
               </ul>
             </motion.div>
 
@@ -945,9 +942,33 @@ export function LandingPageBlue() {
             >
               <h4 className="text-[14px] font-semibold mb-4">Legal</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="text-[13px] text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
-                <li><a href="#" className="text-[13px] text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="text-[13px] text-gray-400 hover:text-white transition-colors">Cookie Policy</a></li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/terms")}
+                    className="text-[13px] text-gray-400 hover:text-white transition-colors"
+                  >
+                    Terms of Service
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/privacy")}
+                    className="text-[13px] text-gray-400 hover:text-white transition-colors"
+                  >
+                    Privacy Policy
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/cookie-policy")}
+                    className="text-[13px] text-gray-400 hover:text-white transition-colors"
+                  >
+                    Cookie Policy
+                  </button>
+                </li>
               </ul>
             </motion.div>
           </div>
@@ -959,7 +980,7 @@ export function LandingPageBlue() {
             className="border-t border-gray-800 pt-8"
           >
             <p className="text-[12px] text-gray-500 text-center">
-              Made with ❤️ for job seekers and employers worldwide
+              Made by Computer Security 3rd Year Block 1 - COMSEC 01
             </p>
           </motion.div>
         </div>

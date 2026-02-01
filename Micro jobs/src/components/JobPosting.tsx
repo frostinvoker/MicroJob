@@ -8,7 +8,9 @@ import {
   RotateCcw,
   Maximize2,
   X,
-  Sparkles
+  Sparkles,
+  ArrowLeft,
+  Plus
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +18,23 @@ import { useNavigate } from "react-router-dom";
 interface Responsibility {
   id: string;
   text: string;
+}
+
+interface HiringStage {
+  id: string;
+  name: string;
+}
+
+interface ScoreCriteria {
+  id: string;
+  label: string;
+  weight: number;
+}
+
+interface ApplicationField {
+  id: string;
+  label: string;
+  required: boolean;
 }
 
 export function JobPosting() {
@@ -53,12 +72,34 @@ export function JobPosting() {
   const [newSkill, setNewSkill] = useState("");
 
   const steps = [
-    { number: 1, label: "Job Details", completed: true },
-    { number: 2, label: "Job Requirement", completed: false },
-    { number: 3, label: "Hiring Stage", completed: false },
-    { number: 4, label: "Score card", completed: false },
-    { number: 5, label: "Application Form", completed: false },
+    { number: 1, label: "Job Details", sectionId: "job-step-1" },
+    { number: 2, label: "Job Requirement", sectionId: "job-step-2" },
+    { number: 3, label: "Hiring Stage", sectionId: "job-step-3" },
+    { number: 4, label: "Score card", sectionId: "job-step-4" },
+    { number: 5, label: "Application Form", sectionId: "job-step-5" },
   ];
+
+  const [hiringStages, setHiringStages] = useState<HiringStage[]>([
+    { id: "1", name: "Application Review" },
+    { id: "2", name: "Interview" },
+    { id: "3", name: "Offer" },
+  ]);
+  const [newStage, setNewStage] = useState("");
+
+  const [scoreCriteria, setScoreCriteria] = useState<ScoreCriteria[]>([
+    { id: "1", label: "Technical Skills", weight: 40 },
+    { id: "2", label: "Experience", weight: 35 },
+    { id: "3", label: "Culture Fit", weight: 25 },
+  ]);
+  const [newCriteria, setNewCriteria] = useState("");
+
+  const [applicationFields, setApplicationFields] = useState<ApplicationField[]>([
+    { id: "full-name", label: "Full name", required: true },
+    { id: "email", label: "Email address", required: true },
+    { id: "phone", label: "Phone number", required: false },
+    { id: "resume", label: "Resume/CV", required: true },
+    { id: "portfolio", label: "Portfolio link", required: false },
+  ]);
 
   const addResponsibility = () => {
     const newId = String(responsibilities.length + 1);
@@ -97,13 +138,68 @@ export function JobPosting() {
     toast.success("Job posting saved successfully!");
   };
 
+  const scrollToStep = (stepNumber: number, sectionId: string) => {
+    setCurrentStep(stepNumber);
+    const target = document.getElementById(sectionId);
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const addHiringStage = () => {
+    if (!newStage.trim()) return;
+    setHiringStages([
+      ...hiringStages,
+      { id: Date.now().toString(), name: newStage.trim() },
+    ]);
+    setNewStage("");
+  };
+
+  const updateHiringStage = (id: string, name: string) => {
+    setHiringStages(hiringStages.map((stage) => stage.id === id ? { ...stage, name } : stage));
+  };
+
+  const removeHiringStage = (id: string) => {
+    setHiringStages(hiringStages.filter((stage) => stage.id !== id));
+  };
+
+  const addScoreCriteria = () => {
+    if (!newCriteria.trim()) return;
+    setScoreCriteria([
+      ...scoreCriteria,
+      { id: Date.now().toString(), label: newCriteria.trim(), weight: 10 },
+    ]);
+    setNewCriteria("");
+  };
+
+  const updateScoreCriteria = (id: string, updates: Partial<ScoreCriteria>) => {
+    setScoreCriteria(scoreCriteria.map((criteria) => criteria.id === id ? { ...criteria, ...updates } : criteria));
+  };
+
+  const removeScoreCriteria = (id: string) => {
+    setScoreCriteria(scoreCriteria.filter((criteria) => criteria.id !== id));
+  };
+
+  const toggleFieldRequired = (id: string) => {
+    setApplicationFields(applicationFields.map((field) => field.id === id ? { ...field, required: !field.required } : field));
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-[1400px] mx-auto p-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-[28px] font-bold text-gray-900 mb-2">Post a New Job</h1>
-          <p className="text-[14px] text-gray-600">Fill in the details to create a new job posting</p>
+        <div className="mb-8 flex items-start justify-between gap-4">
+          <div>
+            <button
+              onClick={() => navigate(-1)}
+              className="inline-flex items-center gap-2 text-[14px] text-[#6B7280] hover:text-[#1C4D8D] font-medium mb-3 transition-colors group"
+            >
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              Back
+            </button>
+            <h1 className="text-[28px] font-bold text-gray-900 mb-2">Post a New Job</h1>
+            <p className="text-[14px] text-gray-600">Fill in the details to create a new job posting</p>
+          </div>
         </div>
 
         <div className="flex gap-8">
@@ -114,21 +210,21 @@ export function JobPosting() {
                 {steps.map((step, index) => (
                   <div key={step.number}>
                     <button
-                      onClick={() => setCurrentStep(step.number)}
+                      onClick={() => scrollToStep(step.number, step.sectionId)}
                       className={`w-full flex items-center gap-3 text-left transition-colors ${
                         currentStep === step.number ? "text-blue-600" : "text-gray-600 hover:text-gray-900"
                       }`}
                     >
                       <div
                         className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          step.completed
+                          step.number < currentStep
                             ? "bg-green-500 text-white"
                             : currentStep === step.number
                             ? "bg-blue-600 text-white"
                             : "bg-gray-100 text-gray-600"
                         }`}
                       >
-                        {step.completed ? (
+                        {step.number < currentStep ? (
                           <Check className="w-4 h-4" />
                         ) : (
                           <span className="text-[13px] font-medium">{step.number}</span>
@@ -148,7 +244,7 @@ export function JobPosting() {
           {/* Main Content */}
           <div className="flex-1">
             {/* Job Description Section */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+            <section id="job-step-1" className="bg-white rounded-xl border border-gray-200 p-6 mb-6 scroll-mt-24">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-[20px] font-semibold text-gray-900">
                   Job Description and Responsibilities
@@ -219,10 +315,10 @@ export function JobPosting() {
                   <span className="text-lg">+</span> Add Responsibilities
                 </button>
               </div>
-            </div>
+            </section>
 
             {/* Requirements and Skills Section */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <section id="job-step-2" className="bg-white rounded-xl border border-gray-200 p-6 scroll-mt-24">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-[20px] font-semibold text-gray-900">
                   Requirement and Skills
@@ -276,7 +372,130 @@ export function JobPosting() {
                   rows={4}
                 />
               </div>
-            </div>
+            </section>
+
+            {/* Hiring Stage */}
+            <section id="job-step-3" className="bg-white rounded-xl border border-gray-200 p-6 mt-6 scroll-mt-24">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-[20px] font-semibold text-gray-900">Hiring Stage</h2>
+                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                  <span className="text-[12px] font-semibold text-gray-600">{hiringStages.length}</span>
+                </div>
+              </div>
+
+              <div className="space-y-3 mb-4">
+                {hiringStages.map((stage, index) => (
+                  <div key={stage.id} className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-[12px] font-semibold">
+                      {index + 1}
+                    </div>
+                    <input
+                      value={stage.name}
+                      onChange={(e) => updateHiringStage(stage.id, e.target.value)}
+                      className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button
+                      onClick={() => removeHiringStage(stage.id)}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4 text-gray-400" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  value={newStage}
+                  onChange={(e) => setNewStage(e.target.value)}
+                  placeholder="Add a stage..."
+                  className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  onClick={addHiringStage}
+                  className="px-4 py-2.5 bg-blue-600 text-white text-[14px] font-medium rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add
+                </button>
+              </div>
+            </section>
+
+            {/* Score Card */}
+            <section id="job-step-4" className="bg-white rounded-xl border border-gray-200 p-6 mt-6 scroll-mt-24">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-[20px] font-semibold text-gray-900">Score card</h2>
+                <span className="text-[12px] text-gray-500">Weight in %</span>
+              </div>
+              <div className="space-y-3 mb-4">
+                {scoreCriteria.map((criteria) => (
+                  <div key={criteria.id} className="flex items-center gap-3">
+                    <input
+                      value={criteria.label}
+                      onChange={(e) => updateScoreCriteria(criteria.id, { label: e.target.value })}
+                      className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                      type="number"
+                      value={criteria.weight}
+                      onChange={(e) => updateScoreCriteria(criteria.id, { weight: Number(e.target.value) })}
+                      className="w-[90px] px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      min={0}
+                      max={100}
+                    />
+                    <button
+                      onClick={() => removeScoreCriteria(criteria.id)}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4 text-gray-400" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  value={newCriteria}
+                  onChange={(e) => setNewCriteria(e.target.value)}
+                  placeholder="Add criteria..."
+                  className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  onClick={addScoreCriteria}
+                  className="px-4 py-2.5 bg-blue-600 text-white text-[14px] font-medium rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add
+                </button>
+              </div>
+            </section>
+
+            {/* Application Form */}
+            <section id="job-step-5" className="bg-white rounded-xl border border-gray-200 p-6 mt-6 scroll-mt-24">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-[20px] font-semibold text-gray-900">Application Form</h2>
+                <span className="text-[12px] text-gray-500">Toggle required fields</span>
+              </div>
+              <div className="space-y-3">
+                {applicationFields.map((field) => (
+                  <div key={field.id} className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3">
+                    <div>
+                      <p className="text-[14px] font-medium text-gray-900">{field.label}</p>
+                      <p className="text-[12px] text-gray-500">{field.required ? "Required" : "Optional"}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => toggleFieldRequired(field.id)}
+                      className={`px-3 py-1.5 rounded-full text-[12px] font-semibold transition-colors ${
+                        field.required
+                          ? "bg-green-100 text-green-700"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      {field.required ? "Required" : "Make required"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
 
             {/* Action Buttons */}
             <div className="flex items-center justify-between mt-6">

@@ -1,4 +1,4 @@
-import { Search, Calendar, Send, Wallet, Mail, TrendingUp, MapPin, Building2, Briefcase, CheckCircle2, Clock, Users, ArrowUpRight, ChevronRight } from "lucide-react";
+import { Calendar, Send, Wallet, Mail, TrendingUp, MapPin, Building2, Briefcase, CheckCircle2, Clock, Users, ArrowUpRight, ChevronRight } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -6,16 +6,16 @@ import { useNavigate } from "react-router-dom";
 import imgBigShoesAvatar from "figma:asset/8b9f86452ff0e90495bf9daf1494dd6920ad538a.png";
 
 const vacancyData = [
-  { month: "Week 01", applicationSent: 5, interviews: 3, rejected: 1 },
-  { month: "Week 02", applicationSent: 8, interviews: 5, rejected: 2 },
-  { month: "Week 03", applicationSent: 12, interviews: 8, rejected: 3 },
-  { month: "Week 04", applicationSent: 15, interviews: 10, rejected: 4 },
-  { month: "Week 05", applicationSent: 20, interviews: 14, rejected: 5 },
-  { month: "Week 06", applicationSent: 25, interviews: 18, rejected: 6 },
-  { month: "Week 07", applicationSent: 30, interviews: 22, rejected: 7 },
-  { month: "Week 08", applicationSent: 28, interviews: 20, rejected: 6 },
-  { month: "Week 09", applicationSent: 32, interviews: 24, rejected: 8 },
-  { month: "Week 10", applicationSent: 37, interviews: 28, rejected: 9 },
+  { month: "Week 01", accepted: 4, interviews: 3, rejected: 1 },
+  { month: "Week 02", accepted: 7, interviews: 5, rejected: 2 },
+  { month: "Week 03", accepted: 11, interviews: 8, rejected: 3 },
+  { month: "Week 04", accepted: 14, interviews: 10, rejected: 4 },
+  { month: "Week 05", accepted: 19, interviews: 14, rejected: 5 },
+  { month: "Week 06", accepted: 24, interviews: 18, rejected: 6 },
+  { month: "Week 07", accepted: 29, interviews: 22, rejected: 7 },
+  { month: "Week 08", accepted: 27, interviews: 20, rejected: 6 },
+  { month: "Week 09", accepted: 31, interviews: 24, rejected: 8 },
+  { month: "Week 10", accepted: 36, interviews: 28, rejected: 9 },
 ];
 
 const recentActivities = [
@@ -27,6 +27,7 @@ const recentActivities = [
 
 const recommendedJobs = [
   {
+    id: "rj-1",
     title: "Senior React Developer",
     company: "Tech Solutions Inc.",
     salary: "₱80,000 - ₱120,000",
@@ -38,6 +39,7 @@ const recommendedJobs = [
     logo: "TS"
   },
   {
+    id: "rj-2",
     title: "Full Stack Developer",
     company: "Innovation Labs",
     salary: "₱70,000 - ₱100,000",
@@ -49,6 +51,7 @@ const recommendedJobs = [
     logo: "IL"
   },
   {
+    id: "rj-3",
     title: "Mobile Developer",
     company: "Digital Ventures",
     salary: "₱75,000 - ₱110,000",
@@ -105,56 +108,61 @@ function StatCard({ icon, title, count, bgColor, change, onClick }: StatCardProp
 
 export function Dashboard() {
   const navigate = useNavigate();
-  const [selectedFilter, setSelectedFilter] = useState("applicationSent");
+  const [selectedFilter, setSelectedFilter] = useState<"accepted" | "interviews" | "rejected">("accepted");
   const [selectedPeriod, setSelectedPeriod] = useState("This Month");
+  const latestVacancy = vacancyData[vacancyData.length - 1];
 
   const handleViewAllActivities = () => {
-    toast.info("Viewing all recent activities");
+    navigate("/dashboard/notifications");
   };
 
   const handleViewAllJobs = () => {
-    toast.info("Loading all recommended jobs...");
+    navigate("/dashboard/find-jobs");
   };
 
   const handleExploreCompanies = () => {
-    toast.info("Exploring all featured companies...");
+    navigate("/dashboard/find-jobs");
   };
 
-  const handleJobClick = (jobTitle: string) => {
-    toast.success(`Opening job details: ${jobTitle}`);
+  const handleJobClick = (jobId: string) => {
+    navigate(`/dashboard/job-details-new/${jobId}`);
   };
 
   const handleCompanyClick = (companyName: string) => {
-    toast.info(`Viewing company profile: ${companyName}`);
+    navigate(`/dashboard/find-jobs?q=${encodeURIComponent(companyName)}`);
   };
 
-  const handleActivityClick = (activity: string) => {
-    toast.info(activity);
+  const handleActivityClick = (activity: { text: string; type: string }) => {
+    if (activity.type === "message") {
+      navigate("/dashboard/messages");
+      return;
+    }
+    navigate("/dashboard/applied-jobs");
   };
 
   const handleStatClick = (statTitle: string) => {
-    toast.info(`Viewing details for: ${statTitle}`);
+    switch (statTitle) {
+      case "Interviews Schedule":
+      case "Application Sent":
+        navigate("/dashboard/applied-jobs");
+        return;
+      case "E-wallet":
+        navigate("/dashboard/e-wallet");
+        return;
+      case "Unread Messages":
+        navigate("/dashboard/messages");
+        return;
+      default:
+        toast.info(`Viewing details for: ${statTitle}`);
+    }
   };
 
   const handleProfileClick = () => {
-    navigate("/profile");
+    navigate("/dashboard/profile");
   };
 
   return (
     <div className="max-w-[1341px] mx-auto space-y-6">
-      {/* Header with Search */}
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="font-semibold text-[28px] text-[#111827]">Dashboard</h1>
-        <div className="flex-1 max-w-[500px] relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#9CA3AF]" />
-          <input
-            type="text"
-            placeholder="Search by skills, name, or expertise..."
-            className="w-full bg-white border border-[#E5E7EB] rounded-[10px] pl-12 pr-4 py-3 text-[14px] text-[#111827] placeholder-[#9CA3AF] outline-none focus:ring-2 focus:ring-[#1C4D8D] focus:border-transparent shadow-sm"
-          />
-        </div>
-      </div>
-
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
@@ -232,12 +240,18 @@ export function Dashboard() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center justify-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-[#10B981]" />
-              <p className="text-[16px] font-semibold text-[#111827]">Profile Verified</p>
-            </div>
-            <p className="text-[12px] text-[#6B7280] mt-2">All requirements completed</p>
+          <div className="flex items-center justify-center gap-2">
+            <CheckCircle2 className="w-5 h-5 text-[#10B981]" />
+            <p className="text-[16px] font-semibold text-[#111827]">Profile Verified</p>
           </div>
+          <p className="text-[12px] text-[#6B7280] mt-2">All requirements completed</p>
+          <button
+            onClick={() => navigate("/dashboard/settings?tab=verification")}
+            className="mt-4 text-[12px] font-semibold text-[#4F46E5] hover:text-[#4338CA]"
+          >
+            View verification steps
+          </button>
+        </div>
 
           {/* Tech Stack */}
           <div className="bg-white rounded-[16px] border border-[#E5E7EB] p-6 shadow-sm hover:shadow-md transition-shadow">
@@ -275,7 +289,7 @@ export function Dashboard() {
             </div>
             <div className="space-y-3">
               {recentActivities.map((activity, index) => (
-                <div key={index} className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-[10px] transition-colors cursor-pointer" onClick={() => handleActivityClick(activity.text)}>
+                <div key={index} className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-[10px] transition-colors cursor-pointer" onClick={() => handleActivityClick(activity)}>
                   <div className={`rounded-[10px] w-10 h-10 flex-shrink-0 flex items-center justify-center ${
                     activity.type === 'success' ? 'bg-[#D1FAE5]' :
                     activity.type === 'info' ? 'bg-[#DBEAFE]' :
@@ -307,9 +321,30 @@ export function Dashboard() {
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-[18px] font-semibold text-[#111827]">Vacancy Stats</h3>
               <div className="flex items-center gap-4 text-[12px]">
-                <button className="px-3 py-1.5 bg-[#4F46E5] text-white rounded-full" onClick={() => setSelectedFilter("applicationSent")}>Application Sent</button>
-                <button className="px-3 py-1.5 text-[#6B7280] hover:bg-gray-100 rounded-full" onClick={() => setSelectedFilter("interviews")}>Interviews</button>
-                <button className="px-3 py-1.5 text-[#6B7280] hover:bg-gray-100 rounded-full" onClick={() => setSelectedFilter("rejected")}>Rejected</button>
+                <button
+                  className={`px-3 py-1.5 rounded-full ${
+                    selectedFilter === "accepted" ? "bg-[#4F46E5] text-white" : "text-[#6B7280] hover:bg-gray-100"
+                  }`}
+                  onClick={() => setSelectedFilter("accepted")}
+                >
+                  Accepted
+                </button>
+                <button
+                  className={`px-3 py-1.5 rounded-full ${
+                    selectedFilter === "interviews" ? "bg-[#4F46E5] text-white" : "text-[#6B7280] hover:bg-gray-100"
+                  }`}
+                  onClick={() => setSelectedFilter("interviews")}
+                >
+                  Interviews
+                </button>
+                <button
+                  className={`px-3 py-1.5 rounded-full ${
+                    selectedFilter === "rejected" ? "bg-[#4F46E5] text-white" : "text-[#6B7280] hover:bg-gray-100"
+                  }`}
+                  onClick={() => setSelectedFilter("rejected")}
+                >
+                  Rejected
+                </button>
                 <select className="px-3 py-1.5 border border-[#E5E7EB] rounded-[8px] text-[#6B7280] cursor-pointer" value={selectedPeriod} onChange={(e) => setSelectedPeriod(e.target.value)}>
                   <option>This Month</option>
                   <option>Last Month</option>
@@ -324,21 +359,32 @@ export function Dashboard() {
                 <YAxis tick={{ fontSize: 12, fill: "#6B7280" }} />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="applicationSent" stroke="#6366F1" strokeWidth={2} name="Application Sent" />
-                <Line type="monotone" dataKey="interviews" stroke="#10B981" strokeWidth={2} name="Interviews" />
-                <Line type="monotone" dataKey="rejected" stroke="#EF4444" strokeWidth={2} name="Rejected" />
+                {selectedFilter === "accepted" && (
+                  <Line type="monotone" dataKey="accepted" stroke="#6366F1" strokeWidth={2} name="Accepted" />
+                )}
+                {selectedFilter === "interviews" && (
+                  <Line type="monotone" dataKey="interviews" stroke="#10B981" strokeWidth={2} name="Interviews" />
+                )}
+                {selectedFilter === "rejected" && (
+                  <Line type="monotone" dataKey="rejected" stroke="#EF4444" strokeWidth={2} name="Rejected" />
+                )}
               </LineChart>
             </ResponsiveContainer>
             <div className="flex items-center justify-end gap-4 mt-4 text-[12px]">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-[#6366F1]"></div>
-                <span className="text-[#111827] font-semibold">37</span>
-                <span className="text-[#6B7280]">Application Sent</span>
+                <span className="text-[#111827] font-semibold">{latestVacancy.accepted}</span>
+                <span className="text-[#6B7280]">Accepted</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-[#10B981]"></div>
-                <span className="text-[#111827] font-semibold">2</span>
+                <span className="text-[#111827] font-semibold">{latestVacancy.interviews}</span>
                 <span className="text-[#6B7280]">Interviews</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-[#EF4444]"></div>
+                <span className="text-[#111827] font-semibold">{latestVacancy.rejected}</span>
+                <span className="text-[#6B7280]">Rejected</span>
               </div>
             </div>
           </div>
@@ -354,7 +400,7 @@ export function Dashboard() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {recommendedJobs.map((job, index) => (
-                <div key={index} className="bg-white rounded-[16px] border border-[#E5E7EB] p-5 hover:shadow-lg hover:border-[#4F46E5] transition-all duration-300 cursor-pointer group" onClick={() => handleJobClick(job.title)}>
+                <div key={index} className="bg-white rounded-[16px] border border-[#E5E7EB] p-5 hover:shadow-lg hover:border-[#4F46E5] transition-all duration-300 cursor-pointer group" onClick={() => handleJobClick(job.id)}>
                   <div className="flex items-start justify-between mb-3">
                     <div className="w-12 h-12 rounded-[12px] bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] flex items-center justify-center text-white font-bold text-[14px] shadow-md">
                       {job.logo}

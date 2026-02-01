@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Building2, MapPin, DollarSign, Calendar, Clock, FileText, Eye, Trash2, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 interface Application {
   id: string;
@@ -81,11 +81,13 @@ const applicationsData: Application[] = [
 
 export function AppliedJobs() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [applications, setApplications] = useState<Application[]>(applicationsData);
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const searchQuery = (searchParams.get("q") || "").trim().toLowerCase();
 
   const handleViewDetails = (appId: string) => {
-    navigate(`/job-details/${appId}`);
+    navigate(`/dashboard/job-details/${appId}`);
   };
 
   const handleWithdrawApplication = (appId: string) => {
@@ -132,9 +134,16 @@ export function AppliedJobs() {
     }
   };
 
-  const filteredApplications = selectedStatus === "all"
-    ? applications
-    : applications.filter(app => app.status === selectedStatus);
+  const filteredApplications = applications.filter(app => {
+    if (selectedStatus !== "all" && app.status !== selectedStatus) {
+      return false;
+    }
+    if (!searchQuery) {
+      return true;
+    }
+    const combined = `${app.jobTitle} ${app.company} ${app.location}`.toLowerCase();
+    return combined.includes(searchQuery);
+  });
 
   const statusCounts = {
     all: applications.length,
@@ -147,8 +156,6 @@ export function AppliedJobs() {
 
   return (
     <div className="max-w-[1341px] mx-auto space-y-6">
-      <h1 className="font-semibold text-[28px] text-[#111827]">Applied Jobs</h1>
-
       {/* Status Filters */}
       <div className="bg-white rounded-[16px] border border-[#E5E7EB] p-6 shadow-sm">
         <h3 className="text-[14px] font-semibold text-[#111827] mb-3">Filter by Status</h3>
@@ -349,7 +356,7 @@ export function AppliedJobs() {
               : `No ${selectedStatus.toLowerCase()} applications`}
           </p>
           <button
-            onClick={() => navigate("/find-jobs")}
+            onClick={() => navigate("/dashboard/find-jobs")}
             className="bg-gradient-to-br from-[#4988C4] to-[#1C4D8D] text-white font-semibold px-6 py-3 rounded-[10px] hover:shadow-lg transition-all duration-300"
           >
             Browse Jobs

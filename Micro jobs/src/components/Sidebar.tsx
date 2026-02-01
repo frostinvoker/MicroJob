@@ -50,7 +50,9 @@ interface NavItemProps {
 
 function NavItem({ icon, label, to, badge, isCollapsed }: NavItemProps) {
   const location = useLocation();
-  const isActive = location.pathname === to || (to !== "/" && location.pathname.startsWith(to));
+  const isActive = to === "/dashboard"
+    ? location.pathname === "/dashboard"
+    : location.pathname === to || (to !== "/" && location.pathname.startsWith(to));
 
   return (
     <Link
@@ -106,7 +108,7 @@ function ExpandableNavItem({ icon, label, basePath, badge, isCollapsed, children
     <div className="w-full">
       <button
         onClick={() => !isCollapsed && setIsExpanded(!isExpanded)}
-        className={`h-[44px] relative rounded-[99px] shrink-0 w-full ${isActive ? "bg-[#E8F2F8]" : ""} group`}
+        className={`h-[44px] relative rounded-[99px] shrink-0 w-full block p-0 text-left border-0 ${isActive ? "bg-[#E8F2F8]" : ""} group`}
         title={isCollapsed ? label : undefined}
       >
         <div className="flex flex-row items-center overflow-clip rounded-[inherit] size-full">
@@ -302,62 +304,53 @@ export function Sidebar() {
         <div className="relative shrink-0 w-full">
           <div className={`content-stretch flex flex-col gap-[4px] items-start ${isCollapsed ? "px-[12px]" : "px-[24px]"} relative w-full`}>
             <NavItem 
-              icon={<DashboardIcon isActive={location.pathname === "/"} />} 
+              icon={<DashboardIcon isActive={location.pathname === "/dashboard"} />} 
               label="Dashboard" 
-              to="/" 
+              to="/dashboard" 
               isCollapsed={isCollapsed}
             />
             <ExpandableNavItem
-              icon={<BriefcaseIcon isActive={location.pathname.startsWith("/employer")} />}
+              icon={<BriefcaseIcon isActive={location.pathname.startsWith("/dashboard/employer")} />}
               label="Employer"
-              basePath="/employer"
+              basePath="/dashboard/employer"
               isCollapsed={isCollapsed}
               children={[
-                { label: "Dashboard", to: "/employer" },
-                { label: "Applications", to: "/employer/applications" },
+                { label: "Dashboard", to: "/dashboard/employer" },
+                { label: "Applications", to: "/dashboard/employer/applications" },
               ]}
             />
             <NavItem 
               icon={<InboxIcon />} 
               label="Find Jobs" 
-              to="/find-jobs" 
+              to="/dashboard/find-jobs" 
               isCollapsed={isCollapsed}
             />
             <NavItem 
               icon={<TruckIcon />} 
               label="Applied Jobs" 
-              to="/applied-jobs" 
+              to="/dashboard/applied-jobs" 
               isCollapsed={isCollapsed}
             />
             <NavItem 
               icon={<CalendarIcon />} 
               label="Messages" 
-              to="/messages" 
+              to="/dashboard/messages" 
               badge={true}
               isCollapsed={isCollapsed}
             />
             <NavItem 
               icon={<TruckIcon />} 
               label="Saved Jobs" 
-              to="/saved-jobs" 
+              to="/dashboard/saved-jobs" 
               isCollapsed={isCollapsed}
             />
             <NavItem 
               icon={<WalletIcon />} 
               label="E-Wallet" 
-              to="/e-wallet" 
+              to="/dashboard/e-wallet" 
               isCollapsed={isCollapsed}
             />
             
-            {/* Admin Dashboard - Only for admin users */}
-            {user && user.role === "admin" && (
-              <NavItem 
-                icon={<Shield className="w-5 h-5 text-[#64748b]" />} 
-                label="Admin Dashboard" 
-                to="/admin-dashboard" 
-                isCollapsed={isCollapsed}
-              />
-            )}
           </div>
         </div>
 
@@ -376,20 +369,78 @@ export function Sidebar() {
             <NavItem 
               icon={<BellIcon />} 
               label="Notifications" 
-              to="/notifications" 
+              to="/dashboard/notifications" 
               badge={true}
               isCollapsed={isCollapsed}
             />
             <NavItem 
               icon={<SettingsIcon />} 
               label="Settings" 
-              to="/settings" 
+              to="/dashboard/settings" 
               isCollapsed={isCollapsed}
             />
+            {!isCollapsed && location.pathname.startsWith("/dashboard/settings") && (
+              <div className="mt-1 ml-[44px] space-y-1">
+                {(() => {
+                  const tabParam = new URLSearchParams(location.search).get("tab");
+                  const accountTabs = ["account", "personal", "experience", "resume", "cv"];
+                  const isAccountGroupActive = !tabParam || accountTabs.includes(tabParam);
+                  const effectiveAccountTab =
+                    tabParam === "experience"
+                      ? "experience"
+                      : tabParam === "resume" || tabParam === "cv"
+                        ? "resume"
+                        : "personal";
+                  const accountItems = [
+                    { label: "Personal Information", tab: "personal" },
+                    { label: "Experience", tab: "experience" },
+                    { label: "CV/Resume", tab: "resume" },
+                  ];
+                  const otherItems = [
+                    { label: "Privacy & Security", tab: "privacy" },
+                    { label: "Notifications", tab: "notifications" },
+                    { label: "Payment Methods", tab: "payments" },
+                    { label: "Team", tab: "team" },
+                  ];
+
+                  return (
+                    <>
+                      <p className="px-3 py-2 text-[13px] font-semibold text-[#111827]">Account</p>
+                      {accountItems.map((item) => (
+                        <Link
+                          key={item.tab}
+                          to={`/dashboard/settings?tab=${item.tab}`}
+                          className={`block px-3 py-2 text-[13px] font-medium rounded-lg transition-colors ${
+                            isAccountGroupActive && effectiveAccountTab === item.tab
+                              ? "bg-[#E8F2F8] text-[#1C4D8D]"
+                              : "text-[#64748b] hover:bg-gray-50"
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                      {otherItems.map((item) => (
+                        <Link
+                          key={item.tab}
+                          to={`/dashboard/settings?tab=${item.tab}`}
+                          className={`block px-3 py-2 text-[13px] font-medium rounded-lg transition-colors ${
+                            tabParam === item.tab
+                              ? "bg-[#E8F2F8] text-[#1C4D8D]"
+                              : "text-[#64748b] hover:bg-gray-50"
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                    </>
+                  );
+                })()}
+              </div>
+            )}
             <NavItem 
               icon={<SupportIcon />} 
               label="Support" 
-              to="/support" 
+              to="/dashboard/support" 
               isCollapsed={isCollapsed}
             />
           </div>
@@ -398,7 +449,7 @@ export function Sidebar() {
 
       {/* Footer */}
       {!isCollapsed && (
-        <Link to="/profile" className="relative shrink-0 w-full z-[1] hover:bg-gray-50 transition-colors group cursor-pointer">
+        <Link to="/dashboard/profile" className="relative shrink-0 w-full z-[1] hover:bg-gray-50 transition-colors group cursor-pointer">
           <div aria-hidden="true" className="absolute border-[#e2e8f0] border-solid border-t inset-[-1px_0_0_0] pointer-events-none" />
           <div className="flex flex-row items-center size-full">
             <div className="content-stretch flex gap-[12px] items-center p-[24px] relative w-full">
@@ -425,7 +476,7 @@ export function Sidebar() {
 
       {/* Footer - Collapsed State */}
       {isCollapsed && (
-        <Link to="/profile" className="relative shrink-0 w-full z-[1] pb-4 hover:bg-gray-50 transition-colors cursor-pointer">
+        <Link to="/dashboard/profile" className="relative shrink-0 w-full z-[1] pb-4 hover:bg-gray-50 transition-colors cursor-pointer">
           <div className="flex flex-col items-center">
             <div className="bg-[#ffb31f] overflow-clip relative rounded-[99px] shrink-0 size-[40px] hover:scale-105 transition-transform">
               <div className="absolute inset-[-35%_-40%_-45%_-40%]">

@@ -1,8 +1,109 @@
-import { useState } from "react";
-import { User, Lock, Briefcase, FileText, Upload, Plus, Trash2, Eye, EyeOff } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  User,
+  ShieldCheck,
+  Bell,
+  CreditCard,
+  Users,
+  Eye,
+  EyeOff,
+  Upload,
+  Plus,
+  Trash2,
+  CheckCircle2,
+  Clock,
+  Circle,
+  Mail,
+  Phone,
+} from "lucide-react";
 import { toast } from "sonner";
+import { useSearchParams } from "react-router-dom";
 
-type TabType = "personal" | "experience" | "resume" | "security";
+type TabType = "account" | "privacy" | "notifications" | "payments" | "team";
+type AccountTab = "personal" | "experience" | "resume";
+
+const tabConfig: { id: TabType; label: string; icon: JSX.Element }[] = [
+  { id: "account", label: "Account", icon: <User className="w-4 h-4" /> },
+  { id: "privacy", label: "Privacy & Security", icon: <ShieldCheck className="w-4 h-4" /> },
+  { id: "notifications", label: "Notifications", icon: <Bell className="w-4 h-4" /> },
+  { id: "payments", label: "Payment Methods", icon: <CreditCard className="w-4 h-4" /> },
+  { id: "team", label: "Team", icon: <Users className="w-4 h-4" /> },
+];
+
+const accountTabConfig: { id: AccountTab; label: string }[] = [
+  { id: "personal", label: "Personal Information" },
+  { id: "experience", label: "Experience" },
+  { id: "resume", label: "CV/Resume" },
+];
+
+const mapTabParam = (value: string | null): TabType | null => {
+  if (!value) return null;
+  if (value === "account") return "account";
+  if (value === "privacy") return "privacy";
+  if (value === "notifications") return "notifications";
+  if (value === "payments" || value === "payment-methods") return "payments";
+  if (value === "team") return "team";
+  if (["personal", "experience", "resume"].includes(value)) return "account";
+  if (["security", "verification"].includes(value)) return "privacy";
+  return null;
+};
+
+const mapAccountTab = (value: string | null): AccountTab | null => {
+  if (!value) return null;
+  if (value === "personal") return "personal";
+  if (value === "experience") return "experience";
+  if (value === "resume") return "resume";
+  if (value === "cv") return "resume";
+  return null;
+};
+
+type VerificationStatus = "complete" | "pending" | "in-review";
+
+interface VerificationStep {
+  id: string;
+  title: string;
+  description: string;
+  status: VerificationStatus;
+}
+
+const verificationSteps: VerificationStep[] = [
+  {
+    id: "email",
+    title: "Email address",
+    description: "Confirm the email you use to sign in and receive alerts.",
+    status: "complete",
+  },
+  {
+    id: "phone",
+    title: "Phone number",
+    description: "Add a verified phone for account recovery and security checks.",
+    status: "complete",
+  },
+  {
+    id: "identity",
+    title: "Government ID",
+    description: "Upload a valid ID to prove your identity.",
+    status: "complete",
+  },
+  {
+    id: "address",
+    title: "Proof of address",
+    description: "Provide a recent utility bill or bank statement.",
+    status: "complete",
+  },
+];
+
+const verificationStatusStyles: Record<VerificationStatus, string> = {
+  complete: "bg-[#DCFCE7] text-[#166534]",
+  "in-review": "bg-[#FEF3C7] text-[#92400E]",
+  pending: "bg-[#E2E8F0] text-[#475569]",
+};
+
+const verificationStatusLabels: Record<VerificationStatus, string> = {
+  complete: "Completed",
+  "in-review": "In Review",
+  pending: "Pending",
+};
 
 interface Experience {
   id: string;
@@ -14,12 +115,51 @@ interface Experience {
   description: string;
 }
 
+interface PaymentMethod {
+  id: string;
+  brand: "Visa" | "Mastercard" | "Card";
+  last4: string;
+  expiry: string;
+  status: "default" | "active" | "expired";
+}
+
+interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+  status: "active" | "pending";
+}
+
+interface SessionInfo {
+  id: string;
+  current: boolean;
+  device: string;
+  location: string;
+  ip: string;
+  lastActive: string;
+}
+
 export function Settings() {
-  const [activeTab, setActiveTab] = useState<TabType>("personal");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = mapTabParam(searchParams.get("tab")) ?? "account";
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab);
+  const initialAccountTab = mapAccountTab(searchParams.get("tab")) ?? "personal";
+  const [accountTab, setAccountTab] = useState<AccountTab>(initialAccountTab);
+
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [mfaEnabled, setMfaEnabled] = useState(false);
+  const [mfaMethod, setMfaMethod] = useState<"authenticator" | "sms" | "email">("authenticator");
+  const [mfaSetupKey, setMfaSetupKey] = useState<string | null>(null);
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [showBackupCodes, setShowBackupCodes] = useState(false);
+  const [hideHiredCandidates, setHideHiredCandidates] = useState(true);
 
-  // Personal Information State
+  const completedSteps = verificationSteps.filter((step) => step.status === "complete").length;
+  const completionPercent = Math.round((completedSteps / verificationSteps.length) * 100);
+
   const [personalInfo, setPersonalInfo] = useState({
     firstName: "Jonas",
     lastName: "Dela Cruz",
@@ -31,7 +171,6 @@ export function Settings() {
     photo: null as File | null,
   });
 
-  // Experience State
   const [experiences, setExperiences] = useState<Experience[]>([
     {
       id: "1",
@@ -52,18 +191,97 @@ export function Settings() {
     current: false,
     description: "",
   });
+  const [experienceLogo, setExperienceLogo] = useState<File | null>(null);
 
-  // Security State
   const [securityData, setSecurityData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
 
-  // Resume State
   const [resume, setResume] = useState<File | null>(null);
 
-  // Personal Information Handlers
+  const [notificationSettings, setNotificationSettings] = useState({
+    newApplications: true,
+    jobOffers: true,
+    reviewReminders: true,
+    referrals: true,
+    chatUpdates: false,
+    calendarUpdates: true,
+  });
+
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([
+    { id: "visa-1", brand: "Visa", last4: "1234", expiry: "01/26", status: "default" },
+    { id: "mc-1", brand: "Mastercard", last4: "1234", expiry: "01/26", status: "active" },
+    { id: "mc-2", brand: "Mastercard", last4: "1234", expiry: "01/26", status: "expired" },
+  ]);
+
+  const [newCard, setNewCard] = useState({
+    name: "",
+    number: "",
+    expiry: "",
+    cvv: "",
+  });
+
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
+    { id: "1", name: "Jonas Dela Cruz", role: "Owner", email: "jonas.delacruz@email.com", status: "active" },
+    { id: "2", name: "Samantha Lee", role: "Recruiter", email: "samantha.lee@email.com", status: "active" },
+    { id: "3", name: "Robert Lane", role: "Hiring Manager", email: "robert.lane@email.com", status: "pending" },
+  ]);
+
+  const [inviteEmail, setInviteEmail] = useState("");
+
+  const sessions: SessionInfo[] = [
+    {
+      id: "session-1",
+      current: true,
+      device: "MacBook Pro, Chrome",
+      location: "Manila, Philippines",
+      ip: "192.168.0.1",
+      lastActive: "Feb 1, 2026, 9:24 AM",
+    },
+    {
+      id: "session-2",
+      current: false,
+      device: "iPhone 15, Safari",
+      location: "Makati, Philippines",
+      ip: "192.168.1.14",
+      lastActive: "Jan 28, 2026, 6:12 PM",
+    },
+  ];
+
+  useEffect(() => {
+    const mappedTab = mapTabParam(searchParams.get("tab"));
+    if (mappedTab && mappedTab !== activeTab) {
+      setActiveTab(mappedTab);
+    }
+  }, [activeTab, searchParams]);
+
+  useEffect(() => {
+    if (activeTab !== "account") return;
+    const mappedAccountTab = mapAccountTab(searchParams.get("tab"));
+    if (mappedAccountTab && mappedAccountTab !== accountTab) {
+      setAccountTab(mappedAccountTab);
+    }
+  }, [activeTab, accountTab, searchParams]);
+
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    if (tab === "account") {
+      setAccountTab("personal");
+    }
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set("tab", tab);
+    setSearchParams(nextParams, { replace: true });
+  };
+
+  const handleAccountTabChange = (tab: AccountTab) => {
+    setAccountTab(tab);
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set("tab", tab);
+    setSearchParams(nextParams, { replace: true });
+  };
+
   const handlePersonalInfoChange = (field: string, value: string) => {
     setPersonalInfo({ ...personalInfo, [field]: value });
   };
@@ -80,7 +298,6 @@ export function Settings() {
     toast.success("Personal information saved successfully!");
   };
 
-  // Experience Handlers
   const handleAddExperience = () => {
     if (!newExperience.position || !newExperience.company || !newExperience.startDate) {
       toast.error("Please fill in all required fields");
@@ -101,15 +318,23 @@ export function Settings() {
       current: false,
       description: "",
     });
+    setExperienceLogo(null);
     toast.success("Experience added successfully!");
   };
 
   const handleDeleteExperience = (id: string) => {
-    setExperiences(experiences.filter(exp => exp.id !== id));
+    setExperiences(experiences.filter((exp) => exp.id !== id));
     toast.success("Experience deleted");
   };
 
-  // Resume Handlers
+  const handleExperienceLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setExperienceLogo(file);
+      toast.success("Logo uploaded successfully!");
+    }
+  };
+
   const handleResumeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -123,7 +348,6 @@ export function Settings() {
     toast.success("Resume deleted");
   };
 
-  // Security Handlers
   const handleChangePassword = () => {
     if (!securityData.currentPassword || !securityData.newPassword || !securityData.confirmPassword) {
       toast.error("Please fill in all fields");
@@ -143,205 +367,1007 @@ export function Settings() {
     });
   };
 
+  const handleDiscardPassword = () => {
+    setSecurityData({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+    toast.info("Changes discarded");
+  };
+
+  const generateMfaSetupKey = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const group = () =>
+      Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+    return `${group()}-${group()}-${group()}-${group()}`;
+  };
+
+  const generateBackupCodes = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const makeCode = () =>
+      `${Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join("")}-${Array.from(
+        { length: 4 },
+        () => chars[Math.floor(Math.random() * chars.length)],
+      ).join("")}`;
+    const codes = Array.from({ length: 8 }, makeCode);
+    setBackupCodes(codes);
+    setShowBackupCodes(true);
+    toast.success("Backup codes generated");
+  };
+
+  const handleToggleMfa = () => {
+    if (mfaEnabled) {
+      setMfaEnabled(false);
+      setMfaSetupKey(null);
+      setBackupCodes([]);
+      setShowBackupCodes(false);
+      toast.info("Two-factor authentication disabled");
+      return;
+    }
+    setMfaEnabled(true);
+    setMfaSetupKey(generateMfaSetupKey());
+    toast.success("Two-factor authentication enabled");
+  };
+
+  const handleSendTestCode = () => {
+    if (mfaMethod === "authenticator") {
+      toast.info("Open your authenticator app and add the setup key.");
+      return;
+    }
+    if (mfaMethod === "sms") {
+      toast.info("Test code sent to your phone.");
+      return;
+    }
+    toast.info("Test code sent to your email.");
+  };
+
+  const toggleNotification = (key: keyof typeof notificationSettings) => {
+    setNotificationSettings({ ...notificationSettings, [key]: !notificationSettings[key] });
+  };
+
+  const getBrand = (number: string): PaymentMethod["brand"] => {
+    const trimmed = number.replace(/\s+/g, "");
+    if (trimmed.startsWith("4")) return "Visa";
+    if (trimmed.startsWith("5")) return "Mastercard";
+    return "Card";
+  };
+
+  const handleAddCard = () => {
+    if (!newCard.name || !newCard.number || !newCard.expiry || !newCard.cvv) {
+      toast.error("Please fill in all card fields");
+      return;
+    }
+    const last4 = newCard.number.replace(/\s+/g, "").slice(-4);
+    const method: PaymentMethod = {
+      id: Date.now().toString(),
+      brand: getBrand(newCard.number),
+      last4,
+      expiry: newCard.expiry,
+      status: "active",
+    };
+    setPaymentMethods([method, ...paymentMethods]);
+    setNewCard({ name: "", number: "", expiry: "", cvv: "" });
+    toast.success("Payment method added");
+  };
+
+  const handleSetDefault = (id: string) => {
+    setPaymentMethods(
+      paymentMethods.map((method) => ({
+        ...method,
+        status: method.id === id ? "default" : method.status === "expired" ? "expired" : "active",
+      })),
+    );
+    toast.success("Default payment method updated");
+  };
+
+  const handleRemoveCard = (id: string) => {
+    setPaymentMethods(paymentMethods.filter((method) => method.id !== id));
+    toast.success("Payment method removed");
+  };
+
+  const handleInvite = () => {
+    if (!inviteEmail.trim()) {
+      toast.error("Enter an email address to invite");
+      return;
+    }
+    setTeamMembers([
+      {
+        id: Date.now().toString(),
+        name: inviteEmail.split("@")[0] || "New Member",
+        role: "Member",
+        email: inviteEmail,
+        status: "pending",
+      },
+      ...teamMembers,
+    ]);
+    setInviteEmail("");
+    toast.success("Invitation sent");
+  };
+
+  const handleDisableAccount = () => {
+    toast.success("Account disabled. You can reactivate anytime.");
+  };
+
+  const handleDeleteAccount = () => {
+    toast.error("Account deletion request submitted");
+  };
+
   return (
-    <div className="max-w-[1100px] mx-auto space-y-6">
-      <h1 className="font-semibold text-[28px] text-[#1e293b]">Settings</h1>
+    <div className="max-w-[1200px] mx-auto space-y-6">
+      <div className="bg-white border border-[#E5E7EB] rounded-[16px]">
+        <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr]">
+          <aside className="border-b lg:border-b-0 lg:border-r border-[#E5E7EB] p-6">
+            <nav className="space-y-2">
+              {tabConfig.map((tab) => (
+                <div key={tab.id}>
+                  <button
+                    onClick={() => handleTabChange(tab.id)}
+                    className={`w-full px-4 py-3.5 rounded-[12px] text-left text-[16px] font-semibold transition-colors ${
+                      activeTab === tab.id
+                        ? "bg-[#EEF2FF] text-[#111827]"
+                        : "text-[#111827] hover:bg-[#F8FAFC]"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                  {tab.id === "account" && activeTab === "account" && (
+                    <div className="mt-2 ml-4 space-y-1">
+                      {accountTabConfig.map((subTab) => (
+                        <button
+                          key={subTab.id}
+                          onClick={() => handleAccountTabChange(subTab.id)}
+                          className={`w-full px-3 py-2 rounded-[10px] text-left text-[13px] font-medium transition-colors ${
+                            accountTab === subTab.id
+                              ? "bg-[#EEF2FF] text-[#1D4ED8]"
+                              : "text-[#64748B] hover:bg-[#F8FAFC]"
+                          }`}
+                        >
+                          {subTab.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </nav>
+          </aside>
 
-      {/* Tabs */}
-      <div className="bg-white rounded-[16px] border border-[#e2e8f0] shadow-sm">
-        <div className="flex border-b border-[#e2e8f0]">
-          <button
-            onClick={() => setActiveTab("personal")}
-            className={`flex items-center gap-2 px-6 py-4 text-[15px] font-medium transition-all ${
-              activeTab === "personal"
-                ? "text-[#2563eb] border-b-2 border-[#2563eb]"
-                : "text-[#64748b] hover:text-[#1e293b]"
-            }`}
-          >
-            <User className="w-4 h-4" />
-            Personal Information
-          </button>
-          <button
-            onClick={() => setActiveTab("experience")}
-            className={`flex items-center gap-2 px-6 py-4 text-[15px] font-medium transition-all ${
-              activeTab === "experience"
-                ? "text-[#2563eb] border-b-2 border-[#2563eb]"
-                : "text-[#64748b] hover:text-[#1e293b]"
-            }`}
-          >
-            <Briefcase className="w-4 h-4" />
-            Experience
-          </button>
-          <button
-            onClick={() => setActiveTab("resume")}
-            className={`flex items-center gap-2 px-6 py-4 text-[15px] font-medium transition-all ${
-              activeTab === "resume"
-                ? "text-[#2563eb] border-b-2 border-[#2563eb]"
-                : "text-[#64748b] hover:text-[#1e293b]"
-            }`}
-          >
-            <FileText className="w-4 h-4" />
-            CV/Resume
-          </button>
-          <button
-            onClick={() => setActiveTab("security")}
-            className={`flex items-center gap-2 px-6 py-4 text-[15px] font-medium transition-all ${
-              activeTab === "security"
-                ? "text-[#2563eb] border-b-2 border-[#2563eb]"
-                : "text-[#64748b] hover:text-[#1e293b]"
-            }`}
-          >
-            <Lock className="w-4 h-4" />
-            Security
-          </button>
-        </div>
-
-        <div className="p-8">
-          {/* Personal Information Tab */}
-          {activeTab === "personal" && (
+          <section className="p-6 space-y-6">
+          {activeTab === "account" && (
             <div className="space-y-6">
-              <h2 className="text-[20px] font-semibold text-[#1e293b] mb-6">Basic details</h2>
-              
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="text-[14px] font-medium text-[#475569] mb-2 block">
-                    First name
-                  </label>
-                  <input
-                    type="text"
-                    value={personalInfo.firstName}
-                    onChange={(e) => handlePersonalInfoChange("firstName", e.target.value)}
-                    className="w-full bg-white border border-[#e2e8f0] rounded-[10px] px-4 py-3 text-[14px] text-[#1e293b] outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="text-[14px] font-medium text-[#475569] mb-2 block">
-                    Last name
-                  </label>
-                  <input
-                    type="text"
-                    value={personalInfo.lastName}
-                    onChange={(e) => handlePersonalInfoChange("lastName", e.target.value)}
-                    className="w-full bg-white border border-[#e2e8f0] rounded-[10px] px-4 py-3 text-[14px] text-[#1e293b] outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent transition-all"
-                  />
-                </div>
-              </div>
+              <div className="bg-white rounded-[16px] border border-[#E5E7EB]">
+                <div className="p-6">
+                  {accountTab === "personal" && (
+                    <div className="space-y-6">
+                      <div>
+                        <h2 className="text-[18px] font-semibold text-[#111827]">Personal Information</h2>
+                        <p className="text-[13px] text-[#6B7280]">Update your profile information.</p>
+                      </div>
 
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="text-[14px] font-medium text-[#475569] mb-2 block">
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    value={personalInfo.city}
-                    onChange={(e) => handlePersonalInfoChange("city", e.target.value)}
-                    className="w-full bg-white border border-[#e2e8f0] rounded-[10px] px-4 py-3 text-[14px] text-[#1e293b] outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="text-[14px] font-medium text-[#475569] mb-2 block">
-                    Country
-                  </label>
-                  <input
-                    type="text"
-                    value={personalInfo.country}
-                    onChange={(e) => handlePersonalInfoChange("country", e.target.value)}
-                    className="w-full bg-white border border-[#e2e8f0] rounded-[10px] px-4 py-3 text-[14px] text-[#1e293b] outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent transition-all"
-                  />
-                </div>
-              </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="text-[14px] font-medium text-[#475569] mb-2 block">First name</label>
+                          <input
+                            type="text"
+                            value={personalInfo.firstName}
+                            onChange={(e) => handlePersonalInfoChange("firstName", e.target.value)}
+                            className="w-full bg-white border border-[#E5E7EB] rounded-[10px] px-4 py-3 text-[14px] text-[#1E293B] outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[14px] font-medium text-[#475569] mb-2 block">Last name</label>
+                          <input
+                            type="text"
+                            value={personalInfo.lastName}
+                            onChange={(e) => handlePersonalInfoChange("lastName", e.target.value)}
+                            className="w-full bg-white border border-[#E5E7EB] rounded-[10px] px-4 py-3 text-[14px] text-[#1E293B] outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent transition-all"
+                          />
+                        </div>
+                      </div>
 
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="text-[14px] font-medium text-[#475569] mb-2 block">
-                    Phone number
-                  </label>
-                  <input
-                    type="tel"
-                    value={personalInfo.phone}
-                    onChange={(e) => handlePersonalInfoChange("phone", e.target.value)}
-                    className="w-full bg-white border border-[#e2e8f0] rounded-[10px] px-4 py-3 text-[14px] text-[#1e293b] outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="text-[14px] font-medium text-[#475569] mb-2 block">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={personalInfo.email}
-                    onChange={(e) => handlePersonalInfoChange("email", e.target.value)}
-                    className="w-full bg-white border border-[#e2e8f0] rounded-[10px] px-4 py-3 text-[14px] text-[#1e293b] outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent transition-all"
-                  />
-                </div>
-              </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="text-[14px] font-medium text-[#475569] mb-2 block">City</label>
+                          <input
+                            type="text"
+                            value={personalInfo.city}
+                            onChange={(e) => handlePersonalInfoChange("city", e.target.value)}
+                            className="w-full bg-white border border-[#E5E7EB] rounded-[10px] px-4 py-3 text-[14px] text-[#1E293B] outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[14px] font-medium text-[#475569] mb-2 block">Country</label>
+                          <input
+                            type="text"
+                            value={personalInfo.country}
+                            onChange={(e) => handlePersonalInfoChange("country", e.target.value)}
+                            className="w-full bg-white border border-[#E5E7EB] rounded-[10px] px-4 py-3 text-[14px] text-[#1E293B] outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent transition-all"
+                          />
+                        </div>
+                      </div>
 
-              <div>
-                <label className="text-[14px] font-medium text-[#475569] mb-2 block">
-                  LinkedIn
-                </label>
-                <input
-                  type="text"
-                  value={personalInfo.linkedin}
-                  onChange={(e) => handlePersonalInfoChange("linkedin", e.target.value)}
-                  className="w-full bg-white border border-[#e2e8f0] rounded-[10px] px-4 py-3 text-[14px] text-[#1e293b] outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent transition-all"
-                />
-              </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="text-[14px] font-medium text-[#475569] mb-2 block">Phone number</label>
+                          <input
+                            type="tel"
+                            value={personalInfo.phone}
+                            onChange={(e) => handlePersonalInfoChange("phone", e.target.value)}
+                            className="w-full bg-white border border-[#E5E7EB] rounded-[10px] px-4 py-3 text-[14px] text-[#1E293B] outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[14px] font-medium text-[#475569] mb-2 block">Email</label>
+                          <input
+                            type="email"
+                            value={personalInfo.email}
+                            onChange={(e) => handlePersonalInfoChange("email", e.target.value)}
+                            className="w-full bg-white border border-[#E5E7EB] rounded-[10px] px-4 py-3 text-[14px] text-[#1E293B] outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent transition-all"
+                          />
+                        </div>
+                      </div>
 
-              <div>
-                <label className="text-[14px] font-medium text-[#475569] mb-2 block">
-                  Profile Photo
-                </label>
-                <div className="flex items-center gap-4">
-                  <label className="bg-[#2563eb] text-white font-semibold px-6 py-3 rounded-[10px] hover:bg-[#1d4ed8] transition-all cursor-pointer flex items-center gap-2">
-                    <Upload className="w-4 h-4" />
-                    Upload your photo
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePhotoUpload}
-                      className="hidden"
-                    />
-                  </label>
-                  <span className="text-[13px] text-[#64748b]">(jpg/png format)</span>
-                </div>
-              </div>
+                      <div>
+                        <label className="text-[14px] font-medium text-[#475569] mb-2 block">LinkedIn</label>
+                        <input
+                          type="text"
+                          value={personalInfo.linkedin}
+                          onChange={(e) => handlePersonalInfoChange("linkedin", e.target.value)}
+                          className="w-full bg-white border border-[#E5E7EB] rounded-[10px] px-4 py-3 text-[14px] text-[#1E293B] outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent transition-all"
+                        />
+                      </div>
 
-              <button
-                onClick={handleSavePersonalInfo}
-                className="bg-[#2563eb] text-white font-semibold px-8 py-3 rounded-[10px] hover:bg-[#1d4ed8] transition-all"
-              >
-                Save Changes
-              </button>
-            </div>
-          )}
+                      <div>
+                        <label className="text-[14px] font-medium text-[#475569] mb-2 block">Profile photo</label>
+                        <div className="flex flex-wrap items-center gap-4">
+                          <label className="bg-[#2563EB] text-white font-semibold px-6 py-3 rounded-[10px] hover:bg-[#1D4ED8] transition-all cursor-pointer flex items-center gap-2">
+                            <Upload className="w-4 h-4" />
+                            Upload your photo
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handlePhotoUpload}
+                              className="hidden"
+                            />
+                          </label>
+                          <span className="text-[13px] text-[#64748B]">(jpg/png format)</span>
+                        </div>
+                      </div>
 
-          {/* Experience Tab */}
-          {activeTab === "experience" && (
-            <div className="space-y-6">
-              <h2 className="text-[20px] font-semibold text-[#1e293b] mb-6">Experience</h2>
+                      <button
+                        onClick={handleSavePersonalInfo}
+                        className="bg-[#2563EB] text-white font-semibold px-8 py-3 rounded-[10px] hover:bg-[#1D4ED8] transition-all"
+                      >
+                        Save changes
+                      </button>
+                    </div>
+                  )}
 
-              {/* Existing Experiences */}
-              {experiences.length > 0 && (
-                <div className="space-y-4 mb-8">
-                  <h3 className="text-[16px] font-semibold text-[#1e293b]">Your Experience</h3>
-                  {experiences.map((exp) => (
-                    <div key={exp.id} className="bg-[#f8fafc] border border-[#e2e8f0] rounded-[12px] p-5">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h4 className="text-[16px] font-semibold text-[#1e293b] mb-1">{exp.position}</h4>
-                          <p className="text-[14px] text-[#64748b] mb-2">{exp.company}</p>
-                          <p className="text-[13px] text-[#64748b] mb-2">
-                            {exp.startDate} - {exp.current ? "Present" : exp.endDate}
-                          </p>
-                          {exp.description && (
-                            <p className="text-[13px] text-[#475569] mt-2">{exp.description}</p>
+                  {accountTab === "experience" && (
+                    <div className="space-y-6">
+                      <div>
+                        <h2 className="text-[18px] font-semibold text-[#111827]">Experience</h2>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="text-[14px] font-medium text-[#475569] mb-2 block">Job position</label>
+                          <input
+                            type="text"
+                            value={newExperience.position}
+                            onChange={(e) => setNewExperience({ ...newExperience, position: e.target.value })}
+                            placeholder="Job position"
+                            className="w-full bg-white border border-[#E5E7EB] rounded-[10px] px-4 py-3 text-[14px] text-[#1E293B] outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[14px] font-medium text-[#475569] mb-2 block">Company name</label>
+                          <input
+                            type="text"
+                            value={newExperience.company}
+                            onChange={(e) => setNewExperience({ ...newExperience, company: e.target.value })}
+                            placeholder="Company name"
+                            className="w-full bg-white border border-[#E5E7EB] rounded-[10px] px-4 py-3 text-[14px] text-[#1E293B] outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="text-[14px] font-medium text-[#475569] mb-2 block">Start date</label>
+                          <input
+                            type="month"
+                            value={newExperience.startDate}
+                            onChange={(e) => setNewExperience({ ...newExperience, startDate: e.target.value })}
+                            className="w-full bg-white border border-[#E5E7EB] rounded-[10px] px-4 py-3 text-[14px] text-[#1E293B] outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[14px] font-medium text-[#475569] mb-2 block">End date</label>
+                          <input
+                            type="month"
+                            value={newExperience.endDate}
+                            onChange={(e) => setNewExperience({ ...newExperience, endDate: e.target.value })}
+                            className="w-full bg-white border border-[#E5E7EB] rounded-[10px] px-4 py-3 text-[14px] text-[#1E293B] outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] border border-[#C7D2FE] text-[#1D4ED8] text-[13px] font-semibold cursor-pointer hover:bg-[#EEF2FF] transition-colors">
+                            <Upload className="w-4 h-4" />
+                            Upload your logo
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleExperienceLogoUpload}
+                              className="hidden"
+                            />
+                          </label>
+                          <span className="text-[12px] text-[#94A3B8]">(jpg/png format/optional)</span>
+                          {experienceLogo && (
+                            <span className="text-[12px] text-[#64748B]">{experienceLogo.name}</span>
                           )}
                         </div>
                         <button
-                          onClick={() => handleDeleteExperience(exp.id)}
-                          className="text-[#ef4444] hover:bg-[#fee2e2] p-2 rounded-[8px] transition-colors"
+                          onClick={handleAddExperience}
+                          className="bg-[#3B82F6] text-white font-semibold px-6 py-2.5 rounded-[10px] hover:bg-[#2563EB] transition-all"
+                        >
+                          Add Experience
+                        </button>
+                      </div>
+
+                      {experiences.length > 0 && (
+                        <div className="pt-6 border-t border-[#E5E7EB]">
+                          <h3 className="text-[14px] font-semibold text-[#111827] mb-3">Saved experience</h3>
+                          <div className="space-y-3">
+                            {experiences.map((exp) => (
+                              <div
+                                key={exp.id}
+                                className="flex items-center justify-between bg-[#F8FAFC] border border-[#E5E7EB] rounded-[10px] px-4 py-3"
+                              >
+                                <div>
+                                  <p className="text-[14px] font-semibold text-[#111827]">{exp.position}</p>
+                                  <p className="text-[12px] text-[#64748B]">
+                                    {exp.company} • {exp.startDate} - {exp.current ? "Present" : exp.endDate || "Present"}
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={() => handleDeleteExperience(exp.id)}
+                                  className="text-[#EF4444] hover:bg-[#FEE2E2] p-2 rounded-[8px] transition-colors"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {accountTab === "resume" && (
+                    <div className="space-y-6">
+                      <div>
+                        <h2 className="text-[18px] font-semibold text-[#111827]">CV/Resume</h2>
+                        <p className="text-[13px] text-[#6B7280]">Upload your latest resume.</p>
+                      </div>
+                      {resume ? (
+                        <div className="bg-[#F8FAFC] border border-[#E5E7EB] rounded-[12px] p-4 flex items-center justify-between">
+                          <div>
+                            <p className="text-[14px] font-semibold text-[#111827]">{resume.name}</p>
+                            <p className="text-[12px] text-[#64748B]">{(resume.size / 1024).toFixed(2)} KB</p>
+                          </div>
+                          <button
+                            onClick={handleDeleteResume}
+                            className="text-[#EF4444] hover:bg-[#FEE2E2] p-2 rounded-[8px]"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="border-2 border-dashed border-[#CBD5E1] rounded-[12px] p-8 text-center">
+                          <p className="text-[14px] text-[#64748B] mb-4">Upload your resume (PDF, DOC)</p>
+                          <label className="bg-[#2563EB] text-white font-semibold px-6 py-3 rounded-[10px] hover:bg-[#1D4ED8] transition-all cursor-pointer inline-flex items-center gap-2">
+                            <Upload className="w-4 h-4" />
+                            Choose file
+                            <input
+                              type="file"
+                              accept=".pdf,.doc,.docx"
+                              onChange={handleResumeUpload}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "privacy" && (
+            <div className="space-y-6">
+              <div className="bg-white rounded-[16px] border border-[#E5E7EB] p-6">
+                <div className="mb-6">
+                  <h2 className="text-[20px] font-semibold text-[#111827]">Change Password</h2>
+                  <p className="text-[13px] text-[#6B7280]">
+                    Changing your password will log you out of all active sessions.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[13px] text-[#6B7280]">Current Password</label>
+                    <div className="relative">
+                      <input
+                        type={showCurrentPassword ? "text" : "password"}
+                        value={securityData.currentPassword}
+                        onChange={(e) => setSecurityData({ ...securityData, currentPassword: e.target.value })}
+                        className="w-full mt-2 bg-white border border-[#E5E7EB] rounded-[12px] px-4 py-3 text-[14px] outline-none focus:ring-2 focus:ring-[#2563EB]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#94A3B8]"
+                      >
+                        {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[13px] text-[#6B7280]">New Password</label>
+                      <div className="relative">
+                        <input
+                          type={showNewPassword ? "text" : "password"}
+                          value={securityData.newPassword}
+                          onChange={(e) => setSecurityData({ ...securityData, newPassword: e.target.value })}
+                          className="w-full mt-2 bg-white border border-[#E5E7EB] rounded-[12px] px-4 py-3 text-[14px] outline-none focus:ring-2 focus:ring-[#2563EB]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-[#94A3B8]"
+                        >
+                          {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[13px] text-[#6B7280]">Confirm Password</label>
+                      <div className="relative">
+                        <input
+                          type={showConfirmPassword ? "text" : "password"}
+                          value={securityData.confirmPassword}
+                          onChange={(e) => setSecurityData({ ...securityData, confirmPassword: e.target.value })}
+                          className="w-full mt-2 bg-white border border-[#E5E7EB] rounded-[12px] px-4 py-3 text-[14px] outline-none focus:ring-2 focus:ring-[#2563EB]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-[#94A3B8]"
+                        >
+                          {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 mt-6">
+                  <button
+                    onClick={handleDiscardPassword}
+                    className="px-6 py-2.5 border border-[#E5E7EB] text-[#64748B] rounded-full text-[14px]"
+                  >
+                    Discard
+                  </button>
+                  <button
+                    onClick={handleChangePassword}
+                    className="px-6 py-2.5 bg-[#4F46E5] text-white rounded-full text-[14px] font-semibold"
+                  >
+                    Save New Password
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-[16px] border border-[#E5E7EB] p-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[16px] font-semibold text-[#111827]">Two-Factor Authentication</h3>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[12px] text-[#6B7280]">{mfaEnabled ? "Enabled" : "Disabled"}</span>
+                    <button
+                      type="button"
+                      onClick={handleToggleMfa}
+                      className={`w-12 h-6 rounded-full flex items-center p-1 transition-colors ${
+                        mfaEnabled ? "bg-green-500" : "bg-gray-200"
+                      }`}
+                    >
+                      <span
+                        className={`h-4 w-4 bg-white rounded-full transition-transform ${mfaEnabled ? "translate-x-6" : ""}`}
+                      />
+                    </button>
+                  </div>
+                </div>
+                <p className="text-[13px] text-[#6B7280] mt-2">
+                  Add an extra verification step to protect your account.
+                </p>
+
+                {mfaEnabled && (
+                  <div className="mt-4 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <label className="flex items-center gap-2 border border-[#E5E7EB] rounded-[10px] px-3 py-2 text-[13px] cursor-pointer hover:bg-[#F8FAFC]">
+                        <input
+                          type="radio"
+                          name="mfa-method"
+                          checked={mfaMethod === "authenticator"}
+                          onChange={() => setMfaMethod("authenticator")}
+                        />
+                        Authenticator app
+                      </label>
+                      <label className="flex items-center gap-2 border border-[#E5E7EB] rounded-[10px] px-3 py-2 text-[13px] cursor-pointer hover:bg-[#F8FAFC]">
+                        <input
+                          type="radio"
+                          name="mfa-method"
+                          checked={mfaMethod === "sms"}
+                          onChange={() => setMfaMethod("sms")}
+                        />
+                        SMS code
+                      </label>
+                      <label className="flex items-center gap-2 border border-[#E5E7EB] rounded-[10px] px-3 py-2 text-[13px] cursor-pointer hover:bg-[#F8FAFC]">
+                        <input
+                          type="radio"
+                          name="mfa-method"
+                          checked={mfaMethod === "email"}
+                          onChange={() => setMfaMethod("email")}
+                        />
+                        Email code
+                      </label>
+                    </div>
+
+                    <div className="bg-[#F8FAFC] border border-[#E5E7EB] rounded-[10px] p-4">
+                      <p className="text-[12px] font-semibold text-[#475569] mb-2">Setup key</p>
+                      <div className="flex items-center justify-between gap-3">
+                        <code className="text-[13px] text-[#0F172A] bg-white border border-[#E5E7EB] rounded px-2 py-1">
+                          {mfaSetupKey || "Generating..."}
+                        </code>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (mfaSetupKey) {
+                              navigator.clipboard.writeText(mfaSetupKey);
+                              toast.success("Setup key copied");
+                            }
+                          }}
+                          className="text-[12px] text-[#2563EB] font-medium hover:text-[#1D4ED8]"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                      <p className="text-[12px] text-[#64748B] mt-2">
+                        Use this key in your authenticator app to finish setup.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={handleSendTestCode}
+                        className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#E2E8F0] text-[#1E293B] hover:bg-[#CBD5F5]"
+                      >
+                        Send test code
+                      </button>
+                      <button
+                        type="button"
+                        onClick={generateBackupCodes}
+                        className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0F172A] text-white hover:bg-[#1E293B]"
+                      >
+                        Generate backup codes
+                      </button>
+                    </div>
+
+                    {backupCodes.length > 0 && showBackupCodes && (
+                      <div className="bg-[#F8FAFC] border border-[#E5E7EB] rounded-[10px] p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <p className="text-[13px] font-semibold text-[#1E293B]">Backup codes</p>
+                          <button
+                            type="button"
+                            onClick={() => setShowBackupCodes(false)}
+                            className="text-[12px] text-[#64748B] hover:text-[#1E293B]"
+                          >
+                            Hide
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[12px] text-[#0F172A] font-mono">
+                          {backupCodes.map((code) => (
+                            <div key={code} className="bg-white border border-[#E5E7EB] rounded px-2 py-1">
+                              {code}
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-[12px] text-[#64748B] mt-2">
+                          Store these in a safe place. Each code can be used once.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-white rounded-[16px] border border-[#E5E7EB] p-6">
+                <h3 className="text-[16px] font-semibold text-[#111827]">Profile Privacy</h3>
+                <p className="text-[13px] text-[#6B7280] mt-1">
+                  You can make some details of your jobs on the marketplace private.
+                </p>
+                <div className="mt-4 flex items-center justify-between border border-[#E5E7EB] rounded-[12px] px-4 py-4">
+                  <div>
+                    <p className="text-[15px] font-semibold text-[#111827]">Hide number of hired candidates</p>
+                    <p className="text-[12px] text-[#6B7280]">Keep your hiring stats private.</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[12px] text-[#6B7280]">{hideHiredCandidates ? "Enable" : "Disabled"}</span>
+                    <button
+                      type="button"
+                      onClick={() => setHideHiredCandidates(!hideHiredCandidates)}
+                      className={`w-12 h-6 rounded-full flex items-center p-1 transition-colors ${
+                        hideHiredCandidates ? "bg-green-500" : "bg-gray-200"
+                      }`}
+                    >
+                      <span
+                        className={`h-4 w-4 bg-white rounded-full transition-transform ${
+                          hideHiredCandidates ? "translate-x-6" : ""
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-[16px] border border-[#E5E7EB] p-6">
+                <h3 className="text-[16px] font-semibold text-[#111827] mb-2">Delete My Account</h3>
+                <p className="text-[13px] text-[#6B7280] mb-4">
+                  You can delete your account and all associated jobs here.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={handleDisableAccount}
+                    className="px-6 py-3 rounded-full bg-[#B91C1C] text-white text-[14px] font-semibold hover:bg-[#991B1B]"
+                  >
+                    Disable Account
+                  </button>
+                  <button
+                    onClick={handleDeleteAccount}
+                    className="px-6 py-3 rounded-full border border-[#FCA5A5] text-[#B91C1C] text-[14px] font-semibold hover:bg-[#FEF2F2]"
+                  >
+                    Delete Account
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-[16px] border border-[#E5E7EB] p-6">
+                <h3 className="text-[16px] font-semibold text-[#111827] mb-2">Active Sessions</h3>
+                <p className="text-[13px] text-[#6B7280] mb-4">
+                  See your currently logged in sessions and remove unrecognized ones.
+                </p>
+                <div className="space-y-4">
+                  {sessions.map((session, index) => (
+                    <div key={session.id} className="border border-[#E5E7EB] rounded-[12px] p-4">
+                      <p className="text-[13px] font-semibold text-[#111827] mb-3">Session {index + 1}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-[12px] text-[#6B7280]">Current Session?</p>
+                          <p className="text-[14px] font-semibold text-[#111827]">{session.current ? "Yes" : "No"}</p>
+                        </div>
+                        <div>
+                          <p className="text-[12px] text-[#6B7280]">Device Details</p>
+                          <p className="text-[14px] font-semibold text-[#111827]">{session.device}</p>
+                        </div>
+                        <div>
+                          <p className="text-[12px] text-[#6B7280]">IP Address</p>
+                          <p className="text-[14px] font-semibold text-[#111827]">{session.ip}</p>
+                        </div>
+                        <div>
+                          <p className="text-[12px] text-[#6B7280]">Location</p>
+                          <p className="text-[14px] font-semibold text-[#111827]">{session.location}</p>
+                        </div>
+                        <div>
+                          <p className="text-[12px] text-[#6B7280]">Last activity</p>
+                          <p className="text-[14px] font-semibold text-[#111827]">{session.lastActive}</p>
+                        </div>
+                        <div className="flex items-end">
+                          <span
+                            className={`px-3 py-1 rounded-full text-[12px] font-semibold ${
+                              session.current ? "bg-[#DCFCE7] text-[#166534]" : "bg-[#E2E8F0] text-[#475569]"
+                            }`}
+                          >
+                            {session.current ? "Current session" : "Signed in"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-[16px] border border-[#E5E7EB] p-6">
+                <h3 className="text-[16px] font-semibold text-[#111827] mb-2">Verification</h3>
+                <div className="bg-[#F8FAFC] border border-[#E5E7EB] rounded-[12px] p-4 mb-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-[14px] text-[#64748B]">Verification status</p>
+                      <h4 className="text-[18px] font-semibold text-[#111827]">Profile verified</h4>
+                      <p className="text-[12px] text-[#64748B] mt-1">All requirements completed.</p>
+                    </div>
+                    <span className="text-[12px] font-semibold px-3 py-1 rounded-full bg-[#DCFCE7] text-[#166534]">
+                      {completionPercent}% complete
+                    </span>
+                  </div>
+                  <div className="mt-3">
+                    <div className="h-2 w-full bg-[#E2E8F0] rounded-full overflow-hidden">
+                      <div className="h-full bg-[#22C55E]" style={{ width: `${completionPercent}%` }} />
+                    </div>
+                    <p className="text-[12px] text-[#64748B] mt-2">
+                      {completedSteps} of {verificationSteps.length} steps completed
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {verificationSteps.map((step) => {
+                    const statusBadge = verificationStatusStyles[step.status];
+                    const statusLabel = verificationStatusLabels[step.status];
+                    const iconBg =
+                      step.status === "complete" ? "bg-[#DCFCE7]" : step.status === "in-review" ? "bg-[#FEF3C7]" : "bg-[#E2E8F0]";
+                    const icon =
+                      step.status === "complete" ? (
+                        <CheckCircle2 className="w-5 h-5 text-[#16A34A]" />
+                      ) : step.status === "in-review" ? (
+                        <Clock className="w-5 h-5 text-[#D97706]" />
+                      ) : (
+                        <Circle className="w-5 h-5 text-[#94A3B8]" />
+                      );
+
+                    return (
+                      <div key={step.id} className="bg-white border border-[#E5E7EB] rounded-[12px] p-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start gap-3">
+                            <div className={`w-9 h-9 rounded-full flex items-center justify-center ${iconBg}`}>
+                              {icon}
+                            </div>
+                            <div>
+                              <p className="text-[15px] font-semibold text-[#1E293B]">{step.title}</p>
+                              <p className="text-[13px] text-[#64748B] mt-1">{step.description}</p>
+                            </div>
+                          </div>
+                          <span className={`text-[12px] font-semibold px-3 py-1 rounded-full ${statusBadge}`}>
+                            {statusLabel}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "notifications" && (
+            <div className="space-y-6">
+              <div className="bg-white rounded-[16px] border border-[#E5E7EB] p-6">
+                <h2 className="text-[20px] font-semibold text-[#111827]">Job</h2>
+                <p className="text-[13px] text-[#6B7280] mb-6">
+                  You can make some details of your jobs on the marketplace private.
+                </p>
+
+                <div className="space-y-4">
+                  <div className="border border-[#E5E7EB] rounded-[12px] px-4 py-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-[15px] font-semibold text-[#111827]">New Applications (Daily)</p>
+                      <p className="text-[12px] text-[#6B7280]">Someone signed on using my referral link</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-[12px] text-[#6B7280]">
+                        {notificationSettings.newApplications ? "Enable" : "Disabled"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => toggleNotification("newApplications")}
+                        className={`w-12 h-6 rounded-full flex items-center p-1 transition-colors ${
+                          notificationSettings.newApplications ? "bg-green-500" : "bg-gray-200"
+                        }`}
+                      >
+                        <span
+                          className={`h-4 w-4 bg-white rounded-full transition-transform ${
+                            notificationSettings.newApplications ? "translate-x-6" : ""
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="border border-[#E5E7EB] rounded-[12px] px-4 py-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-[15px] font-semibold text-[#111827]">Job Offers and Updates</p>
+                      <p className="text-[12px] text-[#6B7280]">Someone signed on using my referral link</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-[12px] text-[#6B7280]">
+                        {notificationSettings.jobOffers ? "Enable" : "Disabled"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => toggleNotification("jobOffers")}
+                        className={`w-12 h-6 rounded-full flex items-center p-1 transition-colors ${
+                          notificationSettings.jobOffers ? "bg-green-500" : "bg-gray-200"
+                        }`}
+                      >
+                        <span
+                          className={`h-4 w-4 bg-white rounded-full transition-transform ${
+                            notificationSettings.jobOffers ? "translate-x-6" : ""
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="border border-[#E5E7EB] rounded-[12px] px-4 py-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-[15px] font-semibold text-[#111827]">Reminder to Review New Talent</p>
+                      <p className="text-[12px] text-[#6B7280]">Someone signed on using my referral link</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-[12px] text-[#6B7280]">
+                        {notificationSettings.reviewReminders ? "Enable" : "Disabled"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => toggleNotification("reviewReminders")}
+                        className={`w-12 h-6 rounded-full flex items-center p-1 transition-colors ${
+                          notificationSettings.reviewReminders ? "bg-green-500" : "bg-gray-200"
+                        }`}
+                      >
+                        <span
+                          className={`h-4 w-4 bg-white rounded-full transition-transform ${
+                            notificationSettings.reviewReminders ? "translate-x-6" : ""
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="border border-[#E5E7EB] rounded-[12px] px-4 py-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-[15px] font-semibold text-[#111827]">Referrals</p>
+                      <p className="text-[12px] text-[#6B7280]">Someone signed on using my referral link</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-[12px] text-[#6B7280]">
+                        {notificationSettings.referrals ? "Enable" : "Disabled"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => toggleNotification("referrals")}
+                        className={`w-12 h-6 rounded-full flex items-center p-1 transition-colors ${
+                          notificationSettings.referrals ? "bg-green-500" : "bg-gray-200"
+                        }`}
+                      >
+                        <span
+                          className={`h-4 w-4 bg-white rounded-full transition-transform ${
+                            notificationSettings.referrals ? "translate-x-6" : ""
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="border border-[#E5E7EB] rounded-[12px] px-4 py-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-[15px] font-semibold text-[#111827]">Chat & Communication</p>
+                      <p className="text-[12px] text-[#6B7280]">New unread messages</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-[12px] text-[#6B7280]">
+                        {notificationSettings.chatUpdates ? "Enable" : "Disabled"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => toggleNotification("chatUpdates")}
+                        className={`w-12 h-6 rounded-full flex items-center p-1 transition-colors ${
+                          notificationSettings.chatUpdates ? "bg-green-500" : "bg-gray-200"
+                        }`}
+                      >
+                        <span
+                          className={`h-4 w-4 bg-white rounded-full transition-transform ${
+                            notificationSettings.chatUpdates ? "translate-x-6" : ""
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="border border-[#E5E7EB] rounded-[12px] px-4 py-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-[15px] font-semibold text-[#111827]">Calendar & Scheduling</p>
+                      <p className="text-[12px] text-[#6B7280]">New unread messages</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-[12px] text-[#6B7280]">
+                        {notificationSettings.calendarUpdates ? "Enable" : "Disabled"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => toggleNotification("calendarUpdates")}
+                        className={`w-12 h-6 rounded-full flex items-center p-1 transition-colors ${
+                          notificationSettings.calendarUpdates ? "bg-green-500" : "bg-gray-200"
+                        }`}
+                      >
+                        <span
+                          className={`h-4 w-4 bg-white rounded-full transition-transform ${
+                            notificationSettings.calendarUpdates ? "translate-x-6" : ""
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "payments" && (
+            <div className="space-y-6">
+              <div className="bg-white rounded-[16px] border border-[#E5E7EB] p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-[20px] font-semibold text-[#111827]">Credit Card</h2>
+                    <p className="text-[13px] text-[#6B7280]">Manage your credit cards and payment options.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => toast.info("Add new card")}
+                    className="text-[14px] text-[#2563EB] font-medium hover:text-[#1D4ED8]"
+                  >
+                    + Add New Card
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {paymentMethods.map((method) => (
+                    <div key={method.id} className="border border-[#E5E7EB] rounded-[14px] p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-10 rounded-[10px] border border-[#E5E7EB] flex items-center justify-center text-[12px] font-semibold">
+                          {method.brand}
+                        </div>
+                        <div>
+                          <p className="text-[14px] font-semibold text-[#111827]">{method.brand} ending in {method.last4}</p>
+                          <p className="text-[12px] text-[#6B7280]">Exp. Date {method.expiry}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {method.status === "default" && (
+                          <span className="px-3 py-1 rounded-full bg-[#0F172A] text-white text-[11px] font-semibold">DEFAULT</span>
+                        )}
+                        {method.status === "expired" && (
+                          <span className="px-3 py-1 rounded-full bg-[#FEE2E2] text-[#B91C1C] text-[11px] font-semibold">EXPIRED</span>
+                        )}
+                        {method.status === "active" && (
+                          <button
+                            type="button"
+                            onClick={() => handleSetDefault(method.id)}
+                            className="text-[13px] text-[#2563EB] hover:text-[#1D4ED8]"
+                          >
+                            Set as Default
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveCard(method.id)}
+                          className="text-[#EF4444] hover:bg-[#FEE2E2] p-2 rounded-[8px]"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -349,237 +1375,137 @@ export function Settings() {
                     </div>
                   ))}
                 </div>
-              )}
+              </div>
 
-              {/* Add New Experience */}
-              <div className="border-t border-[#e2e8f0] pt-6">
-                <h3 className="text-[16px] font-semibold text-[#1e293b] mb-4">Add New Experience</h3>
-                
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-[14px] font-medium text-[#475569] mb-2 block">
-                      Job position
-                    </label>
-                    <input
-                      type="text"
-                      value={newExperience.position}
-                      onChange={(e) => setNewExperience({ ...newExperience, position: e.target.value })}
-                      className="w-full bg-white border border-[#e2e8f0] rounded-[10px] px-4 py-3 text-[14px] text-[#1e293b] outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[14px] font-medium text-[#475569] mb-2 block">
-                      Company name
-                    </label>
-                    <input
-                      type="text"
-                      value={newExperience.company}
-                      onChange={(e) => setNewExperience({ ...newExperience, company: e.target.value })}
-                      className="w-full bg-white border border-[#e2e8f0] rounded-[10px] px-4 py-3 text-[14px] text-[#1e293b] outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-6 mt-6">
-                  <div>
-                    <label className="text-[14px] font-medium text-[#475569] mb-2 block">
-                      Start date
-                    </label>
-                    <input
-                      type="month"
-                      value={newExperience.startDate}
-                      onChange={(e) => setNewExperience({ ...newExperience, startDate: e.target.value })}
-                      className="w-full bg-white border border-[#e2e8f0] rounded-[10px] px-4 py-3 text-[14px] text-[#1e293b] outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[14px] font-medium text-[#475569] mb-2 block">
-                      End date
-                    </label>
-                    <input
-                      type="month"
-                      value={newExperience.endDate}
-                      onChange={(e) => setNewExperience({ ...newExperience, endDate: e.target.value })}
-                      disabled={newExperience.current}
-                      className="w-full bg-white border border-[#e2e8f0] rounded-[10px] px-4 py-3 text-[14px] text-[#1e293b] outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent transition-all disabled:bg-[#f8fafc] disabled:cursor-not-allowed"
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={newExperience.current}
-                      onChange={(e) => setNewExperience({ ...newExperience, current: e.target.checked, endDate: e.target.checked ? "" : newExperience.endDate })}
-                      className="w-4 h-4 rounded border-[#e2e8f0] text-[#2563eb] focus:ring-2 focus:ring-[#2563eb] cursor-pointer"
-                    />
-                    <span className="text-[14px] text-[#475569]">I currently work here</span>
-                  </label>
-                </div>
-
-                <div className="mt-6">
-                  <label className="text-[14px] font-medium text-[#475569] mb-2 block">
-                    Description (optional)
-                  </label>
-                  <textarea
-                    value={newExperience.description}
-                    onChange={(e) => setNewExperience({ ...newExperience, description: e.target.value })}
-                    rows={4}
-                    className="w-full bg-white border border-[#e2e8f0] rounded-[10px] px-4 py-3 text-[14px] text-[#1e293b] outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent transition-all resize-none"
-                    placeholder="Describe your role and responsibilities..."
+              <div className="bg-white rounded-[16px] border border-[#E5E7EB] p-6">
+                <h3 className="text-[16px] font-semibold text-[#111827] mb-4">Add New Payment Method</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <input
+                    type="text"
+                    value={newCard.name}
+                    onChange={(e) => setNewCard({ ...newCard, name: e.target.value })}
+                    placeholder="Name on Card"
+                    className="w-full bg-white border border-[#E5E7EB] rounded-[12px] px-4 py-3 text-[14px]"
+                  />
+                  <input
+                    type="text"
+                    value={newCard.expiry}
+                    onChange={(e) => setNewCard({ ...newCard, expiry: e.target.value })}
+                    placeholder="Expiry"
+                    className="w-full bg-white border border-[#E5E7EB] rounded-[12px] px-4 py-3 text-[14px]"
+                  />
+                  <input
+                    type="text"
+                    value={newCard.number}
+                    onChange={(e) => setNewCard({ ...newCard, number: e.target.value })}
+                    placeholder="Card Number"
+                    className="w-full bg-white border border-[#E5E7EB] rounded-[12px] px-4 py-3 text-[14px]"
+                  />
+                  <input
+                    type="text"
+                    value={newCard.cvv}
+                    onChange={(e) => setNewCard({ ...newCard, cvv: e.target.value })}
+                    placeholder="CVV"
+                    className="w-full bg-white border border-[#E5E7EB] rounded-[12px] px-4 py-3 text-[14px]"
                   />
                 </div>
-
                 <button
-                  onClick={handleAddExperience}
-                  className="mt-6 bg-[#2563eb] text-white font-semibold px-6 py-3 rounded-[10px] hover:bg-[#1d4ed8] transition-all flex items-center gap-2"
+                  type="button"
+                  onClick={handleAddCard}
+                  className="mt-4 bg-[#2563EB] text-white font-semibold px-6 py-3 rounded-[12px] hover:bg-[#1D4ED8]"
                 >
-                  <Plus className="w-4 h-4" />
-                  Add Experience
+                  Save card
                 </button>
               </div>
             </div>
           )}
 
-          {/* CV/Resume Tab */}
-          {activeTab === "resume" && (
+          {activeTab === "team" && (
             <div className="space-y-6">
-              <h2 className="text-[20px] font-semibold text-[#1e293b] mb-6">CV/Resume</h2>
-
-              {resume ? (
-                <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-[12px] p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-[10px] bg-[#dbeafe] flex items-center justify-center">
-                        <FileText className="w-6 h-6 text-[#2563eb]" />
-                      </div>
-                      <div>
-                        <h4 className="text-[15px] font-semibold text-[#1e293b]">{resume.name}</h4>
-                        <p className="text-[13px] text-[#64748b]">
-                          {(resume.size / 1024).toFixed(2)} KB
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={handleDeleteResume}
-                      className="text-[#ef4444] hover:bg-[#fee2e2] p-2 rounded-[8px] transition-colors"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
+              <div className="bg-white rounded-[16px] border border-[#E5E7EB] p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-[20px] font-semibold text-[#111827]">Team</h2>
+                    <p className="text-[13px] text-[#6B7280]">Manage team members and invitations.</p>
                   </div>
                 </div>
-              ) : (
-                <div className="border-2 border-dashed border-[#cbd5e1] rounded-[12px] p-12 text-center">
-                  <FileText className="w-16 h-16 text-[#cbd5e1] mx-auto mb-4" />
-                  <h3 className="text-[16px] font-semibold text-[#1e293b] mb-2">Upload Your Resume</h3>
-                  <p className="text-[14px] text-[#64748b] mb-6">
-                    PDF, DOC, or DOCX format (Max 5MB)
-                  </p>
-                  <label className="bg-[#2563eb] text-white font-semibold px-6 py-3 rounded-[10px] hover:bg-[#1d4ed8] transition-all cursor-pointer inline-flex items-center gap-2">
-                    <Upload className="w-4 h-4" />
-                    Choose File
-                    <input
-                      type="file"
-                      accept=".pdf,.doc,.docx"
-                      onChange={handleResumeUpload}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-              )}
 
-              <div className="bg-[#eff6ff] border border-[#bfdbfe] rounded-[12px] p-4">
-                <h4 className="text-[14px] font-semibold text-[#1e40af] mb-2">Tips for a great resume:</h4>
-                <ul className="space-y-1 text-[13px] text-[#1e40af]">
-                  <li>• Keep it concise (1-2 pages)</li>
-                  <li>• Highlight your relevant skills and experience</li>
-                  <li>• Use clear, professional formatting</li>
-                  <li>• Include measurable achievements</li>
-                </ul>
-              </div>
-            </div>
-          )}
-
-          {/* Security Tab */}
-          {activeTab === "security" && (
-            <div className="space-y-6">
-              <h2 className="text-[20px] font-semibold text-[#1e293b] mb-6">Change Password</h2>
-
-              <div>
-                <label className="text-[14px] font-medium text-[#475569] mb-2 block">
-                  Current Password
-                </label>
-                <div className="relative">
+                <div className="flex flex-col md:flex-row gap-3">
                   <input
-                    type={showCurrentPassword ? "text" : "password"}
-                    value={securityData.currentPassword}
-                    onChange={(e) => setSecurityData({ ...securityData, currentPassword: e.target.value })}
-                    className="w-full bg-white border border-[#e2e8f0] rounded-[10px] px-4 py-3 pr-12 text-[14px] text-[#1e293b] outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent transition-all"
+                    type="email"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    placeholder="Invite member by email"
+                    className="flex-1 bg-white border border-[#E5E7EB] rounded-[12px] px-4 py-3 text-[14px]"
                   />
                   <button
                     type="button"
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#64748b] hover:text-[#475569]"
+                    onClick={handleInvite}
+                    className="bg-[#2563EB] text-white font-semibold px-6 py-3 rounded-[12px] hover:bg-[#1D4ED8]"
                   >
-                    {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    Invite
                   </button>
                 </div>
               </div>
 
-              <div>
-                <label className="text-[14px] font-medium text-[#475569] mb-2 block">
-                  New Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showNewPassword ? "text" : "password"}
-                    value={securityData.newPassword}
-                    onChange={(e) => setSecurityData({ ...securityData, newPassword: e.target.value })}
-                    className="w-full bg-white border border-[#e2e8f0] rounded-[10px] px-4 py-3 pr-12 text-[14px] text-[#1e293b] outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#64748b] hover:text-[#475569]"
-                  >
-                    {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
+              <div className="bg-white rounded-[16px] border border-[#E5E7EB] p-6">
+                <h3 className="text-[16px] font-semibold text-[#111827] mb-4">Members</h3>
+                <div className="space-y-3">
+                  {teamMembers.map((member) => (
+                    <div key={member.id} className="border border-[#E5E7EB] rounded-[12px] p-4 flex items-center justify-between">
+                      <div>
+                        <p className="text-[14px] font-semibold text-[#111827]">{member.name}</p>
+                        <div className="flex items-center gap-3 text-[12px] text-[#6B7280] mt-1">
+                          <span className="flex items-center gap-1">
+                            <Mail className="w-3.5 h-3.5" />
+                            {member.email}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Users className="w-3.5 h-3.5" />
+                            {member.role}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`px-3 py-1 rounded-full text-[12px] font-semibold ${
+                            member.status === "active" ? "bg-[#DCFCE7] text-[#166534]" : "bg-[#FEF3C7] text-[#92400E]"
+                          }`}
+                        >
+                          {member.status === "active" ? "Active" : "Pending"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => toast.info("Manage member")}
+                          className="px-3 py-1.5 text-[12px] font-semibold border border-[#E5E7EB] rounded-[8px] text-[#475569] hover:bg-[#F8FAFC]"
+                        >
+                          Manage
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              <div>
-                <label className="text-[14px] font-medium text-[#475569] mb-2 block">
-                  Confirm New Password
-                </label>
-                <input
-                  type="password"
-                  value={securityData.confirmPassword}
-                  onChange={(e) => setSecurityData({ ...securityData, confirmPassword: e.target.value })}
-                  className="w-full bg-white border border-[#e2e8f0] rounded-[10px] px-4 py-3 text-[14px] text-[#1e293b] outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent transition-all"
-                />
-              </div>
-
-              <button
-                onClick={handleChangePassword}
-                className="bg-[#2563eb] text-white font-semibold px-8 py-3 rounded-[10px] hover:bg-[#1d4ed8] transition-all"
-              >
-                Update Password
-              </button>
-
-              <div className="bg-[#fef3c7] border border-[#fde68a] rounded-[12px] p-4 mt-6">
-                <h4 className="text-[14px] font-semibold text-[#92400e] mb-2">Password Requirements:</h4>
-                <ul className="space-y-1 text-[13px] text-[#92400e]">
-                  <li>• At least 8 characters long</li>
-                  <li>• Contains uppercase and lowercase letters</li>
-                  <li>• Includes at least one number</li>
-                  <li>• Has at least one special character</li>
-                </ul>
+              <div className="bg-white rounded-[16px] border border-[#E5E7EB] p-6">
+                <h3 className="text-[16px] font-semibold text-[#111827] mb-2">Team Contact</h3>
+                <p className="text-[13px] text-[#6B7280] mb-4">Main contact for team communications.</p>
+                <div className="flex flex-col md:flex-row gap-3">
+                  <div className="flex items-center gap-2 border border-[#E5E7EB] rounded-[12px] px-4 py-3 text-[14px] text-[#111827]">
+                    <Mail className="w-4 h-4 text-[#6B7280]" />
+                    team@microjobs.ph
+                  </div>
+                  <div className="flex items-center gap-2 border border-[#E5E7EB] rounded-[12px] px-4 py-3 text-[14px] text-[#111827]">
+                    <Phone className="w-4 h-4 text-[#6B7280]" />
+                    +63 2 8123 4567
+                  </div>
+                </div>
               </div>
             </div>
           )}
-        </div>
+        </section>
       </div>
+    </div>
     </div>
   );
 }

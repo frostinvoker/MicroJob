@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Bell, CheckCheck, Trash2, Filter, Briefcase, DollarSign, AlertCircle, MessageSquare, Star } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface Notification {
   id: string;
@@ -106,16 +107,19 @@ const notificationsData: Notification[] = [
 ];
 
 export function Notifications() {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>(notificationsData);
   const [filter, setFilter] = useState<"all" | "unread" | "application" | "payment" | "message">("all");
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const markAsRead = (id: string) => {
-    setNotifications(notifications.map(n => 
+  const markAsRead = (id: string, options?: { silent?: boolean }) => {
+    setNotifications(notifications.map(n =>
       n.id === id ? { ...n, read: true } : n
     ));
-    toast.success("Marked as read");
+    if (!options?.silent) {
+      toast.success("Marked as read");
+    }
   };
 
   const markAllAsRead = () => {
@@ -131,6 +135,31 @@ export function Notifications() {
   const deleteAllRead = () => {
     setNotifications(notifications.filter(n => !n.read));
     toast.success("All read notifications deleted");
+  };
+
+  const handleViewDetails = (notification: Notification) => {
+    if (!notification.read) {
+      markAsRead(notification.id, { silent: true });
+    }
+    switch (notification.type) {
+      case "application":
+        navigate("/dashboard/applied-jobs");
+        return;
+      case "message":
+        navigate("/dashboard/messages");
+        return;
+      case "payment":
+        navigate("/dashboard/e-wallet");
+        return;
+      case "achievement":
+        navigate("/dashboard/profile");
+        return;
+      case "alert":
+        navigate("/dashboard/notifications");
+        return;
+      default:
+        navigate("/dashboard");
+    }
   };
 
   const getIcon = (type: string) => {
@@ -178,8 +207,7 @@ export function Notifications() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-semibold text-[28px] text-[#111827]">Notifications</h1>
-          <p className="text-[14px] text-[#6B7280] mt-1">
+          <p className="text-[14px] text-[#6B7280]">
             {unreadCount > 0 ? `You have ${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}` : 'All caught up!'}
           </p>
         </div>
@@ -299,10 +327,14 @@ export function Notifications() {
                     <div className="flex items-center gap-2">
                       {notification.actionable && (
                         <button
-                          onClick={() => toast.info("Opening details...")}
-                          className="px-3 py-1.5 bg-[#1C4D8D] text-white text-[12px] font-medium rounded-[8px] hover:bg-[#0F2954] transition-all"
+                          onClick={() => handleViewDetails(notification)}
+                          className={`px-3 py-1.5 text-[12px] font-medium rounded-[8px] transition-all ${
+                            notification.read
+                              ? "bg-[#E2E8F0] text-[#475569] hover:bg-[#CBD5F5]"
+                              : "bg-[#1C4D8D] text-white hover:bg-[#0F2954]"
+                          }`}
                         >
-                          View Details
+                          {notification.read ? "Viewed" : "View Details"}
                         </button>
                       )}
                       {!notification.read && (

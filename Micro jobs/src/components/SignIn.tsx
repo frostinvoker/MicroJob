@@ -16,7 +16,7 @@ export function SignIn() {
   // Redirect to dashboard if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -31,7 +31,7 @@ export function SignIn() {
     setIsLoading(true);
     try {
       await login(email, password);
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     } catch (error: any) {
       toast.error(error.message || "Sign in failed");
     } finally {
