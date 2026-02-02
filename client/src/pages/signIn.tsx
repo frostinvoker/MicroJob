@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import bagIcon from "../assets/bagIcon.png";
+import bagIcon from "../assets/MicroIcon1.png";
 import lockIcon from "../assets/lockIcon.png";
 import mailIcon from "../assets/mailIcon.png";
 import { loginUser } from "../api/auth";
@@ -19,10 +19,11 @@ const SignIn: React.FC = () => {
     setLoading(true);
     try {
       const { token, user } = await loginUser({ emailOrUsername: email, password });
-      // persist user info for dashboard display
+      // Store user info and token for authentication
       localStorage.setItem("auth_user", JSON.stringify(user));
       if (rememberMe) localStorage.setItem("auth_token", token);
-      navigate("/dashboard");
+      // Redirect to dashboard
+      navigate("/dashboard", { replace: true });
     } catch (err: any) {
       setError(err?.message || "Unable to sign in");
     } finally {
@@ -54,10 +55,10 @@ const SignIn: React.FC = () => {
           {/* Logo */}
           <div className="flex items-center gap-3 mb-12">
             <div className="flex items-center justify-center">
-              <img src={bagIcon} alt="Bag Icon" className="w-15 h-15"/>
+              <img src={bagIcon} alt="Bag Icon" className="w-18 h-18"/>
             </div>
             <div>
-              <h1 className="text-6xl font-bold">Micro - Jobs</h1>
+              <h1 className="text-5xl font-bold">MicroJobs</h1>
               <p className="text-white text-2xl">Professional Marketplace</p>
             </div>
           </div>

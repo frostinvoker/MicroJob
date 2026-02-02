@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import logo from "../assets/MicroIcon.png";
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
@@ -10,7 +11,8 @@ const Navbar: React.FC = () => {
         {/* Logo on the left */}
         <div className="flex flex-col cursor-pointer" onClick={() => navigate("/")}>
           <div className="flex items-center gap-2">
-            <h1 className="text-4xl font-bold text-blue-600">MicroJob</h1>
+            <img src={logo} alt="MicroJob Logo" className="h-10 w-10" />
+            <h1 className="text-4xl font-bold text-black">MicroJob</h1>
           </div>
           <p className="text-black text-sm">Professional Marketplace</p>
         </div>

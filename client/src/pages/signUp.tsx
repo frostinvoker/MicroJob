@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import bagIcon from "../assets/bagIcon.png";
+import bagIcon from "../assets/MicroIcon1.png";
 import lockIcon from "../assets/lockIcon.png";
 import mailIcon from "../assets/mailIcon.png";
 import shieilddIcon from "../assets/shielddIcon.png";
@@ -35,8 +35,9 @@ const SignUp: React.FC = () => {
     setLoading(true);
     try {
       await registerUser({ username: fullName.trim(), email: email.trim(), password });
-      setSuccess("Account created! You can now sign in.");
-      setTimeout(() => navigate("/signin"), 500);
+      setSuccess("Account created! Redirecting to sign in...");
+      // Redirect to signin after successful registration
+      setTimeout(() => navigate("/signin", { replace: true }), 1500);
     } catch (err: any) {
       setError(err?.message || "Unable to sign up");
     } finally {
@@ -71,7 +72,7 @@ const SignUp: React.FC = () => {
               <img src={bagIcon} alt="Bag Icon" className="w-15 h-15"/>
             </div>
             <div>
-              <h1 className="text-6xl font-bold">Micro - Jobs</h1>
+              <h1 className="text-6xl font-bold">MicroJobs</h1>
               <p className="text-white text-2xl">Professional Marketplace</p>
             </div>
           </div>
