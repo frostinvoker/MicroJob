@@ -11,7 +11,12 @@
     "isolatedModules": true,
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "baseUrl": ".",
+    "paths": {
+      "sonner": ["src/lib/sonner.tsx"],
+      "lucide-react": ["src/lib/lucide.tsx"]
+    }
   },
   "include": ["src"]
 }
