@@ -84,6 +84,17 @@ export default function AppExample() {
         onBack={() => setCurrentScreen('Jobs')}
         onSaveJob={handleSaveJob}
         isSaved={savedJobs.some(j => j.id === selectedJob.id)}
+        activeTab={activeTab}
+        onTabPress={(tab) => {
+          setActiveTab(tab);
+          if (tab === 'Home') {
+            setCurrentScreen('Dashboard');
+          } else if (tab === 'Jobs') {
+            setCurrentScreen('Jobs');
+          } else if (tab === 'Saved') {
+            setCurrentScreen('SavedJobs');
+          }
+        }}
       />
     );
   }

@@ -13,6 +13,7 @@ type JobDetailsProps = {
 
 export default function JobDetails({ job, onBack, onSaveJob, isSaved = false, activeTab = 'Jobs', onTabPress }: JobDetailsProps) {
   const [saved, setSaved] = useState(isSaved);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleTabPress = (tab: string) => {
     onTabPress?.(tab);
@@ -22,6 +23,48 @@ export default function JobDetails({ job, onBack, onSaveJob, isSaved = false, ac
     setSaved(!saved);
     onSaveJob?.(job);
   };
+
+  const handleApply = () => {
+    console.log('Apply button clicked');
+    setShowSuccess(true);
+    console.log('showSuccess set to true');
+  };
+
+  const handleFindMoreJobs = () => {
+    setShowSuccess(false);
+    onTabPress?.('Jobs');
+  };
+
+  const handleBackToHome = () => {
+    setShowSuccess(false);
+    onTabPress?.('Home');
+  };
+
+  if (showSuccess) {
+    console.log('Rendering success screen');
+    return (
+      <View style={{ flex: 1, backgroundColor: '#f5f7fa' }}>
+        <View style={styles.successContainer}>
+          <View style={styles.successContent}>
+            <View style={styles.successIcon}>
+              <Text style={styles.checkmark}>✓</Text>
+            </View>
+            <Text style={styles.successTitle}>Successful!</Text>
+            <Text style={styles.successMessage}>
+              Congratulations, your application has been sent. Good luck!
+            </Text>
+            <TouchableOpacity style={styles.findJobsBtn} onPress={handleFindMoreJobs}>
+              <Text style={styles.findJobsBtnText}>Find more jobs</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleBackToHome}>
+              <Text style={styles.backToHomeText}>Back to home</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        <Navigation activeTab={activeTab} onTabPress={handleTabPress} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -109,7 +152,7 @@ export default function JobDetails({ job, onBack, onSaveJob, isSaved = false, ac
               {saved ? 'Saved ✓' : 'Saved job'}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.actionBtn, styles.applyBtn]}>
+          <TouchableOpacity style={[styles.actionBtn, styles.applyBtn]} onPress={handleApply}>
             <Text style={styles.actionBtnText}>Apply now</Text>
           </TouchableOpacity>
         </View>
@@ -250,5 +293,62 @@ const styles = StyleSheet.create({
   },
   savedBtnText: {
     color: '#fff',
+  },
+  successContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 100,
+    backgroundColor: '#f5f7fa',
+  },
+  successContent: {
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 320,
+  },
+  successIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#22c55e',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  checkmark: {
+    fontSize: 48,
+    color: '#fff',
+    fontWeight: '700',
+  },
+  successTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1f2937',
+    marginBottom: 12,
+  },
+  successMessage: {
+    fontSize: 14,
+    color: '#9ca3af',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 40,
+  },
+  findJobsBtn: {
+    width: '100%',
+    backgroundColor: '#4a90e2',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  findJobsBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  backToHomeText: {
+    fontSize: 14,
+    color: '#6b7280',
+    fontWeight: '500',
   },
 });

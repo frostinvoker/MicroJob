@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   },
   filterTab: {
     paddingHorizontal: 10,
-    paddingVertical: 3,
+    paddingVertical: 1.5,
     borderRadius: 4,
     backgroundColor: '#f3f4f6',
   },
