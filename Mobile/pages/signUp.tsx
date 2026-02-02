@@ -21,15 +21,28 @@ export default function SignUp({ onBack, onNavigateToSignIn, onNavigateToSuccess
       return;
     }
 
-    if (!phoneNumber.trim()) {
-      Alert.alert('Error', 'Please enter your phone number');
+    // Email is now required for sign-in
+    if (!email.trim()) {
+      Alert.alert('Error', 'Please enter your email');
       return;
     }
 
-    if (!/^\d{10,15}$/.test(phoneNumber)) {
-      Alert.alert('Error', 'Phone number must be 10-15 digits');
+    // Basic email validation
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
       return;
     }
+
+    // Temporarily commented out - phone number will be added in settings later
+    // if (!phoneNumber.trim()) {
+    //   Alert.alert('Error', 'Please enter your phone number');
+    //   return;
+    // }
+
+    // if (!/^\d{10,15}$/.test(phoneNumber)) {
+    //   Alert.alert('Error', 'Phone number must be 10-15 digits');
+    //   return;
+    // }
 
     if (!password) {
       Alert.alert('Error', 'Please enter a password');
@@ -57,7 +70,7 @@ export default function SignUp({ onBack, onNavigateToSignIn, onNavigateToSuccess
         body: JSON.stringify({
           firstName,
           lastName,
-          phoneNumber,
+          phoneNumber: phoneNumber || null, // Optional for now, can be added in settings
           email: email || null,
           password,
         }),
@@ -110,7 +123,8 @@ export default function SignUp({ onBack, onNavigateToSignIn, onNavigateToSuccess
           onChangeText={setLastName}
         />
 
-        {/* Phone Number Input */}
+        {/* Phone Number Input - Temporarily commented out, will be added in settings */}
+        {/* 
         <TextInput
           style={styles.input}
           placeholder="Phone Number"
@@ -119,15 +133,17 @@ export default function SignUp({ onBack, onNavigateToSignIn, onNavigateToSuccess
           onChangeText={setPhoneNumber}
           keyboardType="phone-pad"
         />
+        */}
 
-        {/* Email Input (Optional) */}
+        {/* Email Input - Now Required for Sign In */}
         <TextInput
           style={styles.input}
-          placeholder="Email (Optional)"
+          placeholder="Email"
           placeholderTextColor="#999"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
+          autoCapitalize="none"
         />
 
         {/* Password Input */}

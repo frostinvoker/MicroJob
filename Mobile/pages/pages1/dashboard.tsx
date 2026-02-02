@@ -2,122 +2,131 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import Navigation from '../../components/navigation';
 
-export default function Dashboard({ onLogout }: { onLogout?: () => void }) {
-  const [navOpen, setNavOpen] = useState(false);
+export default function Dashboard({ onLogout, onNavigateToJobs, onViewJobDetails, onSaveJob, savedJobIds = [], activeTab: externalActiveTab, onTabPress: externalOnTabPress, onOpenNotifications }: { onLogout?: () => void; onNavigateToJobs?: () => void; onViewJobDetails?: (job: any) => void; onSaveJob?: (job: any) => void; savedJobIds?: number[]; activeTab?: string; onTabPress?: (tab: string) => void; onOpenNotifications?: () => void }) {
+  const [activeTab, setActiveTab] = useState(externalActiveTab || 'Home');
+  
   const activeJobs = [
-    { title: 'Design Modern Logo', company: 'Tech Solutions Inc.', budget: '$350', deadline: '3 days left' },
-    { title: 'Build Responsive', company: 'Fashion Brand Co.', budget: '$2500', deadline: '5 days left' },
-    { title: 'Social Media', company: 'Startup Ventures', budget: '$800', deadline: '2 days left' },
+    { id: 1, title: 'Design Modern Logo', company: 'Tech Solutions Inc.', budget: '$350', deadline: '3 days left', tags: ['UI/UX', 'Mobile', 'Figma'], type: 'Remote', duration: 'Full Time', salary: '150k - 250k/year', time: '3 days ago' },
+    { id: 2, title: 'Build Responsive', company: 'Fashion Brand Co.', budget: '$2500', deadline: '5 days left', tags: ['React', 'TypeScript', 'CSS'], type: 'Remote', duration: 'Full Time', salary: '120k - 200k/year', time: '5 days ago' },
+    { id: 3, title: 'Social Media', company: 'Startup Ventures', budget: '$800', deadline: '2 days left', tags: ['Content', 'Marketing', 'Design'], type: 'Hybrid', duration: 'Part Time', salary: '80k - 150k/year', time: '2 days ago' },
   ];
+
+  const handleTabPress = (tab: string) => {
+    setActiveTab(tab);
+    externalOnTabPress?.(tab);
+    if (tab === 'Jobs' && onNavigateToJobs) {
+      onNavigateToJobs();
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <Navigation visible={navOpen} onClose={() => setNavOpen(false)} onLogout={onLogout} />
-
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.logoRow}>
-          <View style={styles.logoIcon}><Text style={styles.logoText}>💼</Text></View>
-          <View>
-            <Text style={styles.brand}>Micro BJ</Text>
-            <Text style={styles.brandSub}>Professional Marketplace</Text>
-          </View>
+        <View>
+          <Text style={styles.greeting}>Good morning, Jonas!</Text>
+          <Text style={styles.headerTitle}>Find your Dream job</Text>
         </View>
-        <TouchableOpacity style={styles.menuBtn} onPress={() => setNavOpen(true)}>
-          <Text style={styles.menuText}>☰</Text>
+        <TouchableOpacity style={styles.notificationIcon} onPress={onOpenNotifications}>
+          <Text style={styles.bellIcon}>🔔</Text>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>3</Text>
+          </View>
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* Welcome card */}
-        <View style={styles.welcomeCard}>
-          <View style={styles.activeTag}><Text style={styles.activeDot}>●</Text><Text style={styles.activeText}>Active Now</Text></View>
-          <Text style={styles.welcomeTitle}>Welcome back,{'\n'}John!</Text>
-          <Text style={styles.welcomeBody}>Track your performance, manage your work, and grow your business</Text>
-          <View style={styles.welcomeActions}>
-            <TouchableOpacity style={[styles.wBtn, styles.wBtnPrimary]}><Text style={styles.wBtnPrimaryText}>Browse Jobs</Text></TouchableOpacity>
-            <TouchableOpacity style={[styles.wBtn, styles.wBtnGhost]}><Text style={styles.wBtnGhostText}>View Wallet</Text></TouchableOpacity>
-          </View>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <Text style={styles.searchPlaceholder}>Search Job</Text>
         </View>
 
-        {/* Stats */}
-        <View style={styles.statsGrid}>
-          <View style={styles.statCard}>
-            <Text style={styles.statIcon}>💰</Text>
-            <Text style={styles.statValue}>$5600.75</Text>
-            <Text style={styles.statLabel}>Total Earnings</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statIcon}>📂</Text>
-            <Text style={styles.statValue}>8</Text>
-            <Text style={styles.statLabel}>Active Jobs</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statIcon}>🎯</Text>
-            <Text style={styles.statValue}>98%</Text>
-            <Text style={styles.statLabel}>Success Rate</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statIcon}>⭐</Text>
-            <Text style={styles.statValue}>4.9</Text>
-            <Text style={styles.statLabel}>Rating</Text>
-          </View>
+        {/* Upload Resume Card */}
+        <View style={styles.uploadCard}>
+          <Text style={styles.uploadTitle}>Upload your resume</Text>
+          <Text style={styles.uploadSubtitle}>Get matched with top companies automatically</Text>
+          <TouchableOpacity style={styles.checkButton}>
+            <Text style={styles.checkButtonText}>Check Applied</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Quick actions */}
-        <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Quick Actions</Text></View>
-        <View style={styles.quickRow}>
-          {[
-            { label: 'Browse Jobs', icon: '🔍' },
-            { label: 'Apply Jobs', icon: '📨' },
-            { label: 'Wallet', icon: '💳' },
-            { label: 'Messages', icon: '💬' },
-          ].map(a => (
-            <TouchableOpacity key={a.label} style={styles.quickCard}>
-              <Text style={styles.quickIcon}>{a.icon}</Text>
-              <Text style={styles.quickLabel}>{a.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Active jobs */}
+        {/* Job Category */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Active Jobs</Text>
+          <Text style={styles.sectionTitle}>Job Category</Text>
           <TouchableOpacity><Text style={styles.seeAll}>See all</Text></TouchableOpacity>
+        </View>
+        <View style={styles.categoryRow}>
+          <View style={[styles.categoryCard, { backgroundColor: '#1e3a5f' }]}>
+            <Text style={styles.categoryIcon}>💼</Text>
+            <Text style={styles.categoryCount}>3.5k</Text>
+            <Text style={styles.categoryLabel}>Jobs</Text>
+          </View>
+          <View style={[styles.categoryCard, { backgroundColor: '#2563eb' }]}>
+            <Text style={styles.categoryIcon}>💻</Text>
+            <Text style={styles.categoryCount}>2.3k</Text>
+            <Text style={styles.categoryLabel}>Design</Text>
+          </View>
+          <View style={[styles.categoryCard, { backgroundColor: '#0a1929' }]}>
+            <Text style={styles.categoryIcon}>📱</Text>
+            <Text style={styles.categoryCount}>1.8k</Text>
+            <Text style={styles.categoryLabel}>Tech</Text>
+          </View>
+        </View>
+
+        {/* Recent Jobs */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Recent Jobs</Text>
+          <TouchableOpacity onPress={() => {
+            console.log('See all clicked');
+            onNavigateToJobs?.();
+          }}>
+            <Text style={styles.seeAll}>See all</Text>
+          </TouchableOpacity>
         </View>
         <View style={styles.jobsList}>
           {activeJobs.map(job => (
-            <View key={job.title} style={styles.jobCard}>
-              <View style={styles.jobHeader}>
-                <Text style={styles.jobTitle}>{job.title}</Text>
-                <View style={styles.badge}><Text style={styles.badgeText}>In Progress</Text></View>
+            <TouchableOpacity 
+              key={job.id} 
+              style={styles.jobCard}
+              onPress={() => onViewJobDetails?.(job)}
+            >
+              <View style={styles.jobCardHeader}>
+                <View style={styles.jobLogo}>
+                  <Text style={styles.jobLogoText}>logo</Text>
+                </View>
+                <View style={styles.jobInfo}>
+                  <Text style={styles.jobTitle}>{job.title}</Text>
+                  <Text style={styles.jobCompany}>{job.company}</Text>
+                </View>
+                <TouchableOpacity 
+                  style={styles.bookmarkBtn}
+                  onPress={() => onSaveJob?.(job)}
+                >
+                  <Text style={styles.bookmarkIcon}>
+                    {savedJobIds.includes(job.id) ? '🔖' : '📄'}
+                  </Text>
+                </TouchableOpacity>
               </View>
-              <Text style={styles.jobCompany}>{job.company}</Text>
-              <View style={styles.jobMeta}>
-                <View><Text style={styles.metaLabel}>Budget</Text><Text style={styles.metaValue}>{job.budget}</Text></View>
-                <View><Text style={styles.metaLabel}>Deadline</Text><Text style={styles.metaValue}>{job.deadline}</Text></View>
+              <View style={styles.jobTags}>
+                <View style={styles.tag}><Text style={styles.tagText}>{job.tags[0]}</Text></View>
+                <View style={styles.tag}><Text style={styles.tagText}>{job.tags[1]}</Text></View>
+                <View style={styles.tag}><Text style={styles.tagText}>{job.tags[2]}</Text></View>
               </View>
-              <TouchableOpacity style={styles.viewLink}><Text style={styles.viewLinkText}>View →</Text></TouchableOpacity>
-            </View>
+              <View style={styles.jobFooter}>
+                <View style={styles.jobMetaRow}>
+                  <Text style={styles.jobMetaText}>{job.type}</Text>
+                  <Text style={styles.jobMetaText}>{job.duration}</Text>
+                </View>
+                <Text style={styles.jobSalary}>{job.salary}</Text>
+              </View>
+            </TouchableOpacity>
           ))}
         </View>
       </ScrollView>
 
       {/* Bottom nav */}
-      <View style={styles.tabBar}>
-        {[
-          { label: 'Home', icon: '🏠', active: true },
-          { label: 'Jobs', icon: '🗂️' },
-          { label: 'Find', icon: '🔎' },
-          { label: 'Messages', icon: '✉️' },
-          { label: 'Profile', icon: '👤' },
-        ].map(tab => (
-          <TouchableOpacity key={tab.label} style={styles.tabItem}>
-            <Text style={[styles.tabIcon, tab.active && styles.tabActive]}>{tab.icon}</Text>
-            <Text style={[styles.tabLabel, tab.active && styles.tabActive]}>{tab.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <Navigation activeTab={activeTab} onTabPress={handleTabPress} />
     </View>
   );
 }
@@ -127,55 +136,135 @@ const BLUE = '#0a3c7d';
 const LIGHT = '#eef1f6';
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  header: { paddingHorizontal: 16, paddingVertical: 12, paddingTop: 48, paddingBottom: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0a2847' },
-  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  logoIcon: { width: 36, height: 36, borderRadius: 8, backgroundColor: BLUE, alignItems: 'center', justifyContent: 'center' },
-  logoText: { color: '#fff', fontSize: 18 },
-  brand: { fontSize: 18, fontWeight: '800', color: '#fff' },
-  brandSub: { fontSize: 11, color: '#b0c4de' },
-  menuBtn: { width: 36, height: 36, borderRadius: 8, backgroundColor: '#1a4c8f', alignItems: 'center', justifyContent: 'center' },
-  menuText: { fontSize: 18, color: '#fff' },
-  scroll: { paddingHorizontal: 16, paddingTop: 24, paddingBottom: 90, gap: 14 },
-  welcomeCard: { backgroundColor: BLUE, borderRadius: 14, padding: 16, gap: 8 },
-  activeTag: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1f7a3d', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, alignSelf: 'flex-start', gap: 6 },
-  activeDot: { color: '#8fffb2', fontSize: 12 },
-  activeText: { color: '#d7ffe5', fontSize: 12 },
-  welcomeTitle: { color: '#fff', fontSize: 22, fontWeight: '800' },
-  welcomeBody: { color: '#dbe7ff', fontSize: 13, lineHeight: 18 },
-  welcomeActions: { flexDirection: 'row', gap: 10, marginTop: 6 },
-  wBtn: { flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: 'center' },
-  wBtnPrimary: { backgroundColor: '#2e6fe8' },
-  wBtnPrimaryText: { color: '#fff', fontWeight: '700', fontSize: 13 },
-  wBtnGhost: { backgroundColor: '#e8eefc' },
-  wBtnGhostText: { color: '#1f3d7a', fontWeight: '700', fontSize: 13 },
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  statCard: { width: '48%', backgroundColor: '#fff', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: LIGHT, gap: 6 },
-  statIcon: { fontSize: 18 },
-  statValue: { fontSize: 16, fontWeight: '700', color: '#111' },
-  statLabel: { fontSize: 12, color: '#6b7280' },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#111' },
-  seeAll: { fontSize: 12, color: '#2563eb', fontWeight: '700' },
-  quickRow: { flexDirection: 'row', gap: 10 },
-  quickCard: { flex: 1, backgroundColor: '#fff', borderRadius: 12, paddingVertical: 12, alignItems: 'center', borderWidth: 1, borderColor: LIGHT, gap: 6 },
-  quickIcon: { fontSize: 18 },
-  quickLabel: { fontSize: 12, color: '#111', textAlign: 'center' },
-  jobsList: { gap: 10 },
-  jobCard: { backgroundColor: '#fff', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: LIGHT, gap: 6 },
-  jobHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  jobTitle: { fontSize: 14, fontWeight: '700', color: '#111' },
-  badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10, backgroundColor: '#e0f7e9' },
-  badgeText: { color: '#0ea35a', fontSize: 11, fontWeight: '700' },
-  jobCompany: { fontSize: 12, color: '#6b7280' },
-  jobMeta: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
-  metaLabel: { fontSize: 11, color: '#6b7280' },
-  metaValue: { fontSize: 12, fontWeight: '700', color: '#111' },
-  viewLink: { alignSelf: 'flex-end', marginTop: 4 },
-  viewLinkText: { color: '#2563eb', fontSize: 12, fontWeight: '700' },
-  tabBar: { height: 64, flexDirection: 'row', borderTopWidth: 1, borderTopColor: LIGHT, backgroundColor: '#fff' },
-  tabItem: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2 },
-  tabIcon: { fontSize: 16, color: '#6b7280' },
-  tabLabel: { fontSize: 11, color: '#6b7280' },
-  tabActive: { color: BLUE, fontWeight: '700' },
+  container: { flex: 1, backgroundColor: '#f5f7fa' },
+  header: { 
+    paddingHorizontal: 20, 
+    paddingTop: 50, 
+    paddingBottom: 20, 
+    backgroundColor: '#1e3a5f',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  greeting: { fontSize: 14, color: '#b0c4de', marginBottom: 4 },
+  headerTitle: { fontSize: 24, fontWeight: '800', color: '#fff' },
+  notificationIcon: {
+    position: 'relative',
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bellIcon: {
+    fontSize: 24,
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#ef4444',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  scroll: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 90, gap: 16 },
+  searchContainer: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: '#fff', 
+    borderRadius: 12, 
+    paddingHorizontal: 16, 
+    paddingVertical: 14,
+    gap: 10,
+  },
+  searchIcon: { fontSize: 18 },
+  searchPlaceholder: { fontSize: 14, color: '#9ca3af' },
+  uploadCard: { 
+    backgroundColor: '#3b5a85', 
+    borderRadius: 16, 
+    padding: 20, 
+    gap: 8,
+  },
+  uploadTitle: { fontSize: 18, fontWeight: '700', color: '#fff' },
+  uploadSubtitle: { fontSize: 13, color: '#d1dce6', lineHeight: 18 },
+  checkButton: { 
+    backgroundColor: '#1e3a5f', 
+    paddingVertical: 10, 
+    paddingHorizontal: 20, 
+    borderRadius: 8, 
+    alignSelf: 'flex-start',
+    marginTop: 8,
+  },
+  checkButtonText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  sectionHeader: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center',
+  },
+  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#1f2937' },
+  seeAll: { fontSize: 14, color: '#6b7280', fontWeight: '500' },
+  categoryRow: { flexDirection: 'row', gap: 12 },
+  categoryCard: { 
+    flex: 1, 
+    borderRadius: 14, 
+    padding: 16, 
+    gap: 8,
+  },
+  categoryIcon: { fontSize: 24 },
+  categoryCount: { fontSize: 20, fontWeight: '800', color: '#fff' },
+  categoryLabel: { fontSize: 13, color: '#e5e7eb', fontWeight: '500' },
+  jobsList: { gap: 14 },
+  jobCard: { 
+    backgroundColor: '#fff', 
+    borderRadius: 14, 
+    padding: 16, 
+    gap: 12,
+  },
+  jobCardHeader: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 12,
+  },
+  jobLogo: { 
+    width: 48, 
+    height: 48, 
+    borderRadius: 10, 
+    backgroundColor: '#f3f4f6', 
+    alignItems: 'center', 
+    justifyContent: 'center',
+  },
+  jobLogoText: { fontSize: 11, color: '#9ca3af', fontWeight: '600' },
+  jobInfo: { flex: 1 },
+  jobTitle: { fontSize: 15, fontWeight: '700', color: '#1f2937', marginBottom: 2 },
+  jobCompany: { fontSize: 13, color: '#6b7280' },
+  bookmarkBtn: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bookmarkIcon: { fontSize: 18 },
+  jobTags: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  tag: { 
+    backgroundColor: '#f3f4f6', 
+    paddingHorizontal: 12, 
+    paddingVertical: 6, 
+    borderRadius: 6,
+  },
+  tagText: { fontSize: 12, color: '#4b5563', fontWeight: '500' },
+  jobFooter: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center',
+  },
+  jobMetaRow: { flexDirection: 'row', gap: 12 },
+  jobMetaText: { fontSize: 13, color: '#6b7280' },
+  jobSalary: { fontSize: 13, fontWeight: '700', color: '#1f2937' },
 });

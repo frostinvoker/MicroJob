@@ -27,7 +27,6 @@ const Sidebar: React.FC<SidebarProps> = ({
     { icon: "messages", label: "Messages", path: "/messages", notification: true },
     { icon: "saved-jobs", label: "Saved jobs", path: "/saved-jobs" },
     { icon: "e-wallet", label: "E-Wallet", path: "/e-wallet" },
-    { icon: "admin", label: "Admin Dashboard", path: "/admin" },
   ];
 
   const bottomMenuItems = [

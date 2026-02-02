@@ -13,15 +13,15 @@ export default function SignIn({
   onNavigateToForgot?: () => void;
   onLogin?: () => void;
 }) {
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [email, setEmail] = useState(''); // Changed from phoneNumber to email
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSignIn = async () => {
     // Validation
-    if (!phoneNumber.trim()) {
-      Alert.alert('Error', 'Please enter your phone number');
+    if (!email.trim()) {
+      Alert.alert('Error', 'Please enter your email');
       return;
     }
 
@@ -39,7 +39,7 @@ export default function SignIn({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          phoneNumber,
+          email, // Changed from phoneNumber to email
           password,
         }),
       });
@@ -76,16 +76,17 @@ export default function SignIn({
         <Text style={styles.title}>Welcome Back</Text>
         <Text style={styles.subtitle}>Sign in to your account</Text>
 
-        {/* Phone Number Input */}
+        {/* Email Input - Changed from Phone Number (phone is now optional) */}
         <View style={styles.inputContainer}>
-          <Text style={styles.inputIcon}>📱</Text>
+          <Text style={styles.inputIcon}>📧</Text>
           <TextInput
             style={styles.input}
-            placeholder="Phone Number"
+            placeholder="Email"
             placeholderTextColor="#999"
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            keyboardType="phone-pad"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
           />
         </View>
 

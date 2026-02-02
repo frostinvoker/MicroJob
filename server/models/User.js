@@ -5,13 +5,15 @@ const UserSchema = new mongoose.Schema(
     {   
         phoneNumber: {
             type: String,
-            required: true,
+            required: false, // Changed to optional - can be added in settings later
             unique: true,
+            sparse: true, // Allows multiple null values for unique field
             minlength: 11,
             maxlength: 11,
         },
         email: {
             type: String,
+            required: true, // Changed to required since we use it for login
             unique: true,
             lowercase: true,
             trim: true,
