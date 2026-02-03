@@ -100,9 +100,9 @@ export function ProfileNew() {
         </nav>
 
         {/* Add New Project Button */}
-        <button className="mt-auto flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-[13px] text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors">
+          <button className="mt-auto flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-[13px] text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors">
           <div className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center">
-            <span className="text-lg">+</span>
+            <span className="text-lg">&gt;</span>
           </div>
           <span className="font-medium">Add New Project</span>
         </button>

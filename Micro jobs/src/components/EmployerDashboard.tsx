@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Users, Clock, MessageSquare, CheckCircle, XCircle, TrendingUp, ArrowRight, Briefcase, Plus } from "lucide-react";
+import { Users, Clock, MessageSquare, CheckCircle, XCircle, TrendingUp, ArrowRight, Briefcase, ChevronRight } from "lucide-react";
 
 export function EmployerDashboard() {
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ export function EmployerDashboard() {
           onClick={() => navigate("/dashboard/employer/post-job")}
           className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold text-[14px] rounded-lg hover:bg-blue-700 transition-all shadow-sm hover:shadow-md"
         >
-          <Plus className="w-4 h-4" />
+          <ChevronRight className="w-4 h-4" />
           Post New Job
         </button>
       </div>

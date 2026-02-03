@@ -1,34 +1,10 @@
 import { useEffect, useState } from "react";
-import {
-  User,
-  ShieldCheck,
-  Bell,
-  CreditCard,
-  Users,
-  Eye,
-  EyeOff,
-  Upload,
-  Plus,
-  Trash2,
-  CheckCircle2,
-  Clock,
-  Circle,
-  Mail,
-  Phone,
-} from "lucide-react";
+import { Eye, EyeOff, Upload, Trash2, CheckCircle2, Clock, Circle } from "lucide-react";
 import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
 
-type TabType = "account" | "privacy" | "notifications" | "payments" | "team";
+type TabType = "account" | "privacy" | "payments";
 type AccountTab = "personal" | "experience" | "resume";
-
-const tabConfig: { id: TabType; label: string; icon: JSX.Element }[] = [
-  { id: "account", label: "Account", icon: <User className="w-4 h-4" /> },
-  { id: "privacy", label: "Privacy & Security", icon: <ShieldCheck className="w-4 h-4" /> },
-  { id: "notifications", label: "Notifications", icon: <Bell className="w-4 h-4" /> },
-  { id: "payments", label: "Payment Methods", icon: <CreditCard className="w-4 h-4" /> },
-  { id: "team", label: "Team", icon: <Users className="w-4 h-4" /> },
-];
 
 const accountTabConfig: { id: AccountTab; label: string }[] = [
   { id: "personal", label: "Personal Information" },
@@ -40,10 +16,8 @@ const mapTabParam = (value: string | null): TabType | null => {
   if (!value) return null;
   if (value === "account") return "account";
   if (value === "privacy") return "privacy";
-  if (value === "notifications") return "notifications";
   if (value === "payments" || value === "payment-methods") return "payments";
-  if (value === "team") return "team";
-  if (["personal", "experience", "resume"].includes(value)) return "account";
+  if (["personal", "experience", "resume", "cv"].includes(value)) return "account";
   if (["security", "verification"].includes(value)) return "privacy";
   return null;
 };
@@ -123,14 +97,6 @@ interface PaymentMethod {
   status: "default" | "active" | "expired";
 }
 
-interface TeamMember {
-  id: string;
-  name: string;
-  role: string;
-  email: string;
-  status: "active" | "pending";
-}
-
 interface SessionInfo {
   id: string;
   current: boolean;
@@ -201,15 +167,6 @@ export function Settings() {
 
   const [resume, setResume] = useState<File | null>(null);
 
-  const [notificationSettings, setNotificationSettings] = useState({
-    newApplications: true,
-    jobOffers: true,
-    reviewReminders: true,
-    referrals: true,
-    chatUpdates: false,
-    calendarUpdates: true,
-  });
-
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([
     { id: "visa-1", brand: "Visa", last4: "1234", expiry: "01/26", status: "default" },
     { id: "mc-1", brand: "Mastercard", last4: "1234", expiry: "01/26", status: "active" },
@@ -222,14 +179,6 @@ export function Settings() {
     expiry: "",
     cvv: "",
   });
-
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
-    { id: "1", name: "Jonas Dela Cruz", role: "Owner", email: "jonas.delacruz@email.com", status: "active" },
-    { id: "2", name: "Samantha Lee", role: "Recruiter", email: "samantha.lee@email.com", status: "active" },
-    { id: "3", name: "Robert Lane", role: "Hiring Manager", email: "robert.lane@email.com", status: "pending" },
-  ]);
-
-  const [inviteEmail, setInviteEmail] = useState("");
 
   const sessions: SessionInfo[] = [
     {
@@ -251,29 +200,35 @@ export function Settings() {
   ];
 
   useEffect(() => {
-    const mappedTab = mapTabParam(searchParams.get("tab"));
-    if (mappedTab && mappedTab !== activeTab) {
+    const tabParam = searchParams.get("tab");
+    const mappedTab = mapTabParam(tabParam);
+    if (!mappedTab) {
+      if (tabParam) {
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.set("tab", "account");
+        setSearchParams(nextParams, { replace: true });
+      }
+      return;
+    }
+    if (mappedTab !== activeTab) {
       setActiveTab(mappedTab);
     }
-  }, [activeTab, searchParams]);
+  }, [activeTab, searchParams, setSearchParams]);
 
   useEffect(() => {
     if (activeTab !== "account") return;
-    const mappedAccountTab = mapAccountTab(searchParams.get("tab"));
-    if (mappedAccountTab && mappedAccountTab !== accountTab) {
-      setAccountTab(mappedAccountTab);
+    const tabParam = searchParams.get("tab");
+    const mappedAccountTab = mapAccountTab(tabParam);
+    if (mappedAccountTab) {
+      if (mappedAccountTab !== accountTab) {
+        setAccountTab(mappedAccountTab);
+      }
+      return;
     }
-  }, [activeTab, accountTab, searchParams]);
-
-  const handleTabChange = (tab: TabType) => {
-    setActiveTab(tab);
-    if (tab === "account") {
+    if (tabParam === "account" && accountTab !== "personal") {
       setAccountTab("personal");
     }
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set("tab", tab);
-    setSearchParams(nextParams, { replace: true });
-  };
+  }, [activeTab, accountTab, searchParams]);
 
   const handleAccountTabChange = (tab: AccountTab) => {
     setAccountTab(tab);
@@ -422,10 +377,6 @@ export function Settings() {
     toast.info("Test code sent to your email.");
   };
 
-  const toggleNotification = (key: keyof typeof notificationSettings) => {
-    setNotificationSettings({ ...notificationSettings, [key]: !notificationSettings[key] });
-  };
-
   const getBrand = (number: string): PaymentMethod["brand"] => {
     const trimmed = number.replace(/\s+/g, "");
     if (trimmed.startsWith("4")) return "Visa";
@@ -466,25 +417,6 @@ export function Settings() {
     toast.success("Payment method removed");
   };
 
-  const handleInvite = () => {
-    if (!inviteEmail.trim()) {
-      toast.error("Enter an email address to invite");
-      return;
-    }
-    setTeamMembers([
-      {
-        id: Date.now().toString(),
-        name: inviteEmail.split("@")[0] || "New Member",
-        role: "Member",
-        email: inviteEmail,
-        status: "pending",
-      },
-      ...teamMembers,
-    ]);
-    setInviteEmail("");
-    toast.success("Invitation sent");
-  };
-
   const handleDisableAccount = () => {
     toast.success("Account disabled. You can reactivate anytime.");
   };
@@ -496,48 +428,26 @@ export function Settings() {
   return (
     <div className="max-w-[1200px] mx-auto space-y-6">
       <div className="bg-white border border-[#E5E7EB] rounded-[16px]">
-        <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr]">
-          <aside className="border-b lg:border-b-0 lg:border-r border-[#E5E7EB] p-6">
-            <nav className="space-y-2">
-              {tabConfig.map((tab) => (
-                <div key={tab.id}>
-                  <button
-                    onClick={() => handleTabChange(tab.id)}
-                    className={`w-full px-4 py-3.5 rounded-[12px] text-left text-[16px] font-semibold transition-colors ${
-                      activeTab === tab.id
-                        ? "bg-[#EEF2FF] text-[#111827]"
-                        : "text-[#111827] hover:bg-[#F8FAFC]"
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                  {tab.id === "account" && activeTab === "account" && (
-                    <div className="mt-2 ml-4 space-y-1">
-                      {accountTabConfig.map((subTab) => (
-                        <button
-                          key={subTab.id}
-                          onClick={() => handleAccountTabChange(subTab.id)}
-                          className={`w-full px-3 py-2 rounded-[10px] text-left text-[13px] font-medium transition-colors ${
-                            accountTab === subTab.id
-                              ? "bg-[#EEF2FF] text-[#1D4ED8]"
-                              : "text-[#64748B] hover:bg-[#F8FAFC]"
-                          }`}
-                        >
-                          {subTab.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </nav>
-          </aside>
-
-          <section className="p-6 space-y-6">
+        <section className="p-6 space-y-6">
           {activeTab === "account" && (
             <div className="space-y-6">
               <div className="bg-white rounded-[16px] border border-[#E5E7EB]">
                 <div className="p-6">
+                  <div className="flex flex-wrap gap-2 border-b border-[#E5E7EB] pb-4 mb-6">
+                    {accountTabConfig.map((subTab) => (
+                      <button
+                        key={subTab.id}
+                        onClick={() => handleAccountTabChange(subTab.id)}
+                        className={`px-4 py-2 rounded-full text-[13px] font-semibold transition-colors ${
+                          accountTab === subTab.id
+                            ? "bg-[#EEF2FF] text-[#1D4ED8]"
+                            : "text-[#64748B] hover:bg-[#F8FAFC]"
+                        }`}
+                      >
+                        {subTab.label}
+                      </button>
+                    ))}
+                  </div>
                   {accountTab === "personal" && (
                     <div className="space-y-6">
                       <div>
@@ -1156,169 +1066,6 @@ export function Settings() {
             </div>
           )}
 
-          {activeTab === "notifications" && (
-            <div className="space-y-6">
-              <div className="bg-white rounded-[16px] border border-[#E5E7EB] p-6">
-                <h2 className="text-[20px] font-semibold text-[#111827]">Job</h2>
-                <p className="text-[13px] text-[#6B7280] mb-6">
-                  You can make some details of your jobs on the marketplace private.
-                </p>
-
-                <div className="space-y-4">
-                  <div className="border border-[#E5E7EB] rounded-[12px] px-4 py-4 flex items-center justify-between">
-                    <div>
-                      <p className="text-[15px] font-semibold text-[#111827]">New Applications (Daily)</p>
-                      <p className="text-[12px] text-[#6B7280]">Someone signed on using my referral link</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-[12px] text-[#6B7280]">
-                        {notificationSettings.newApplications ? "Enable" : "Disabled"}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => toggleNotification("newApplications")}
-                        className={`w-12 h-6 rounded-full flex items-center p-1 transition-colors ${
-                          notificationSettings.newApplications ? "bg-green-500" : "bg-gray-200"
-                        }`}
-                      >
-                        <span
-                          className={`h-4 w-4 bg-white rounded-full transition-transform ${
-                            notificationSettings.newApplications ? "translate-x-6" : ""
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="border border-[#E5E7EB] rounded-[12px] px-4 py-4 flex items-center justify-between">
-                    <div>
-                      <p className="text-[15px] font-semibold text-[#111827]">Job Offers and Updates</p>
-                      <p className="text-[12px] text-[#6B7280]">Someone signed on using my referral link</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-[12px] text-[#6B7280]">
-                        {notificationSettings.jobOffers ? "Enable" : "Disabled"}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => toggleNotification("jobOffers")}
-                        className={`w-12 h-6 rounded-full flex items-center p-1 transition-colors ${
-                          notificationSettings.jobOffers ? "bg-green-500" : "bg-gray-200"
-                        }`}
-                      >
-                        <span
-                          className={`h-4 w-4 bg-white rounded-full transition-transform ${
-                            notificationSettings.jobOffers ? "translate-x-6" : ""
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="border border-[#E5E7EB] rounded-[12px] px-4 py-4 flex items-center justify-between">
-                    <div>
-                      <p className="text-[15px] font-semibold text-[#111827]">Reminder to Review New Talent</p>
-                      <p className="text-[12px] text-[#6B7280]">Someone signed on using my referral link</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-[12px] text-[#6B7280]">
-                        {notificationSettings.reviewReminders ? "Enable" : "Disabled"}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => toggleNotification("reviewReminders")}
-                        className={`w-12 h-6 rounded-full flex items-center p-1 transition-colors ${
-                          notificationSettings.reviewReminders ? "bg-green-500" : "bg-gray-200"
-                        }`}
-                      >
-                        <span
-                          className={`h-4 w-4 bg-white rounded-full transition-transform ${
-                            notificationSettings.reviewReminders ? "translate-x-6" : ""
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="border border-[#E5E7EB] rounded-[12px] px-4 py-4 flex items-center justify-between">
-                    <div>
-                      <p className="text-[15px] font-semibold text-[#111827]">Referrals</p>
-                      <p className="text-[12px] text-[#6B7280]">Someone signed on using my referral link</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-[12px] text-[#6B7280]">
-                        {notificationSettings.referrals ? "Enable" : "Disabled"}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => toggleNotification("referrals")}
-                        className={`w-12 h-6 rounded-full flex items-center p-1 transition-colors ${
-                          notificationSettings.referrals ? "bg-green-500" : "bg-gray-200"
-                        }`}
-                      >
-                        <span
-                          className={`h-4 w-4 bg-white rounded-full transition-transform ${
-                            notificationSettings.referrals ? "translate-x-6" : ""
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="border border-[#E5E7EB] rounded-[12px] px-4 py-4 flex items-center justify-between">
-                    <div>
-                      <p className="text-[15px] font-semibold text-[#111827]">Chat & Communication</p>
-                      <p className="text-[12px] text-[#6B7280]">New unread messages</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-[12px] text-[#6B7280]">
-                        {notificationSettings.chatUpdates ? "Enable" : "Disabled"}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => toggleNotification("chatUpdates")}
-                        className={`w-12 h-6 rounded-full flex items-center p-1 transition-colors ${
-                          notificationSettings.chatUpdates ? "bg-green-500" : "bg-gray-200"
-                        }`}
-                      >
-                        <span
-                          className={`h-4 w-4 bg-white rounded-full transition-transform ${
-                            notificationSettings.chatUpdates ? "translate-x-6" : ""
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="border border-[#E5E7EB] rounded-[12px] px-4 py-4 flex items-center justify-between">
-                    <div>
-                      <p className="text-[15px] font-semibold text-[#111827]">Calendar & Scheduling</p>
-                      <p className="text-[12px] text-[#6B7280]">New unread messages</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-[12px] text-[#6B7280]">
-                        {notificationSettings.calendarUpdates ? "Enable" : "Disabled"}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => toggleNotification("calendarUpdates")}
-                        className={`w-12 h-6 rounded-full flex items-center p-1 transition-colors ${
-                          notificationSettings.calendarUpdates ? "bg-green-500" : "bg-gray-200"
-                        }`}
-                      >
-                        <span
-                          className={`h-4 w-4 bg-white rounded-full transition-transform ${
-                            notificationSettings.calendarUpdates ? "translate-x-6" : ""
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {activeTab === "payments" && (
             <div className="space-y-6">
               <div className="bg-white rounded-[16px] border border-[#E5E7EB] p-6">
@@ -1332,7 +1079,7 @@ export function Settings() {
                     onClick={() => toast.info("Add new card")}
                     className="text-[14px] text-[#2563EB] font-medium hover:text-[#1D4ED8]"
                   >
-                    + Add New Card
+                    &gt; Add New Card
                   </button>
                 </div>
 
@@ -1420,92 +1167,8 @@ export function Settings() {
             </div>
           )}
 
-          {activeTab === "team" && (
-            <div className="space-y-6">
-              <div className="bg-white rounded-[16px] border border-[#E5E7EB] p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h2 className="text-[20px] font-semibold text-[#111827]">Team</h2>
-                    <p className="text-[13px] text-[#6B7280]">Manage team members and invitations.</p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col md:flex-row gap-3">
-                  <input
-                    type="email"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="Invite member by email"
-                    className="flex-1 bg-white border border-[#E5E7EB] rounded-[12px] px-4 py-3 text-[14px]"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleInvite}
-                    className="bg-[#2563EB] text-white font-semibold px-6 py-3 rounded-[12px] hover:bg-[#1D4ED8]"
-                  >
-                    Invite
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-[16px] border border-[#E5E7EB] p-6">
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-4">Members</h3>
-                <div className="space-y-3">
-                  {teamMembers.map((member) => (
-                    <div key={member.id} className="border border-[#E5E7EB] rounded-[12px] p-4 flex items-center justify-between">
-                      <div>
-                        <p className="text-[14px] font-semibold text-[#111827]">{member.name}</p>
-                        <div className="flex items-center gap-3 text-[12px] text-[#6B7280] mt-1">
-                          <span className="flex items-center gap-1">
-                            <Mail className="w-3.5 h-3.5" />
-                            {member.email}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Users className="w-3.5 h-3.5" />
-                            {member.role}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`px-3 py-1 rounded-full text-[12px] font-semibold ${
-                            member.status === "active" ? "bg-[#DCFCE7] text-[#166534]" : "bg-[#FEF3C7] text-[#92400E]"
-                          }`}
-                        >
-                          {member.status === "active" ? "Active" : "Pending"}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => toast.info("Manage member")}
-                          className="px-3 py-1.5 text-[12px] font-semibold border border-[#E5E7EB] rounded-[8px] text-[#475569] hover:bg-[#F8FAFC]"
-                        >
-                          Manage
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-white rounded-[16px] border border-[#E5E7EB] p-6">
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-2">Team Contact</h3>
-                <p className="text-[13px] text-[#6B7280] mb-4">Main contact for team communications.</p>
-                <div className="flex flex-col md:flex-row gap-3">
-                  <div className="flex items-center gap-2 border border-[#E5E7EB] rounded-[12px] px-4 py-3 text-[14px] text-[#111827]">
-                    <Mail className="w-4 h-4 text-[#6B7280]" />
-                    team@microjobs.ph
-                  </div>
-                  <div className="flex items-center gap-2 border border-[#E5E7EB] rounded-[12px] px-4 py-3 text-[14px] text-[#111827]">
-                    <Phone className="w-4 h-4 text-[#6B7280]" />
-                    +63 2 8123 4567
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </section>
       </div>
-    </div>
     </div>
   );
 }

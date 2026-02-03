@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ChevronLeft, ChevronRight, ChevronDown, User, Shield } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import svgPaths from "../imports/svg-at917c2et3";
 import imgBigShoesAvatar from "figma:asset/8b9f86452ff0e90495bf9daf1494dd6920ad538a.png";
 import { useAuth } from "../contexts/AuthContext";
@@ -96,7 +96,7 @@ interface ExpandableNavItemProps {
   basePath: string;
   badge?: boolean;
   isCollapsed: boolean;
-  children?: { label: string; to: string }[];
+  children?: { label: string; to: string; isActive?: boolean }[];
 }
 
 function ExpandableNavItem({ icon, label, basePath, badge, isCollapsed, children = [] }: ExpandableNavItemProps) {
@@ -127,7 +127,13 @@ function ExpandableNavItem({ icon, label, basePath, badge, isCollapsed, children
                       <div aria-hidden="true" className="absolute border border-solid border-white inset-[-1px] pointer-events-none rounded-[100px]" />
                     </div>
                   )}
-                  <ChevronDown className={`w-4 h-4 text-[#64748b] transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                  <div
+                    className={`flex items-center justify-center w-7 h-7 rounded-[8px] border border-[#E2E8F0] transition-colors ${
+                      isExpanded ? "bg-[#E8F2F8] text-[#1C4D8D]" : "text-[#64748b]"
+                    }`}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </div>
                 </>
               )}
               {isCollapsed && badge && (
@@ -143,7 +149,11 @@ function ExpandableNavItem({ icon, label, basePath, badge, isCollapsed, children
       {!isCollapsed && isExpanded && children.length > 0 && (
         <div className="mt-1 ml-[44px] space-y-1">
           {children.map((child) => {
-            const isChildActive = location.pathname === child.to;
+            const isChildActive =
+              child.isActive ??
+              (child.to.includes("?")
+                ? `${location.pathname}${location.search}` === child.to
+                : location.pathname === child.to);
             return (
               <Link
                 key={child.to}
@@ -272,6 +282,11 @@ export function Sidebar() {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user } = useAuth();
+  const settingsTabParam = new URLSearchParams(location.search).get("tab");
+  const settingsAccountTabs = ["account", "personal", "experience", "resume", "cv"];
+  const isSettingsAccountActive =
+    location.pathname.startsWith("/dashboard/settings") &&
+    (!settingsTabParam || settingsAccountTabs.includes(settingsTabParam));
 
   return (
     <div 
@@ -291,11 +306,7 @@ export function Sidebar() {
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="absolute -right-3 top-8 bg-white border border-[#E5E7EB] rounded-full p-1.5 hover:bg-gray-50 transition-colors shadow-sm z-10"
         >
-          {isCollapsed ? (
-            <ChevronRight className="w-4 h-4 text-[#64748b]" />
-          ) : (
-            <ChevronLeft className="w-4 h-4 text-[#64748b]" />
-          )}
+          <ChevronRight className="w-4 h-4 text-[#64748b]" />
         </button>
       </div>
 
@@ -373,70 +384,31 @@ export function Sidebar() {
               badge={true}
               isCollapsed={isCollapsed}
             />
-            <NavItem 
-              icon={<SettingsIcon />} 
-              label="Settings" 
-              to="/dashboard/settings" 
+            <ExpandableNavItem
+              icon={<SettingsIcon />}
+              label="Settings"
+              basePath="/dashboard/settings"
               isCollapsed={isCollapsed}
+              children={[
+                {
+                  label: "Account",
+                  to: "/dashboard/settings?tab=account",
+                  isActive: isSettingsAccountActive,
+                },
+                {
+                  label: "Privacy & Security",
+                  to: "/dashboard/settings?tab=privacy",
+                  isActive:
+                    location.pathname.startsWith("/dashboard/settings") && settingsTabParam === "privacy",
+                },
+                {
+                  label: "Payment Methods",
+                  to: "/dashboard/settings?tab=payments",
+                  isActive:
+                    location.pathname.startsWith("/dashboard/settings") && settingsTabParam === "payments",
+                },
+              ]}
             />
-            {!isCollapsed && location.pathname.startsWith("/dashboard/settings") && (
-              <div className="mt-1 ml-[44px] space-y-1">
-                {(() => {
-                  const tabParam = new URLSearchParams(location.search).get("tab");
-                  const accountTabs = ["account", "personal", "experience", "resume", "cv"];
-                  const isAccountGroupActive = !tabParam || accountTabs.includes(tabParam);
-                  const effectiveAccountTab =
-                    tabParam === "experience"
-                      ? "experience"
-                      : tabParam === "resume" || tabParam === "cv"
-                        ? "resume"
-                        : "personal";
-                  const accountItems = [
-                    { label: "Personal Information", tab: "personal" },
-                    { label: "Experience", tab: "experience" },
-                    { label: "CV/Resume", tab: "resume" },
-                  ];
-                  const otherItems = [
-                    { label: "Privacy & Security", tab: "privacy" },
-                    { label: "Notifications", tab: "notifications" },
-                    { label: "Payment Methods", tab: "payments" },
-                    { label: "Team", tab: "team" },
-                  ];
-
-                  return (
-                    <>
-                      <p className="px-3 py-2 text-[13px] font-semibold text-[#111827]">Account</p>
-                      {accountItems.map((item) => (
-                        <Link
-                          key={item.tab}
-                          to={`/dashboard/settings?tab=${item.tab}`}
-                          className={`block px-3 py-2 text-[13px] font-medium rounded-lg transition-colors ${
-                            isAccountGroupActive && effectiveAccountTab === item.tab
-                              ? "bg-[#E8F2F8] text-[#1C4D8D]"
-                              : "text-[#64748b] hover:bg-gray-50"
-                          }`}
-                        >
-                          {item.label}
-                        </Link>
-                      ))}
-                      {otherItems.map((item) => (
-                        <Link
-                          key={item.tab}
-                          to={`/dashboard/settings?tab=${item.tab}`}
-                          className={`block px-3 py-2 text-[13px] font-medium rounded-lg transition-colors ${
-                            tabParam === item.tab
-                              ? "bg-[#E8F2F8] text-[#1C4D8D]"
-                              : "text-[#64748b] hover:bg-gray-50"
-                          }`}
-                        >
-                          {item.label}
-                        </Link>
-                      ))}
-                    </>
-                  );
-                })()}
-              </div>
-            )}
             <NavItem 
               icon={<SupportIcon />} 
               label="Support" 

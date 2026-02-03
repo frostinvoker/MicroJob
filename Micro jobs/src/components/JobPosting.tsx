@@ -10,7 +10,7 @@ import {
   X,
   Sparkles,
   ArrowLeft,
-  Plus
+  ChevronRight
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -312,7 +312,7 @@ export function JobPosting() {
                   onClick={addResponsibility}
                   className="mt-3 text-[14px] text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
                 >
-                  <span className="text-lg">+</span> Add Responsibilities
+                  <ChevronRight className="w-4 h-4" /> Add Responsibilities
                 </button>
               </div>
             </section>
@@ -414,7 +414,7 @@ export function JobPosting() {
                   onClick={addHiringStage}
                   className="px-4 py-2.5 bg-blue-600 text-white text-[14px] font-medium rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center gap-1"
                 >
-                  <Plus className="w-4 h-4" />
+                  <ChevronRight className="w-4 h-4" />
                   Add
                 </button>
               </div>
@@ -462,7 +462,7 @@ export function JobPosting() {
                   onClick={addScoreCriteria}
                   className="px-4 py-2.5 bg-blue-600 text-white text-[14px] font-medium rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center gap-1"
                 >
-                  <Plus className="w-4 h-4" />
+                  <ChevronRight className="w-4 h-4" />
                   Add
                 </button>
               </div>

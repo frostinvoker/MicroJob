@@ -1,4 +1,4 @@
-import { ArrowUpRight, ArrowDownLeft, CreditCard, TrendingUp, DollarSign, Send, Download, Plus, X } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, CreditCard, TrendingUp, DollarSign, Send, Download, ChevronRight, X } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -203,7 +203,7 @@ export function EWallet() {
               onClick={handleTopUp}
               className="flex-1 bg-white text-[#1C4D8D] font-semibold py-3 px-6 rounded-[12px] hover:bg-gray-100 transition-all duration-300 flex items-center justify-center gap-2"
             >
-              <Plus className="w-5 h-5" />
+              <ChevronRight className="w-5 h-5" />
               Top Up
             </button>
             <button
