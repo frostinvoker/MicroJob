@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
+import { useAuth } from "../hooks/useAuth";
 
 const FindJobs: React.FC = () => {
   const navigate = useNavigate();
+  const authUser = useAuth();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 
@@ -79,7 +81,7 @@ const FindJobs: React.FC = () => {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <Sidebar userName="Jonas" userEmail="jonas@example.com" balance="₱67.67" messageCount={2} />
+      <Sidebar userName={authUser?.firstName || "Jonas"} userEmail={authUser?.email || "jonas@example.com"} balance="₱67.67" messageCount={2} userRole={authUser?.role || "work"} />
 
       {/* Main Content */}
       <div className="flex-1 overflow-auto ml-64">

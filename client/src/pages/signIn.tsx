@@ -9,6 +9,7 @@ const SignIn: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,9 +20,15 @@ const SignIn: React.FC = () => {
     setLoading(true);
     try {
       const { token, user } = await loginUser({ emailOrUsername: email, password });
+      console.log("SignIn - Response from login:", { token, user });
+      console.log("SignIn - User role from API:", user?.role);
+      console.log("SignIn - User object:", user);
       // Store user info and token for authentication
       localStorage.setItem("auth_user", JSON.stringify(user));
+      console.log("SignIn - Stored in localStorage:", localStorage.getItem("auth_user"));
+      console.log("SignIn - Role in localStorage:", JSON.parse(localStorage.getItem("auth_user") || '{}').role);
       if (rememberMe) localStorage.setItem("auth_token", token);
+        window.dispatchEvent(new Event("auth_user_updated"));
       // Redirect to dashboard
       navigate("/dashboard", { replace: true });
     } catch (err: any) {
@@ -120,13 +127,13 @@ const SignIn: React.FC = () => {
           <form onSubmit={handleSignIn} className="space-y-6">
             {error && <p className="text-red-600 text-sm">{error}</p>}
             
-            {/* Email Field */
+            {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-2">
                 Email Address
               </label>
               <div className="relative">
-                <img src ={mailIcon} alt="Mail Icon" className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"/>
+                <img src={mailIcon} alt="Mail Icon" className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"/>
                 <input
                   type="email"
                   id="email"
@@ -139,22 +146,29 @@ const SignIn: React.FC = () => {
               </div>
             </div>
 
-            /* Password Field */}
+            {/* Password Field */}
             <div>
               <label htmlFor="password" className="block text-sm font-semibold text-gray-900 mb-2">
                 Password
               </label>
               <div className="relative">
-                <img src= {lockIcon} alt="Lock Icon" className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"/>
+                <img src={lockIcon} alt="Lock Icon" className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"/>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-12 pr-12 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? "👁" : "👁"}
+                </button>
               </div>
             </div>
 

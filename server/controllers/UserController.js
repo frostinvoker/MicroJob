@@ -11,10 +11,27 @@ export async function getUserList(req, res) {
 }
 export async function register(req, res) {
     try {
-        const {phoneNumber, email, firstName, lastName, password} = req.body;
-        // Phone number is now optional - can be added in settings later
-        if (!firstName || !lastName || !password) {
+        const {phoneNumber, email, firstName, lastName, username, password, role} = req.body;
+        
+        // Handle both web (username) and mobile (firstName/lastName) formats
+        let finalFirstName = firstName;
+        let finalLastName = lastName;
+        
+        if (username && !firstName && !lastName) {
+            // Web client format - split username into first and last name
+            const nameParts = username.trim().split(' ');
+            finalFirstName = nameParts[0] || '';
+            finalLastName = nameParts.slice(1).join(' ') || nameParts[0] || '';
+        }
+        
+        // Validation
+        if (!finalFirstName || !password || !email) {
             return res.status(400).json({message: "Missing Fields."});
+        }
+        
+        // Ensure lastName has a value
+        if (!finalLastName) {
+            finalLastName = finalFirstName;
         }
         
         // Check if user exists by phone or email
@@ -32,7 +49,18 @@ export async function register(req, res) {
             }
         }
 
-        const user = new User({phoneNumber, email, firstName, lastName});
+        // Validate role
+        const validRoles = ["hire", "work", "both", "admin", "superadmin"];
+        const userRole = role && validRoles.includes(role) ? role : "work";
+        console.log("Register - User role being set to:", userRole);
+
+        const user = new User({
+            phoneNumber, 
+            email, 
+            firstName: finalFirstName, 
+            lastName: finalLastName,
+            role: userRole
+        });
         await user.setPassword(password);
         await user.save();
 
@@ -45,12 +73,16 @@ export async function register(req, res) {
 
 export async function login(req, res) {
     try{
-        const {phonenumber, password, phoneNumber, email} = req.body;
-        // Support both phonenumber and phoneNumber field names, as well as email
+        console.log("Login request body:", req.body);
+        const {phonenumber, password, phoneNumber, email, emailOrUsername} = req.body;
+        // Support both web (emailOrUsername) and mobile (email) formats
         const phone = phonenumber || phoneNumber;
-        const identifier = phone || email;
+        const identifier = emailOrUsername || email || phone;
+        
+        console.log("Identifier:", identifier, "Password present:", !!password);
         
         if(!identifier || !password) {
+            console.log("Missing fields - identifier:", identifier, "password:", !!password);
             return res.status(400).json({message: "Missing Fields."});
         }
         
@@ -91,7 +123,7 @@ export async function login(req, res) {
                 lastName: user.lastName,
                 phoneNumber: user.phoneNumber,
                 email: user.email,
-                role: user.role
+                role: user.role // hire, work, both, admin, superadmin
             }
         });
     } catch (error){
@@ -106,5 +138,5 @@ export async function logout(req, res) {
         sameSite: "strict",
         secure: process.env.NODE_ENV === 'production'
     });
-    res.status(200).json({message: "Logout successful."});
+    return res.status(200).json({message: "Logout successful."});
 }

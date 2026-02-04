@@ -15,7 +15,7 @@ const SignUp: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [userType, setUserType] = useState("both");
+  const [userType, setUserType] = useState("work"); // Default to work, not both
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -34,11 +34,14 @@ const SignUp: React.FC = () => {
     }
     setLoading(true);
     try {
-      await registerUser({ username: fullName.trim(), email: email.trim(), password });
+      console.log("SignUp - Sending registration with role:", userType);
+      await registerUser({ username: fullName.trim(), email: email.trim(), password, role: userType });
+      console.log("SignUp - Registration successful");
       setSuccess("Account created! Redirecting to sign in...");
       // Redirect to signin after successful registration
       setTimeout(() => navigate("/signin", { replace: true }), 1500);
     } catch (err: any) {
+      console.error("SignUp - Registration failed:", err);
       setError(err?.message || "Unable to sign up");
     } finally {
       setLoading(false);

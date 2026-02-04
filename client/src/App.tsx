@@ -8,11 +8,16 @@ import PhoneVerification from "./pages/phoneVerification";
 import FindJobs from "./pages/FindJobs";
 import JobDetails from "./pages/JobDetails";
 import Settings from "./pages/Settings";
+// Worker pages
+import { AppliedJobs, SavedJobs } from "./pages/worker";
+// Employer pages
+import { PostJob } from "./pages/employer";
 
 const App: React.FC = () => {
   return (
     <Router>
       <Routes>
+        {/* Shared Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
@@ -21,6 +26,13 @@ const App: React.FC = () => {
         <Route path="/find-jobs" element={<FindJobs />} />
         <Route path="/job-details/:jobId" element={<JobDetails />} />
         <Route path="/settings" element={<Settings />} />
+
+        {/* Worker Routes */}
+        <Route path="/worker/applied-jobs" element={<AppliedJobs />} />
+        <Route path="/worker/saved-jobs" element={<SavedJobs />} />
+
+        {/* Employer Routes */}
+        <Route path="/employer/post-job" element={<PostJob />} />
       </Routes>
     </Router>
   );

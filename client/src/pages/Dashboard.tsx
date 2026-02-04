@@ -13,6 +13,7 @@ import {
   Filler,
 } from "chart.js";
 import Sidebar from "../components/Sidebar";
+import { useAuth } from "../hooks/useAuth";
 
 ChartJS.register(
   CategoryScale,
@@ -28,6 +29,7 @@ ChartJS.register(
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const authUser = useAuth();
   const [userName, setUserName] = useState("Jonas Dick");
   const [userEmail, setUserEmail] = useState("you@example.com");
   const [activeVacancyTab, setActiveVacancyTab] = useState("Application Sent");
@@ -35,16 +37,23 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const stored = localStorage.getItem("auth_user");
+    console.log("Dashboard - Auth user from localStorage:", stored);
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        if (parsed?.username) setUserName(parsed.username);
+        console.log("Dashboard - Parsed auth_user:", parsed);
+        console.log("Dashboard - User role:", parsed?.role);
+        if (parsed?.firstName && parsed?.lastName) setUserName(`${parsed.firstName} ${parsed.lastName}`);
         if (parsed?.email) setUserEmail(parsed.email);
       } catch (err) {
         console.warn("Failed to parse auth_user", err);
       }
     }
   }, []);
+
+  useEffect(() => {
+    console.log("Dashboard - authUser from useAuth hook:", authUser);
+  }, [authUser]);
 
   const recommendations = [
     {
@@ -153,7 +162,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <Sidebar userName={userName} userEmail={userEmail} balance="₱67.67" messageCount={2} />
+      <Sidebar userName={userName} userEmail={userEmail} balance="₱67.67" messageCount={2} userRole={authUser?.role || "work"} />
 
       {/* Main Content */}
       <div className="flex-1 overflow-auto ml-64">

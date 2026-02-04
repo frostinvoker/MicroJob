@@ -1,6 +1,6 @@
 const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 
-export type AuthUser = { id: string; username: string; email: string };
+export type AuthUser = { id: string; username?: string; firstName?: string; lastName?: string; email: string; role?: string };
 export type AuthResponse = { token: string; user: AuthUser; message?: string };
 
 type RequestInitInput = Omit<RequestInit, 'body' | 'method'>;
@@ -31,7 +31,7 @@ async function request<T>(
 }
 
 // Auth APIs
-export function registerUser(payload: { username: string; email: string; password: string }) {
+export function registerUser(payload: { username: string; email: string; password: string; role?: string }) {
   return request<AuthResponse>('/users/register', { method: 'POST', body: payload });
 }
 

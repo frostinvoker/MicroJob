@@ -9,7 +9,12 @@ const router = express.Router();
 // Register a new user (supports both email/username and phone-based registration)
 router.post('/register', async (req, res) => {
   try {
-    const { username, email, password, phoneNumber, firstName, lastName } = req.body;
+    const { username, email, password, phoneNumber, firstName, lastName, role } = req.body;
+
+    // Validate role
+    const validRoles = ['hire', 'work', 'both', 'admin', 'superadmin'];
+    const userRole = role && validRoles.includes(role) ? role : 'work';
+    console.log('Register - User role being set to:', userRole);
 
     // Flexible validation - support both email-based and phone-based registration
     if (!password) {
@@ -33,6 +38,7 @@ router.post('/register', async (req, res) => {
         lastName,
         password,
         email: email?.toLowerCase() || null,
+        role: userRole,
       });
 
       return res.status(201).json({
@@ -43,6 +49,7 @@ router.post('/register', async (req, res) => {
           firstName: user.firstName,
           lastName: user.lastName,
           email: user.email,
+          role: user.role,
         },
       });
     }
@@ -52,22 +59,27 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Username, email, or phone number with firstName and lastName are required' });
     }
 
-    const existingUser = await User.findOne({ 
-      $or: [{ email: email.toLowerCase() }, { username }] 
-    });
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
+    // Split username into firstName and lastName
+    const nameParts = username.trim().split(' ');
+    const userFirstName = nameParts[0] || username;
+    const userLastName = nameParts.slice(1).join(' ') || nameParts[0];
+
     const user = await User.create({
-      username,
+      firstName: userFirstName,
+      lastName: userLastName,
       email: email.toLowerCase(),
       password,
+      role: userRole,
     });
 
     return res.status(201).json({
       message: 'User registered successfully',
-      user: { id: user._id, username: user.username, email: user.email },
+      user: { id: user._id, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role },
     });
   } catch (error) {
     console.error('Register error:', error);
@@ -111,7 +123,7 @@ router.post('/login', async (req, res) => {
           firstName: user.firstName,
           lastName: user.lastName,
           email: user.email,
-          role: user.role || 'user',
+          role: user.role || 'work',
         },
       });
     }
@@ -152,9 +164,10 @@ router.post('/login', async (req, res) => {
       token,
       user: { 
         id: user._id, 
-        username: user.username, 
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
-        role: user.role || 'user',
+        role: user.role || 'work',
       },
     });
   } catch (error) {

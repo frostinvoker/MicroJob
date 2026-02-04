@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/MicroIcon.png";
+import { useAuth } from "../hooks/useAuth";
 
 interface SidebarProps {
   userName?: string;
   userEmail?: string;
   balance?: string;
   messageCount?: number;
+  userRole?: "hire" | "work" | "both" | "admin" | "superadmin"; // Optional override
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -14,30 +16,71 @@ const Sidebar: React.FC<SidebarProps> = ({
   userEmail = "joserizal@gmail.com",
   balance = "$67.67",
   messageCount = 2,
+  userRole = "work", // Default to work, NOT both
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [expandedEmployer, setExpandedEmployer] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const authUser = useAuth();
+  
+  // Get role from auth user (backend source of truth)
+  const userRoleFromAuth = authUser?.role || "work";
+  
+  // Debug logging
+  console.log("[Sidebar] Full authUser object:", authUser);
+  console.log("[Sidebar] Role from authUser:", userRoleFromAuth);
+  console.log("[Sidebar] localStorage auth_user:", localStorage.getItem("auth_user"));
 
-  const menuItems = [
-    { icon: "dashboard", label: "Dashboard", path: "/dashboard" },
-    { icon: "find-jobs", label: "Find jobs", path: "/find-jobs" },
-    { icon: "applied-jobs", label: "Applied Jobs", path: "/applied-jobs" },
+  // Menu items based on user role
+  const workerMenuItems = [
+    { icon: "find-jobs", label: "Apply Jobs", path: "/find-jobs" },
+    { icon: "applied-jobs", label: "Applied Jobs", path: "/worker/applied-jobs" },
+  ];
+
+  const employerMenuItems = [
+    { icon: "➕", label: "Post a Job", path: "/employer/post-job" },
+    { icon: "📋", label: "My Job Posts", path: "/employer/job-posts" },
+  ];
+
+  const commonMenuItems = [
     { icon: "messages", label: "Messages", path: "/messages", notification: true },
-    { icon: "saved-jobs", label: "Saved jobs", path: "/saved-jobs" },
     { icon: "e-wallet", label: "E-Wallet", path: "/e-wallet" },
   ];
+
+  // Build menu items array based on role
+  let menuItems: any[] = [];
+  
+  console.log("[Sidebar] Building menu for role:", userRoleFromAuth);
+  
+  if (userRoleFromAuth === "work") {
+    // Worker: Only Apply Jobs + Applied Jobs
+    menuItems = [...workerMenuItems, ...commonMenuItems];
+    console.log("[Sidebar] Using WORKER menu items");
+  } else if (userRoleFromAuth === "hire") {
+    // Employer: Only Post Jobs + My Job Posts
+    menuItems = [...employerMenuItems, ...commonMenuItems];
+    console.log("[Sidebar] Using EMPLOYER menu items");
+  } else if (userRoleFromAuth === "both") {
+    // Both: All items
+    menuItems = [...workerMenuItems, ...employerMenuItems, ...commonMenuItems];
+    console.log("[Sidebar] Using BOTH menu items");
+  } else if (userRoleFromAuth === "admin" || userRoleFromAuth === "superadmin") {
+    // Admin: All items
+    menuItems = [...workerMenuItems, ...employerMenuItems, ...commonMenuItems];
+    console.log("[Sidebar] Using ADMIN menu items");
+  } else {
+    // Unknown: Default to worker
+    menuItems = [...workerMenuItems, ...commonMenuItems];
+    console.log("[Sidebar] Using DEFAULT (worker) menu items");
+  }
+  
+  console.log("[Sidebar] Final menu items:", menuItems.map(i => i.label));
 
   const bottomMenuItems = [
     { icon: "notifications", label: "Notifications", path: "/notifications", notification: true },
     { icon: "settings", label: "Settings", path: "/settings" },
     { icon: "support", label: "Support", path: "/support" },
-  ];
-
-  const employerSubItems = [
-    { icon: "📊", label: "Dashboard", path: "/employer/dashboard" },
-    { icon: "📋", label: "Applications", path: "/employer/applications" },
   ];
 
   return (
@@ -82,7 +125,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             title={isCollapsed ? "Dashboard" : ""}
           >
             <img 
-              src={`/icons/${menuItems[0].icon}.svg`} 
+              src="/icons/dashboard.svg" 
               alt="Dashboard" 
               className="w-5 h-5 flex-shrink-0"
               onError={(e) => (e.currentTarget.style.display = 'none')}
@@ -90,60 +133,8 @@ const Sidebar: React.FC<SidebarProps> = ({
             {!isCollapsed && <span>Dashboard</span>}
           </button>
 
-          {/* Employer Dropdown */}
-          <div>
-            <button
-              onClick={() => setExpandedEmployer(!expandedEmployer)}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-lg font-semibold text-gray-700 hover:bg-gray-100 transition"
-            >
-              <div className="flex items-center justify-center lg:justify-start gap-3">
-                <img 
-                  src="/icons/employer.svg" 
-                  alt="Employer" 
-                  className="w-5 h-5 flex-shrink-0"
-                  onError={(e) => (e.currentTarget.style.display = 'none')}
-                />
-                {!isCollapsed && <span>Employer</span>}
-              </div>
-              {!isCollapsed && (
-                <span
-                  className={`text-lg transition-transform duration-200 ${
-                    expandedEmployer ? "rotate-180" : ""
-                  }`}
-                >
-                  ▼
-                </span>
-              )}
-            </button>
-
-            {/* Employer Submenu */}
-            {expandedEmployer && !isCollapsed && (
-              <div className="ml-4 mt-1 space-y-1 border-l border-gray-300 pl-4">
-                {employerSubItems.map((item) => (
-                  <button
-                    key={item.path}
-                    onClick={() => navigate(item.path)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg font-semibold transition text-sm ${
-                      location.pathname === item.path
-                        ? "text-blue-600 bg-blue-50"
-                        : "text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    <img 
-                      src={`/icons/${item.icon}.svg`} 
-                      alt={item.label} 
-                      className="w-4 h-4"
-                      onError={(e) => (e.currentTarget.style.display = 'none')}
-                    />
-                    <span>{item.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Remaining Menu Items */}
-          {menuItems.slice(1).map((item) => (
+          {/* Menu Items based on role */}
+          {menuItems.map((item) => (
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
@@ -193,6 +184,53 @@ const Sidebar: React.FC<SidebarProps> = ({
               )}
             </button>
           ))}
+
+          {/* Logout Button */}
+          <button
+            onClick={() => {
+              setShowLogoutConfirm(true);
+            }}
+            className="w-full flex items-center justify-center lg:justify-start gap-3 px-4 py-3 rounded-lg font-semibold text-red-600 hover:bg-red-50 transition relative"
+            title={isCollapsed ? "Logout" : ""}
+          >
+            <img 
+              src="/icons/logout.svg" 
+              alt="Logout" 
+              className="w-5 h-5 flex-shrink-0"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+            {!isCollapsed && <span>Logout</span>}
+          </button>
+
+          {/* Logout Confirmation - Inside Sidebar */}
+          {showLogoutConfirm && !isCollapsed && (
+            <div className="mt-3 rounded-lg border border-red-300 bg-red-50 p-3">
+              <p className="text-sm text-red-800 font-semibold mb-3">Confirm logout?</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    localStorage.removeItem("auth_user");
+                    localStorage.removeItem("auth_token");
+                    window.dispatchEvent(new Event("auth_user_updated"));
+                    setShowLogoutConfirm(false);
+                    navigate("/signin", { replace: true });
+                  }}
+                  className="flex-1 bg-red-600 text-white text-sm font-semibold py-2 rounded-lg hover:bg-red-700 transition"
+                >
+                  Logout
+                </button>
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="flex-1 bg-white text-red-700 text-sm font-semibold py-2 rounded-lg border border-red-300 hover:bg-red-100 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
         </div>
       </nav>
 
