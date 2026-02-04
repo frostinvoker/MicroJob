@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lock, Eye, EyeOff, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { toast } from "sonner";
+import { toast } from "../lib/toast";
 
 export function ResetPassword() {
   const navigate = useNavigate();

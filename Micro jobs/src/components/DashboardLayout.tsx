@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
-import { Toaster } from "sonner";
+import { Toaster } from "../lib/toast";
 import { NavBar } from "./NavBar";
 
 export function DashboardLayout() {

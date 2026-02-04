@@ -12,7 +12,7 @@ import {
   Link as LinkIcon,
   X
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "../lib/toast";
 import { useNavigate } from "react-router-dom";
 import imgAvatar from "figma:asset/bda9a52c26578a6f12610edd3cd448cf9606b430.png";
 

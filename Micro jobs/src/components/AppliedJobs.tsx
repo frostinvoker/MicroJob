@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Building2, MapPin, DollarSign, Calendar, Clock, FileText, Eye, Trash2, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "../lib/toast";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 interface Application {

@@ -9,8 +9,6 @@
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
       alias: {
         'vaul@1.1.2': 'vaul',
-        'sonner@2.0.3': 'sonner',
-        'sonner': path.resolve(__dirname, './src/lib/sonner.tsx'),
         'recharts@2.15.2': 'recharts',
         'react-resizable-panels@2.1.7': 'react-resizable-panels',
         'react-hook-form@7.55.0': 'react-hook-form',

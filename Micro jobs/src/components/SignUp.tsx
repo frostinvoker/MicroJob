@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Mail, Lock, User, Eye, EyeOff, Phone, Briefcase, Users, Award, TrendingUp, UserPlus, Handshake, ArrowLeft } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { OTPVerification } from "./OTPVerification";
-import { toast } from "sonner";
+import { toast } from "../lib/toast";
 
 export function SignUp() {
   const navigate = useNavigate();

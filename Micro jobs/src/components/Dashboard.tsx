@@ -1,6 +1,6 @@
 import { Calendar, Send, Wallet, Mail, TrendingUp, MapPin, Building2, Briefcase, CheckCircle2, Clock, Users, ArrowUpRight, ChevronRight } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { toast } from "sonner";
+import { toast } from "../lib/toast";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import imgBigShoesAvatar from "figma:asset/8b9f86452ff0e90495bf9daf1494dd6920ad538a.png";

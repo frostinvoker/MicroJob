@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Users, Briefcase, DollarSign, TrendingUp, Search, Filter, UserCheck, UserX, MoreVertical, Eye, Trash2, Shield } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "../lib/toast";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 

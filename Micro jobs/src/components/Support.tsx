@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { MessageSquare, Mail, Phone, HelpCircle, Book, Video, Send, Search, ChevronDown, ChevronUp } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "../lib/toast";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 interface FAQ {

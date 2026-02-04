@@ -14,7 +14,6 @@
     "types": ["vite/client"],
     "baseUrl": ".",
     "paths": {
-      "sonner": ["src/lib/sonner.tsx"],
       "lucide-react": ["src/lib/lucide.tsx"]
     }
   },

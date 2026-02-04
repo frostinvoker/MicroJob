@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { MapPin, Calendar, Heart, Star, DollarSign, Briefcase } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "../lib/toast";
 import imgNetflix from "figma:asset/eb3a4c132d9ba4934da046219f88853e32272b51.png";
 
 interface Job {

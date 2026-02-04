@@ -1,5 +1,5 @@
 import { MapPin, Building2, Briefcase, Clock, Users, Bookmark, Trash2, ExternalLink, DollarSign, Calendar } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "../lib/toast";
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 

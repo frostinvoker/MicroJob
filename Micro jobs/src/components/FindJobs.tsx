@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Heart, Clock, SlidersHorizontal, CheckCircle2, Star } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "../lib/toast";
 import { useSearchParams } from "react-router-dom";
 
 interface CompanyInfo {

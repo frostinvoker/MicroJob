@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { toast } from "sonner";
+import { toast } from "../lib/toast";
 
 interface User {
   id: string;

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Mail, Lock, Eye, EyeOff, Briefcase, Award, Users, TrendingUp, ArrowLeft } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "../lib/toast";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 

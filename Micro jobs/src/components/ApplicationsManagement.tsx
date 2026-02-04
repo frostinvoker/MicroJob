@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Search, Filter, Calendar, FileText, User as UserIcon, Mail, ExternalLink, ArrowLeft, ArrowRight } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "../lib/toast";
 
 type ApplicationStatus = "all" | "under-review" | "pending" | "reviewing" | "interviewed" | "accepted" | "rejected";
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Bell, CheckCheck, Trash2, Filter, Briefcase, DollarSign, AlertCircle, MessageSquare, Star } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "../lib/toast";
 import { useNavigate } from "react-router-dom";
 
 interface Notification {

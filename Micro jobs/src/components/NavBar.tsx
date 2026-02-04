@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Bell, Settings, User, Search } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "../lib/toast";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
