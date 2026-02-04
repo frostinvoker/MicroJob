@@ -7,8 +7,9 @@ const UserSchema = new mongoose.Schema(
             type: String,
             required: true,
             unique: true,
-            minlength: 11,
-            maxlength: 11,
+            sparse: true, // Allows multiple null values for unique field
+            minlength: 13,
+            maxlength: 13,
         },
         email: {
             type: String,
@@ -42,6 +43,10 @@ const UserSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+        isVerified: {
+            type: Boolean,
+            default: false,
+        }
     },
 );
 UserSchema.methods.setPassword = async function (password) {

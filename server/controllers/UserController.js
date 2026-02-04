@@ -11,23 +11,63 @@ export async function getUserList(req, res) {
 }
 export async function register(req, res) {
     try {
-        const {phoneNumber, firstName, lastName, password} = req.body;
-        if (!phoneNumber ||  !firstName || !lastName || !password) {
+        const {phoneNumber, email, firstName, lastName, password} = req.body;
+
+        if (!firstName || !lastName || !password || !phoneNumber) {
             return res.status(400).json({message: "Missing Fields."});
         }
-        const ifExists = await User.findOne({phoneNumber});
-        if(ifExists){
+        
+        // Check if user exists
+        const phoneExists = await User.findOne({phoneNumber});
+        if(phoneExists){
             return res.status(409).json({message: "Phone Number is already registered."})
         }
-
-        const user = new User({phoneNumber, firstName, lastName});
+        
+        const emailExists = await User.findOne({email});
+        if(emailExists){
+            return res.status(409).json({message: "Email is already registered."})
+        }
+        const user = new User({phoneNumber, email, firstName, lastName});
         await user.setPassword(password);
         await user.save();
 
-        return res.status(201).json({message: "Successfully registered."});
+        return res.status(201).json({
+            message: "Registration successful. Please verify your phone number.",
+            userId: user._id 
+        });
+
     } catch (error) {
-        console.error("Registration Failed.");
+        console.error("Registration Failed:", error);
         return res.status(500).json({message: "Registration Failed."});
+    }
+}
+
+export async function verifyPhone(req, res) {
+    try {
+        // The middleware has already verified the token and put the phone number here
+        const firebasePhone = req.firebaseUser.phone_number; 
+
+        // Find the user with this phone number and update them
+        const user = await User.findOneAndUpdate(
+            { phoneNumber: firebasePhone },
+            { isVerified: true },
+            { new: true } // Return the updated document
+        );
+
+        if (!user) {
+            return res.status(404).json({ 
+                message: "No user found with this phone number. Please register first." 
+            });
+        }
+
+        return res.status(200).json({ 
+            message: "Phone number verified successfully!", 
+            user 
+        });
+
+    } catch (error) {
+        console.error("Verification Update Failed:", error);
+        return res.status(500).json({message: "Failed to update verification status."});
     }
 }
 
