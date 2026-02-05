@@ -56,7 +56,7 @@ export function SignUp() {
     }
 
     try {
-      await register(formData.email, formData.password, formData.fullName);
+      await register(formData.email, formData.password, formData.fullName, userType);
       setShowOTP(true);
     } catch (error: any) {
       toast.error(error.message || "Registration failed");

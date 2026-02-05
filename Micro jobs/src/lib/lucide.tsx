@@ -44,7 +44,27 @@ export const ArrowLeft = createIcon("ArrowLeft");
 export const ArrowRight = createIcon("ArrowRight");
 export const ArrowUpRight = createIcon("ArrowUpRight");
 export const Award = createIcon("Award");
-export const Bell = createIcon("Bell");
+export const Bell = React.forwardRef<SVGSVGElement, IconProps>(
+  ({ size = 20, color = "currentColor", strokeWidth = 1.5, className, fill, ...props }, ref) => (
+    <svg
+      ref={ref}
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill={fill ?? "none"}
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      {...props}
+    >
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  ),
+);
+Bell.displayName = "Bell";
 export const Bold = createIcon("Bold");
 export const Book = createIcon("Book");
 export const Bookmark = createIcon("Bookmark");
@@ -61,8 +81,28 @@ export const ChevronDown = createIcon("ChevronDown");
 export const ChevronDownIcon = createIcon("ChevronDownIcon");
 export const ChevronLeft = createIcon("ChevronLeft");
 export const ChevronLeftIcon = createIcon("ChevronLeftIcon");
-export const ChevronRight = createIcon("ChevronRight");
-export const ChevronRightIcon = createIcon("ChevronRightIcon");
+export const ChevronRight = React.forwardRef<SVGSVGElement, IconProps>(
+  ({ size = 20, color = "currentColor", strokeWidth = 1.5, className, fill, ...props }, ref) => (
+    <svg
+      ref={ref}
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill={fill ?? "none"}
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      {...props}
+    >
+      <path d="M9 18l6-6-6-6" />
+    </svg>
+  ),
+);
+ChevronRight.displayName = "ChevronRight";
+
+export const ChevronRightIcon = ChevronRight;
 export const ChevronUp = createIcon("ChevronUp");
 export const ChevronUpIcon = createIcon("ChevronUpIcon");
 export const Circle = createIcon("Circle");

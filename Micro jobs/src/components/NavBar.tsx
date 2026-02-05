@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Bell, Settings, User, Search } from "lucide-react";
+import { Bell, User, Search } from "lucide-react";
 import { toast } from "../lib/toast";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -40,7 +40,7 @@ export function NavBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { logout } = useAuth();
+  const { logout, user, switchAccountType } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
@@ -157,16 +157,6 @@ export function NavBar() {
     toast.success("All notifications marked as read");
   };
 
-  const handleProfile = () => {
-    navigate("/dashboard/profile");
-    setShowUserMenu(false);
-  };
-
-  const handleSettings = () => {
-    navigate("/dashboard/settings");
-    setShowUserMenu(false);
-  };
-
   const handleSignOut = () => {
     logout();
     setShowUserMenu(false);
@@ -174,8 +164,15 @@ export function NavBar() {
     navigate("/");
   };
 
+  const handleSwitchAccount = () => {
+    if (!user) return;
+    const nextType = user.accountType === "employer" ? "worker" : "employer";
+    switchAccountType(nextType);
+    setShowUserMenu(false);
+  };
+
   return (
-    <div className="w-full">
+    <div className="w-full sticky top-0 z-40 bg-[#f8f8f8]">
       <div className="max-w-[1341px] mx-auto flex items-center gap-6 px-6 py-4 min-h-[56px] flex-nowrap">
         <div className="min-w-0 h-10 flex items-center shrink-0">
           {pageMeta.title && (
@@ -293,32 +290,32 @@ export function NavBar() {
 
           {/* User Dropdown */}
           {showUserMenu && (
-            <div className="absolute right-0 mt-2 w-[280px] bg-white rounded-[12px] shadow-lg border border-[#E5E7EB] overflow-hidden z-50">
-              <div className="py-2">
+            <div className="absolute right-0 mt-2 w-[300px] bg-white rounded-[14px] shadow-lg border border-[#E5E7EB] overflow-hidden z-50">
+              <div className="p-4 border-b border-[#E5E7EB]">
+                <p className="text-[18px] font-semibold text-[#111827]">
+                  {user?.name ?? "User"}
+                </p>
+                <p className="text-[14px] text-[#6B7280]">
+                  {user?.accountType === "employer" ? "Employer Account" : "Worker Account"}
+                </p>
+              </div>
+
+              <div className="p-4 border-b border-[#E5E7EB]">
                 <button
-                  onClick={handleProfile}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3"
+                  onClick={handleSwitchAccount}
+                  className="w-full rounded-[12px] bg-[#1EC19A] text-white text-[15px] font-semibold py-3 hover:bg-[#18a882] transition-colors"
                 >
-                  <User className="w-4 h-4 text-[#6B7280]" />
-                  <span className="text-[16px] text-[#111827]">View Profile</span>
+                  {user?.accountType === "employer" ? "Switch to Worker" : "Switch to Hiring"}
                 </button>
-                
+              </div>
+
+              <div className="p-4">
                 <button
-                  onClick={handleSettings}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3"
+                  onClick={handleSignOut}
+                  className="w-full text-left text-[#EF4444] font-semibold"
                 >
-                  <Settings className="w-4 h-4 text-[#6B7280]" />
-                  <span className="text-[16px] text-[#111827]">Settings</span>
+                  Sign out
                 </button>
-                
-                <div className="border-t border-[#E5E7EB] mt-2 pt-2">
-                  <button
-                    onClick={handleSignOut}
-                    className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-                  >
-                    <span className="text-[16px] text-[#EF4444]">Sign out</span>
-                  </button>
-                </div>
               </div>
             </div>
           )}

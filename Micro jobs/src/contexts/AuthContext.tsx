@@ -6,6 +6,8 @@ interface User {
   email: string;
   name: string;
   role: "user" | "admin";
+  accountType: "employer" | "worker";
+  accountOptions: ("employer" | "worker")[];
   isVerified: boolean;
   avatar?: string;
   createdAt: string;
@@ -16,8 +18,9 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  register: (email: string, password: string, name: string, accountPreference: "employer" | "worker" | "both") => Promise<void>;
   logout: () => void;
+  switchAccountType: (nextType: "employer" | "worker") => void;
   verifyOTP: (otp: string) => Promise<boolean>;
   resendOTP: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
@@ -40,13 +43,20 @@ const getMockUsers = (): User[] => {
       email: "admin@microjobs.ph",
       name: "Admin User",
       role: "admin",
+      accountType: "worker",
+      accountOptions: ["worker"],
       isVerified: true,
       createdAt: new Date().toISOString(),
     };
     localStorage.setItem(MOCK_USERS_KEY, JSON.stringify([adminUser]));
     return [adminUser];
   }
-  return JSON.parse(stored);
+  const parsed = JSON.parse(stored) as User[];
+  return parsed.map((user) => ({
+    ...user,
+    accountType: user.accountType ?? "worker",
+    accountOptions: user.accountOptions ?? [user.accountType ?? "worker"],
+  }));
 };
 
 const saveMockUsers = (users: User[]) => {
@@ -66,12 +76,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check for existing session
     const currentUser = localStorage.getItem(CURRENT_USER_KEY);
     if (currentUser) {
-      setUser(JSON.parse(currentUser));
+      const parsed = JSON.parse(currentUser) as User;
+      const normalizedUser = {
+        ...parsed,
+        accountType: parsed.accountType ?? "worker",
+        accountOptions: parsed.accountOptions ?? [parsed.accountType ?? "worker"],
+      };
+      setUser(normalizedUser);
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(normalizedUser));
     }
     setIsLoading(false);
   }, []);
 
-  const register = async (email: string, password: string, name: string) => {
+  const register = async (
+    email: string,
+    password: string,
+    name: string,
+    accountPreference: "employer" | "worker" | "both",
+  ) => {
     setIsLoading(true);
     
     // Simulate API call
@@ -87,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Store pending verification
     setPendingVerification({ email, password, name });
+    localStorage.setItem("pending_account_preference", accountPreference);
     
     // In production, this would send a real OTP via email
     const mockOTP = Math.floor(100000 + Math.random() * 900000).toString();
@@ -117,12 +140,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
+    const accountPreference = (localStorage.getItem("pending_account_preference") ?? "worker") as
+      | "employer"
+      | "worker"
+      | "both";
+    const accountOptions =
+      accountPreference === "both" ? ["employer", "worker"] : [accountPreference];
+    const accountType =
+      accountPreference === "employer" ? "employer" : "worker";
+
     // Create new user
     const newUser: User = {
       id: `user-${Date.now()}`,
       email: pendingVerification.email,
       name: pendingVerification.name,
       role: "user",
+      accountType,
+      accountOptions,
       isVerified: true,
       createdAt: new Date().toISOString(),
     };
@@ -140,6 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(newUser);
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(newUser));
     localStorage.removeItem("pending_otp");
+    localStorage.removeItem("pending_account_preference");
     setPendingVerification(null);
 
     setIsLoading(false);
@@ -179,6 +214,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
       throw new Error("Account not found. Please create an account and verify your email first.");
     }
+    foundUser = {
+      ...foundUser,
+      accountType: foundUser.accountType ?? "worker",
+      accountOptions: foundUser.accountOptions ?? [foundUser.accountType ?? "worker"],
+    };
 
     // Admin default password
     if (trimmedEmail === "admin@microjobs.ph" && password === "admin123") {
@@ -204,6 +244,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     localStorage.removeItem(CURRENT_USER_KEY);
     toast.success("Logged out successfully");
+  };
+
+  const switchAccountType = (nextType: "employer" | "worker") => {
+    if (!user) return;
+    const accountOptions = user.accountOptions.includes(nextType)
+      ? user.accountOptions
+      : [...user.accountOptions, nextType];
+    const updatedUser = { ...user, accountType: nextType, accountOptions };
+    setUser(updatedUser);
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
+    toast.success(`Switched to ${nextType === "employer" ? "Employer" : "Worker"} account`);
   };
 
   const requestPasswordReset = async (email: string) => {
@@ -278,6 +329,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         register,
         logout,
+        switchAccountType,
         verifyOTP,
         resendOTP,
         requestPasswordReset,

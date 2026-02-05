@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ChevronRight } from "lucide-react";
 import svgPaths from "../imports/svg-at917c2et3";
 import imgBigShoesAvatar from "figma:asset/8b9f86452ff0e90495bf9daf1494dd6920ad538a.png";
 import { useAuth } from "../contexts/AuthContext";
@@ -128,11 +127,15 @@ function ExpandableNavItem({ icon, label, basePath, badge, isCollapsed, children
                     </div>
                   )}
                   <div
-                    className={`flex items-center justify-center w-7 h-7 rounded-[8px] border border-[#E2E8F0] transition-colors ${
-                      isExpanded ? "bg-[#E8F2F8] text-[#1C4D8D]" : "text-[#64748b]"
+                    className={`flex items-center justify-center w-7 h-7 rounded-[10px] border transition-all duration-200 ${
+                      isExpanded
+                        ? "bg-[#E8F2F8] text-[#1C4D8D] border-[#CFE3F2] shadow-[0_4px_12px_rgba(28,77,141,0.18)]"
+                        : "text-[#64748b] border-[#E2E8F0] hover:bg-[#F1F5F9]"
                     }`}
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <span className={`text-[16px] leading-[16px] transition-transform ${isExpanded ? "rotate-90" : ""}`}>
+                      {">"}
+                    </span>
                   </div>
                 </>
               )}
@@ -304,9 +307,12 @@ export function Sidebar() {
         {/* Toggle Button */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -right-3 top-8 bg-white border border-[#E5E7EB] rounded-full p-1.5 hover:bg-gray-50 transition-colors shadow-sm z-10"
+          className="absolute -right-3 top-8 rounded-full p-1.5 bg-white border border-[#E5E7EB] shadow-[0_6px_18px_rgba(15,23,42,0.12)] z-10 transition-all duration-200 hover:-translate-y-[1px] hover:shadow-[0_10px_24px_rgba(15,23,42,0.18)] active:translate-y-0"
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          <ChevronRight className="w-4 h-4 text-[#64748b]" />
+          <span className="block w-5 h-5 rounded-full bg-[#E8F2F8] text-center text-[16px] leading-[20px] text-[#1C4D8D] shadow-inner">
+            {isCollapsed ? ">" : "<"}
+          </span>
         </button>
       </div>
 
@@ -436,10 +442,8 @@ export function Sidebar() {
                   <p className="relative shrink-0 text-[#081021] text-[14px] w-full group-hover:text-[#1C4D8D] transition-colors">Jonas</p>
                 </div>
               </div>
-              <div className="relative shrink-0 size-[20px]">
-                <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 20 20">
-                  <path clipRule="evenodd" d={svgPaths.p3efe8e00} fill="#081021" fillRule="evenodd" />
-                </svg>
+              <div className="relative shrink-0 size-[20px] flex items-center justify-center">
+                <span className="text-[18px] leading-[18px] text-[#081021]">{">"}</span>
               </div>
             </div>
           </div>
