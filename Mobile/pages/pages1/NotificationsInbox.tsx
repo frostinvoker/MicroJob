@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import Navigation from '../../components/navigation';
 
 type NotificationsInboxProps = {
   onBack?: () => void;
+  activeTab?: string;
+  onTabPress?: (tab: string) => void;
 };
 
-export default function NotificationsInbox({ onBack }: NotificationsInboxProps) {
+export default function NotificationsInbox({ onBack, activeTab = 'Messages', onTabPress }: NotificationsInboxProps) {
   const [notifications, setNotifications] = useState([
     {
       id: 1,
@@ -79,6 +82,8 @@ export default function NotificationsInbox({ onBack }: NotificationsInboxProps) 
           </View>
         )}
       </ScrollView>
+
+      <Navigation activeTab={activeTab} onTabPress={onTabPress} />
     </View>
   );
 }

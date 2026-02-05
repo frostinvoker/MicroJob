@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { useState } from 'react';
 import { API_URL } from '../config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SignIn({
   onBack,
@@ -39,19 +40,23 @@ export default function SignIn({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email, // Changed from phoneNumber to email
+          emailOrUsername: email.toLowerCase().trim(),
           password,
         }),
       });
 
       const data = await response.json();
 
-      if (response.ok) {
-        // Store token if needed (consider using AsyncStorage)
+      if (response.ok && data.token) {
+        // Store token and user info
+        await AsyncStorage.setItem('auth_token', data.token);
+        await AsyncStorage.setItem('auth_user', JSON.stringify(data.user));
+        await AsyncStorage.setItem('has_onboarded', 'true');
+        
         Alert.alert('Success', 'Login successful!');
         if (onLogin) onLogin();
       } else {
-        Alert.alert('Error', data.message || 'Login failed');
+        Alert.alert('Error', data.message || 'Invalid credentials');
       }
     } catch (error) {
       console.error('Login error:', error);

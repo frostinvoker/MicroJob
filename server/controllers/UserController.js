@@ -78,20 +78,23 @@ export async function login(req, res) {
         // Support both web (emailOrUsername) and mobile (email) formats
         const phone = phonenumber || phoneNumber;
         const identifier = emailOrUsername || email || phone;
+        const normalizedIdentifier = identifier && identifier.includes('@')
+            ? identifier.toLowerCase().trim()
+            : identifier?.trim();
         
         console.log("Identifier:", identifier, "Password present:", !!password);
         
-        if(!identifier || !password) {
-            console.log("Missing fields - identifier:", identifier, "password:", !!password);
+        if(!normalizedIdentifier || !password) {
+            console.log("Missing fields - identifier:", normalizedIdentifier, "password:", !!password);
             return res.status(400).json({message: "Missing Fields."});
         }
         
         // Search by phoneNumber or email
         const user = await User.findOne({
             $or: [
-                {phoneNumber: identifier}, 
-                {phonenumber: identifier},
-                {email: identifier}
+                {phoneNumber: normalizedIdentifier}, 
+                {phonenumber: normalizedIdentifier},
+                {email: normalizedIdentifier}
             ]
         });
         if(!user || !(await user.validatePassword(password))) {

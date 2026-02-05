@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 
 type SettingsProps = {
   onBack?: () => void;
@@ -12,6 +12,17 @@ type SettingsProps = {
 };
 
 export default function Settings({ onBack, onLogout, onNavigatePersonalDetails, onNavigateChangePassword, onNavigateNotifications, onNavigateAbout, onNavigateDeleteAccount }: SettingsProps) {
+  const handleLogout = () => {
+    Alert.alert(
+      'Log out',
+      'Are you sure you want to log out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Log out', style: 'destructive', onPress: onLogout },
+      ]
+    );
+  };
+
   const settingsMenus = [
     { title: 'Personal Information', onPress: onNavigatePersonalDetails },
     { title: 'Change Password', onPress: onNavigateChangePassword },
@@ -49,7 +60,7 @@ export default function Settings({ onBack, onLogout, onNavigatePersonalDetails, 
           <View style={styles.divider} />
 
           {/* Log out Button */}
-          <TouchableOpacity style={styles.logoutItem} onPress={onLogout}>
+          <TouchableOpacity style={styles.logoutItem} onPress={handleLogout}>
             <Text style={styles.logoutText}>Log out</Text>
           </TouchableOpacity>
         </View>

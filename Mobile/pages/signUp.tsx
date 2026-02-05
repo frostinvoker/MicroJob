@@ -1,15 +1,15 @@
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { useState } from 'react';
 import { API_URL } from '../config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SignUp({ onBack, onNavigateToSignIn, onNavigateToSuccess }: { onBack: () => void; onNavigateToSignIn: () => void; onNavigateToSuccess: () => void }) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [selectedRole, setSelectedRole] = useState('Hire');
+  const [selectedRole, setSelectedRole] = useState('work');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -32,17 +32,6 @@ export default function SignUp({ onBack, onNavigateToSignIn, onNavigateToSuccess
       Alert.alert('Error', 'Please enter a valid email address');
       return;
     }
-
-    // Temporarily commented out - phone number will be added in settings later
-    // if (!phoneNumber.trim()) {
-    //   Alert.alert('Error', 'Please enter your phone number');
-    //   return;
-    // }
-
-    // if (!/^\d{10,15}$/.test(phoneNumber)) {
-    //   Alert.alert('Error', 'Phone number must be 10-15 digits');
-    //   return;
-    // }
 
     if (!password) {
       Alert.alert('Error', 'Please enter a password');
@@ -68,17 +57,36 @@ export default function SignUp({ onBack, onNavigateToSignIn, onNavigateToSuccess
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          firstName,
-          lastName,
-          phoneNumber: phoneNumber || null, // Optional for now, can be added in settings
-          email: email || null,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          email: email.toLowerCase().trim(),
           password,
+          role: selectedRole,
         }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
+        // Auto-login after registration
+        const loginResponse = await fetch(`${API_URL}/users/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: email.toLowerCase().trim(),
+            password,
+          }),
+        });
+
+        const loginData = await loginResponse.json();
+        if (loginResponse.ok && loginData.token) {
+          await AsyncStorage.setItem('auth_token', loginData.token);
+          await AsyncStorage.setItem('auth_user', JSON.stringify(loginData.user));
+          await AsyncStorage.setItem('has_onboarded', 'true');
+        }
+
         Alert.alert('Success', 'Account created successfully!');
         onNavigateToSuccess();
       } else {
@@ -179,30 +187,27 @@ export default function SignUp({ onBack, onNavigateToSignIn, onNavigateToSuccess
         {/* Role Selection */}
         <Text style={styles.roleLabel}>I want to:</Text>
         <View style={styles.roleContainer}>
-          {['Hire', 'Work', 'Both'].map((role) => (
+            {[
+              { label: 'Hire', value: 'hire', icon: '🏢' },
+              { label: 'Work', value: 'work', icon: '👤' },
+              { label: 'Both', value: 'both', icon: '👥' },
+            ].map((role) => (
             <TouchableOpacity
-              key={role}
+                key={role.value}
               style={[
                 styles.roleButton,
-                selectedRole === role && styles.roleButtonActive,
+                  selectedRole === role.value && styles.roleButtonActive,
               ]}
-              onPress={() => setSelectedRole(role)}
+              onPress={() => setSelectedRole(role.value)}
             >
-              <Text
-                style={[
-                  styles.roleText,
-                  selectedRole === role && styles.roleTextActive,
-                ]}
-              >
-                {role === 'Hire' ? '🏢' : role === 'Work' ? '👤' : '👥'}
-              </Text>
+                <Text style={styles.roleText}>{role.icon}</Text>
               <Text
                 style={[
                   styles.roleLabel,
-                  selectedRole === role && styles.roleTextActive,
+                    selectedRole === role.value && styles.roleTextActive,
                 ]}
               >
-                {role}
+                  {role.label}
               </Text>
             </TouchableOpacity>
           ))}
