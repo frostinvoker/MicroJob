@@ -40,7 +40,7 @@ const Home: React.FC = () => {
         {/* Headline */}
         <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4 text-center">
           Connect with Your{" "} <br></br>
-          <span className="bg-gradient-to-b from-sky-400 to-indigo-600 bg-clip-text text-transparent">Community's Skilled Workers</span>{" "} <br></br>
+          <span className="bg-[#2265A2] bg-clip-text text-transparent">Community's Skilled Workers</span>{" "} <br></br>
           for Micro-Jobs
         </h1>
 
@@ -56,7 +56,7 @@ const Home: React.FC = () => {
               <svg className="w-5 h-5 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeLinecap="round" strokeWidth="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/></svg>
             </div>
             <input type="search" id="search" className="block w-full p-4 pl-12 bg-white border border-gray-200 text-gray-900 text-base rounded-xl focus:ring-2 focus:ring-gray-800 focus:border-gray-800 shadow-sm placeholder:text-gray-500" placeholder="Try 'Vacumm Cleaner'" required />
-            <button type="button" className="absolute right-2 bottom-2.5 text-white bg-gray-900 hover:bg-black focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-6 py-2 focus:outline-none flex items-center gap-2">Search <span>→</span></button>
+            <button type="button" className="absolute right-2 bottom-2.5 text-white bg-[#2265A2] hover:bg-[#1a4e7c] focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-6 py-2 focus:outline-none flex items-center gap-2">Search <span>→</span></button>
           </div>
         </form>
 
@@ -299,7 +299,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-slate-900 py-24 px-4">
+      <section className="bg-[#0F2854] py-24 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-5xl font-bold text-white mb-4">Ready to Join the Community?</h2>
           <p className="text-gray-300 text-lg mb-12">Post micro-jobs or find work in your community with secure payments today</p>
@@ -311,7 +311,7 @@ const Home: React.FC = () => {
             >
               Get Started Free <span>→</span>
             </button>
-            <button className="bg-transparent border-2 border-gray-400 text-white hover:border-white hover:bg-gray-800 font-bold py-3 px-8 rounded-full transition">
+            <button className="bg-transparent border-2 border-gray-400 text-white hover:border-white hover:bg-[#2265A2] font-bold py-3 px-8 rounded-full transition">
               Learn More
             </button>
           </div>

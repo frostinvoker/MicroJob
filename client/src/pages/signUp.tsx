@@ -8,6 +8,9 @@ import peopleTransparent from "../assets/peopletransIcon.png";
 import bagtransIcon from "../assets/bagtransIcon.png";
 import peopletrans from "../assets/peopletransIcon1.png";
 import { registerUser } from "../api/auth";
+import check from "../assets/check.png";
+import lock from "../assets/lock.png";
+import star1 from "../assets/star1.png";
 
 const SignUp: React.FC = () => {
   const navigate = useNavigate();
@@ -46,7 +49,7 @@ const SignUp: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-t from-cyan-400 to-indigo-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#0F2854] flex items-center justify-center px-4">
       <style>{`
         @keyframes slideInRight {
           from {
@@ -92,20 +95,24 @@ const SignUp: React.FC = () => {
           {/* Features */}
           <div className="space-y-6">
             {/* Feature 1 */}
-            <div className="flex gap-4">
+            <div className="flex gap-4 border border-blue-300 radius-2xl p-4  rounded-2xl">
               <div className="w-14 h-14 bg-blue-400 bg-opacity-20 rounded-2xl flex items-center justify-center flex-shrink-0 border border-blue-300">
-                <span className="text-2xl">✓</span>
+                <img src={check} alt="Verified" className="w-14 h-14" />
               </div>
               <div>
-                <h3 className="font-bold text-lg mb-1">Verified Professionals</h3>
-                <p className="text-blue-200">All users are background-checked</p>
+                <h3 className="font-bold text-lg mb-1">
+                  Verified Professionals
+                </h3>
+                <p className="text-blue-200">
+                  All users are background-checked
+                </p>
               </div>
             </div>
 
             {/* Feature 2 */}
-            <div className="flex gap-4">
+            <div className="flex gap-4 border border-blue-300 radius-2xl p-4  rounded-2xl">
               <div className="w-14 h-14 bg-blue-400 bg-opacity-20 rounded-2xl flex items-center justify-center flex-shrink-0 border border-blue-300">
-                <span className="text-2xl">🔒</span>
+                <img src={lock} alt="lock" className="w-14 h-14" />
               </div>
               <div>
                 <h3 className="font-bold text-lg mb-1">Secure Payments</h3>
@@ -114,9 +121,9 @@ const SignUp: React.FC = () => {
             </div>
 
             {/* Feature 3 */}
-            <div className="flex gap-4">
+            <div className="flex gap-4 border border-blue-300 radius-2xl p-4  rounded-2xl">
               <div className="w-14 h-14 bg-blue-400 bg-opacity-20 rounded-2xl flex items-center justify-center flex-shrink-0 border border-blue-300">
-                <span className="text-2xl">⭐</span>
+                <img src={star1} alt="star" className="w-14 h-14" />
               </div>
               <div>
                 <h3 className="font-bold text-lg mb-1">Rated 4.9/5</h3>
@@ -263,7 +270,7 @@ const SignUp: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-t from-cyan-500 to-indigo-900 hover:from-cyan-600 hover:to-blue-600 disabled:opacity-70 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 mt-8"
+              className="w-full bg-[#0F2854] hover:from-blue-600 hover:bg-[#2265A2] disabled:opacity-70 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 mt-8"
             >
               {loading ? "Creating..." : "Create Account"} <span>→</span>
             </button>
@@ -271,7 +278,7 @@ const SignUp: React.FC = () => {
 
           {/* Sign In Link */}
           <p className="text-center text-gray-600 text-sm mt-6">
-            Already have an account? <button onClick={() => navigate("/signin")} className="text-blue-600 hover:text-blue-700 font-bold bg-none border-none cursor-pointer">Sign In</button>
+            Already have an account? <button onClick={() => navigate("/signin")} className="text-sm text-[#2265A2] hover:text-[#0F2854] font-bold bg-none border-none cursor-pointer">Sign In</button>
           </p>
 
           {/* Security Message */}

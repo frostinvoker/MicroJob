@@ -8,6 +8,12 @@ import PhoneVerification from "./pages/phoneVerification";
 import FindJobs from "./pages/FindJobs";
 import JobDetails from "./pages/JobDetails";
 import Settings from "./pages/Settings";
+import ForgotPass1 from "./pages/ForgotPass1";
+import VerifyEmail from "./pages/VerifyEmail";
+import CreateNewPass from "./pages/CreateNewPass";
+import CreateNewPass2 from "./pages/CreateNewPass2";
+import PhoneNumber from "./pages/PhoneNumber";
+import VerifyNumber from "./pages/VerifyNumber";
 
 const App: React.FC = () => {
   return (
@@ -21,6 +27,12 @@ const App: React.FC = () => {
         <Route path="/find-jobs" element={<FindJobs />} />
         <Route path="/job-details/:jobId" element={<JobDetails />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/forgot-password" element={<ForgotPass1 />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/confirm-password" element={<CreateNewPass />} />
+        <Route path="/confirm-password2" element={<CreateNewPass2 />} />
+        <Route path="/phone-number" element={<PhoneNumber />} />
+        <Route path="/verify-number" element={<VerifyNumber />} />
       </Routes>
     </Router>
   );

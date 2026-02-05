@@ -25,9 +25,9 @@ ChartJS.register(
   Filler
 );
 
-
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const [isCollapsed, setIsCollapsed] = useState(false); // sidebar collapse state
   const [userName, setUserName] = useState("Jonas Dick");
   const [userEmail, setUserEmail] = useState("you@example.com");
   const [activeVacancyTab, setActiveVacancyTab] = useState("Application Sent");
@@ -47,39 +47,9 @@ const Dashboard: React.FC = () => {
   }, []);
 
   const recommendations = [
-    {
-      id: 1,
-      title: "Senior React Developer",
-      company: "Tech Solutions Inc.",
-      salary: "₱80,000 - ₱120,000",
-      description: "We're looking for an experienced React developer...",
-      location: "Manila, PH",
-      type: "Remote",
-      daysAgo: "2 days ago",
-      initials: "TS"
-    },
-    {
-      id: 2,
-      title: "Full Stack Developer",
-      company: "Innovation Labs",
-      salary: "₱70,000 - ₱100,000",
-      description: "Join our dynamic team building next-generation SaaS...",
-      location: "Cebu, PH",
-      type: "Hybrid",
-      daysAgo: "5 days ago",
-      initials: "IL"
-    },
-    {
-      id: 3,
-      title: "Mobile Developer",
-      company: "Digital Ventures",
-      salary: "₱75,000 - ₱110,000",
-      description: "Build amazing mobile experiences with React Native...",
-      location: "Makati, PH",
-      type: "On-site",
-      daysAgo: "1 week ago",
-      initials: "DV"
-    },
+    { id: 1, title: "Senior React Developer", company: "Tech Solutions Inc.", salary: "₱80,000 - ₱120,000", description: "We're looking for an experienced React developer...", location: "Manila, PH", type: "Remote", daysAgo: "2 days ago", initials: "TS" },
+    { id: 2, title: "Full Stack Developer", company: "Innovation Labs", salary: "₱70,000 - ₱100,000", description: "Join our dynamic team building next-generation SaaS...", location: "Cebu, PH", type: "Hybrid", daysAgo: "5 days ago", initials: "IL" },
+    { id: 3, title: "Mobile Developer", company: "Digital Ventures", salary: "₱75,000 - ₱110,000", description: "Build amazing mobile experiences with React Native...", location: "Makati, PH", type: "On-site", daysAgo: "1 week ago", initials: "DV" },
   ];
 
   const companies = [
@@ -90,34 +60,10 @@ const Dashboard: React.FC = () => {
   ];
 
   const recentActivities = [
-    {
-      id: 1,
-      type: "accepted",
-      title: "Your application has been accepted for Senior Frontend Developer",
-      time: "1m ago",
-      icon: "✓"
-    },
-    {
-      id: 2,
-      type: "scheduled",
-      title: "Interview scheduled with Tech Corp on Friday at 2:00 PM",
-      time: "15m ago",
-      icon: "🕐"
-    },
-    {
-      id: 3,
-      type: "message",
-      title: "New message from HR Manager at Innovation Labs",
-      time: "1h ago",
-      icon: "✉️"
-    },
-    {
-      id: 4,
-      type: "viewed",
-      title: "Application viewed by Google Inc.",
-      time: "2h ago",
-      icon: "👁️"
-    },
+    { id: 1, type: "accepted", title: "Your application has been accepted for Senior Frontend Developer", time: "1m ago", icon: "✓" },
+    { id: 2, type: "scheduled", title: "Interview scheduled with Tech Corp on Friday at 2:00 PM", time: "15m ago", icon: "🕐" },
+    { id: 3, type: "message", title: "New message from HR Manager at Innovation Labs", time: "1h ago", icon: "✉️" },
+    { id: 4, type: "viewed", title: "Application viewed by Google Inc.", time: "2h ago", icon: "👁️" },
   ];
 
   const techStack = [
@@ -127,112 +73,105 @@ const Dashboard: React.FC = () => {
   ];
 
   const notifications = [
-    {
-      id: 1,
-      title: "New Application Received",
-      description: "Sarah Chen applied for Senior Frontend Developer position",
-      time: "5 minutes ago",
-      isNew: true,
-    },
-    {
-      id: 2,
-      title: "Application Status Updated",
-      description: "Michael Rodriguez has been moved to interview stage",
-      time: "1 hour ago",
-      isNew: true,
-    },
-    {
-      id: 3,
-      title: "Job Posting Approved",
-      description: "Your Backend Engineer job posting is now live",
-      time: "2 hours ago",
-      isNew: true,
-    },
+    { id: 1, title: "New Application Received", description: "Sarah Chen applied for Senior Frontend Developer position", time: "5 minutes ago", isNew: true },
+    { id: 2, title: "Application Status Updated", description: "Michael Rodriguez has been moved to interview stage", time: "1 hour ago", isNew: true },
+    { id: 3, title: "Job Posting Approved", description: "Your Backend Engineer job posting is now live", time: "2 hours ago", isNew: true },
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <Sidebar userName={userName} userEmail={userEmail} balance="₱67.67" messageCount={2} />
+  <div className="flex h-screen bg-gray-50">
+    {/* Sidebar */}
+    <Sidebar
+      userName={userName}
+      userEmail={userEmail}
+      balance="₱67.67"
+      messageCount={2}
+      isCollapsed={isCollapsed}
+      setIsCollapsed={setIsCollapsed} // allow toggling collapse
+    />
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto ml-64">
-        <div className="p-8 pb-20">
-          {/* Header with Search and Icons */}
-          <div className="flex items-center justify-between gap-6 mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <div className="flex-1 max-w-md relative">
-              <input
-                type="text"
-                placeholder="Search by skills, name, or expertise..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-blue-500"
-              />
-              <span className="absolute right-4 top-2.5 text-gray-400">🔍</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <button
-                  onClick={() => setShowNotifications(!showNotifications)}
-                  className="relative hover:opacity-80 transition"
-                >
-                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold absolute -top-1 -right-1">
-                    {notifications.length}
+      <div
+        className={`flex-1 transition-all duration-300 p-8 pb-20 ${
+          isCollapsed ? "ml-20" : "ml-64"
+        }`}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between gap-6 mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <div className="flex-1 max-w-md relative">
+            <input
+              type="text"
+              placeholder="Search by skills, name, or expertise..."
+              className="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-blue-500"
+            />
+            <span className="absolute right-4 top-2.5 text-gray-400">🔍</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative hover:opacity-80 transition"
+              >
+                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold absolute -top-1 -right-1">
+                  {notifications.length}
+                </div>
+                <span className="text-2xl">🔔</span>
+              </button>
+
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
+                  <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                    <h3 className="font-bold text-gray-900">
+                      Notifications ({notifications.length})
+                    </h3>
+                    <button className="text-blue-600 text-sm font-semibold hover:text-blue-700">
+                      Mark all as read
+                    </button>
                   </div>
-                  <span className="text-2xl">🔔</span>
-                </button>
 
-                {/* Notifications Dropdown */}
-                {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
-                    {/* Header */}
-                    <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                      <h3 className="font-bold text-gray-900">Notifications ({notifications.length})</h3>
-                      <button className="text-blue-600 text-sm font-semibold hover:text-blue-700">
-                        Mark all as read
-                      </button>
-                    </div>
-
-                    {/* Notifications List */}
-                    <div className="max-h-96 overflow-y-auto">
-                      {notifications.map((notif) => (
-                        <div
-                          key={notif.id}
-                          className="px-6 py-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition cursor-pointer"
-                        >
-                          <div className="flex gap-3">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h4 className="font-bold text-gray-900 text-sm">{notif.title}</h4>
-                                {notif.isNew && (
-                                  <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                                )}
-                              </div>
-                              <p className="text-gray-600 text-xs mb-2">{notif.description}</p>
-                              <p className="text-gray-500 text-xs">{notif.time}</p>
+                  <div className="max-h-96 overflow-y-auto">
+                    {notifications.map((notif) => (
+                      <div
+                        key={notif.id}
+                        className="px-6 py-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition cursor-pointer"
+                      >
+                        <div className="flex gap-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-bold text-gray-900 text-sm">
+                                {notif.title}
+                              </h4>
+                              {notif.isNew && (
+                                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                              )}
                             </div>
+                            <p className="text-gray-600 text-xs mb-2">
+                              {notif.description}
+                            </p>
+                            <p className="text-gray-500 text-xs">{notif.time}</p>
                           </div>
                         </div>
-                      ))}
-                    </div>
-
-                    {/* Footer */}
-                    <div className="p-6 border-t border-gray-200 text-center">
-                      <button className="text-blue-600 font-semibold text-sm hover:text-blue-700">
-                        View All Notifications
-                      </button>
-                    </div>
+                      </div>
+                    ))}
                   </div>
-                )}
-              </div>
-              <div className="flex items-center gap-2 bg-yellow-400 rounded-full px-3 py-1">
-                <span className="text-white font-semibold text-sm">JD</span>
-              </div>
+                  <div className="p-6 border-t border-gray-200 text-center">
+                    <button className="text-blue-600 font-semibold text-sm hover:text-blue-700">
+                      View All Notifications
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2 bg-yellow-400 rounded-full px-3 py-1">
+              <span className="text-white font-semibold text-sm">JD</span>
             </div>
           </div>
+        </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
+            <div className="bg-[#2265A2] rounded-2xl p-6 text-white">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-blue-100 text-sm mb-2">Interviews Schedule</p>
@@ -243,7 +182,7 @@ const Dashboard: React.FC = () => {
               <p className="text-xs text-blue-100 mt-3">↑ +12%</p>
             </div>
 
-            <div className="bg-gradient-to-br from-blue-700 to-blue-900 rounded-2xl p-6 text-white">
+            <div className="bg-[#0F2854] rounded-2xl p-6 text-white">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-blue-200 text-sm mb-2">Application Sent</p>
@@ -254,7 +193,7 @@ const Dashboard: React.FC = () => {
               <p className="text-xs text-blue-200 mt-3">↑ +8%</p>
             </div>
 
-            <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-2xl p-6 text-white">
+            <div className="bg-[#2265A2] rounded-2xl p-6 text-white">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-blue-100 text-sm mb-2">E-wallet</p>
@@ -265,7 +204,7 @@ const Dashboard: React.FC = () => {
               <p className="text-xs text-blue-100 mt-3">↑ +5%</p>
             </div>
 
-            <div className="bg-gradient-to-br from-blue-800 to-blue-900 rounded-2xl p-6 text-white">
+            <div className="bg-[#0F2854] rounded-2xl p-6 text-white">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-blue-200 text-sm mb-2">Unread Messages</p>
@@ -587,7 +526,6 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
   );
 };
 
