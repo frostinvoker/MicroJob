@@ -1,9 +1,0 @@
-{
-  "name": "microjob-root",
-  "private": true,
-  "scripts": {
-    "dev": "npm --prefix \"Micro jobs\" run dev",
-    "build": "npm --prefix \"Micro jobs\" run build",
-    "install": "npm --prefix \"Micro jobs\" install"
-  }
-}
