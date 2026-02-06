@@ -1,16 +1,23 @@
-import { useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, StatusBar } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, StatusBar, ActivityIndicator, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '../config';
 
 type Props = {
   email?: string;
-  onVerify?: (code: string) => void;
-  onResend?: () => void;
+  onVerified?: () => void;
   onBack?: () => void; // NEW
 };
 
-export default function VerifyEmail({ email = 'elijah@gmail.com', onVerify, onResend, onBack }: Props) {
+export default function VerifyEmail({ email: emailProp, onVerified, onBack }: Props) {
   const [code, setCode] = useState(Array(6).fill(''));
+  const [email, setEmail] = useState(emailProp || '');
+  const [timer, setTimer] = useState(30);
+  const [canResend, setCanResend] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const inputs = useRef<TextInput[]>([]);
+  const hasSentRef = useRef(false);
 
   const handleChange = (val: string, idx: number) => {
     const digit = val.slice(-1);
@@ -20,7 +27,103 @@ export default function VerifyEmail({ email = 'elijah@gmail.com', onVerify, onRe
     if (digit && idx < 5) inputs.current[idx + 1]?.focus();
   };
 
-  const handleVerify = () => onVerify?.(code.join(''));
+  useEffect(() => {
+    const loadEmail = async () => {
+      if (emailProp) {
+        setEmail(emailProp);
+        return;
+      }
+      const storedEmail = await AsyncStorage.getItem('pending_verification_email');
+      setEmail(storedEmail || '');
+    };
+
+    loadEmail();
+  }, [emailProp]);
+
+  useEffect(() => {
+    if (!email || hasSentRef.current) return;
+    hasSentRef.current = true;
+    sendOtp();
+  }, [email]);
+
+  useEffect(() => {
+    if (!canResend && timer > 0) {
+      const interval = setInterval(() => {
+        setTimer((prev) => {
+          if (prev <= 1) {
+            setCanResend(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [timer, canResend]);
+
+  const sendOtp = async () => {
+    if (!email) {
+      setErrorMessage('Missing email. Please sign up again.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage('');
+    try {
+      const response = await fetch(`${API_URL}/users/otp/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data?.message || 'Failed to send OTP.');
+      }
+
+      setTimer(30);
+      setCanResend(false);
+    } catch (error: any) {
+      setErrorMessage(error?.message || 'Failed to send OTP.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerify = async () => {
+    const otpCode = code.join('');
+    if (otpCode.length !== 6) {
+      Alert.alert('Error', 'Please enter the complete 6-digit code.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage('');
+    try {
+      const response = await fetch(`${API_URL}/users/otp/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code: otpCode }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data?.message || 'Verification failed.');
+      }
+
+      if (data?.token && data?.user) {
+        await AsyncStorage.setItem('auth_token', data.token);
+        await AsyncStorage.setItem('auth_user', JSON.stringify(data.user));
+        await AsyncStorage.setItem('has_onboarded', 'true');
+      }
+      await AsyncStorage.removeItem('pending_verification_email');
+      onVerified?.();
+    } catch (error: any) {
+      setErrorMessage(error?.message || 'Verification failed.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -39,7 +142,11 @@ export default function VerifyEmail({ email = 'elijah@gmail.com', onVerify, onRe
 
         <Text style={styles.title}>Verify Your Email</Text>
         <Text style={styles.subtitle}>We’ve sent a 6-digit code to</Text>
-        <Text style={styles.email}>{email}</Text>
+        <Text style={styles.email}>{email || 'your email'}</Text>
+
+        {errorMessage ? (
+          <Text style={styles.errorText}>{errorMessage}</Text>
+        ) : null}
 
         <View style={styles.codeRow}>
           {code.map((c, i) => (
@@ -59,15 +166,19 @@ export default function VerifyEmail({ email = 'elijah@gmail.com', onVerify, onRe
           ))}
         </View>
 
-        <TouchableOpacity style={styles.button} onPress={handleVerify}>
-          <Text style={styles.buttonText}>Verify Code</Text>
+        <TouchableOpacity style={[styles.button, isLoading && styles.buttonDisabled]} onPress={handleVerify} disabled={isLoading}>
+          {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Verify Code</Text>}
         </TouchableOpacity>
 
         <View style={styles.resendRow}>
           <Text style={styles.resendText}>Didn’t receive the code? </Text>
-          <TouchableOpacity onPress={onResend}>
-            <Text style={styles.resendLink}>Resend Code (0:30)</Text>
-          </TouchableOpacity>
+          {canResend ? (
+            <TouchableOpacity onPress={sendOtp} disabled={isLoading}>
+              <Text style={styles.resendLink}>Resend Code</Text>
+            </TouchableOpacity>
+          ) : (
+            <Text style={styles.resendLink}>Resend Code (0:{timer.toString().padStart(2, '0')})</Text>
+          )}
         </View>
       </View>
     </View>
@@ -175,6 +286,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#0a5ac7',
     fontWeight: '700',
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  errorText: {
+    marginTop: 8,
+    marginBottom: 12,
+    color: '#b91c1c',
+    fontSize: 12,
+    textAlign: 'center',
   },
   backBtn: {
     position: 'absolute',

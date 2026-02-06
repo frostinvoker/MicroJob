@@ -1,19 +1,100 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from 'react-native';
 import Navigation from '../../components/navigation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '../../config';
+
+type Category = { _id: string; name: string };
+type Job = {
+  _id: string;
+  title: string;
+  description: string;
+  location: string;
+  salary: string;
+  jobType: string;
+  skills?: string[];
+  createdAt?: string;
+  category?: { _id: string; name: string } | string;
+  jobPoster?: { firstName?: string; lastName?: string; email?: string };
+};
 
 export default function Jobs({ onBack, onViewDetails, onSaveJob, activeTab: externalActiveTab, onTabPress: externalOnTabPress }: { onBack?: () => void; onViewDetails?: (job: any) => void; onSaveJob?: (job: any) => void; activeTab?: string; onTabPress?: (tab: string) => void }) {
   const [activeTab, setActiveTab] = useState(externalActiveTab || 'Jobs');
   const [searchQuery, setSearchQuery] = useState('');
-  const [savedJobIds, setSavedJobIds] = useState<number[]>([]);
+  const [savedJobIds, setSavedJobIds] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedJobType, setSelectedJobType] = useState<string>('All');
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const allJobs = [
-    { id: 1, title: 'Mobile Developer Designer', company: 'Company Name', tags: ['UI/UX', 'Mobile', 'Figma'], time: '3 days ago', type: 'Remote', duration: 'Full Time', salary: '150k - 250k/year' },
-    { id: 2, title: 'Mobile Developer Designer', company: 'Company Name', tags: ['UI/UX', 'Mobile', 'Figma'], time: '3 days ago', type: 'Remote', duration: 'Full Time', salary: '150k - 250k/year' },
-    { id: 3, title: 'Frontend Developer', company: 'Tech Corp', tags: ['React', 'TypeScript', 'CSS'], time: '5 days ago', type: 'Remote', duration: 'Full Time', salary: '120k - 200k/year' },
-    { id: 4, title: 'UI/UX Designer', company: 'Design Studio', tags: ['Figma', 'Sketch', 'Adobe XD'], time: '1 week ago', type: 'Hybrid', duration: 'Full Time', salary: '100k - 180k/year' },
-    { id: 5, title: 'Backend Developer', company: 'Cloud Services Inc', tags: ['Node.js', 'MongoDB', 'AWS'], time: '2 weeks ago', type: 'Remote', duration: 'Contract', salary: '140k - 220k/year' },
-  ];
+  const jobTypes = ['All', 'Remote', 'Fulltime', 'Part-time', 'Freelance'];
+
+  const filteredJobs = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return jobs.filter((job) => {
+      if (!query) return true;
+      return [job.title, job.description, job.location]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(query));
+    });
+  }, [jobs, searchQuery]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch(`${API_URL}/categories`);
+      const data = await response.json();
+      if (response.ok && Array.isArray(data)) {
+        setCategories(data);
+      }
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+    }
+  };
+
+  const fetchJobs = async () => {
+    setIsLoading(true);
+    setErrorMessage('');
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      const params = new URLSearchParams();
+      if (selectedCategory !== 'All') {
+        params.append('category', selectedCategory);
+      }
+      if (selectedJobType !== 'All') {
+        params.append('jobType', selectedJobType);
+      }
+      if (searchQuery.trim()) {
+        params.append('search', searchQuery.trim());
+      }
+      params.append('excludeOwn', 'true');
+
+      const response = await fetch(`${API_URL}/jobs?${params.toString()}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      const data = await response.json().catch(() => []);
+      if (!response.ok) {
+        throw new Error(data?.message || 'Failed to load jobs.');
+      }
+      setJobs(Array.isArray(data) ? data : []);
+    } catch (error: any) {
+      setErrorMessage(error?.message || 'Failed to load jobs.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchJobs();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [selectedCategory, selectedJobType, searchQuery]);
 
   const handleTabPress = (tab: string) => {
     setActiveTab(tab);
@@ -23,7 +104,7 @@ export default function Jobs({ onBack, onViewDetails, onSaveJob, activeTab: exte
     }
   };
 
-  const handleToggleSave = (jobId: number, job: any) => {
+  const handleToggleSave = (jobId: string, job: Job) => {
     if (savedJobIds.includes(jobId)) {
       setSavedJobIds(savedJobIds.filter(id => id !== jobId));
     } else {
@@ -64,55 +145,96 @@ export default function Jobs({ onBack, onViewDetails, onSaveJob, activeTab: exte
         </View>
 
         <View style={styles.filterButtons}>
-          <TouchableOpacity style={styles.filterBtn}>
+          <TouchableOpacity style={styles.filterBtn} onPress={() => fetchJobs()}>
             <Text style={styles.filterIcon}>☰</Text>
-            <Text style={styles.filterText}>Filter</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.filterBtn}>
-            <Text style={styles.filterText}>Job Role</Text>
-            <Text style={styles.filterDropIcon}>▼</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.filterBtn}>
-            <Text style={styles.filterText}>Work arrangement</Text>
-            <Text style={styles.filterDropIcon}>▼</Text>
+            <Text style={styles.filterText}>Refresh</Text>
           </TouchableOpacity>
         </View>
 
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionLabel}>Categories</Text>
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRow}>
+          <TouchableOpacity
+            style={[styles.categoryChip, selectedCategory === 'All' && styles.categoryChipActive]}
+            onPress={() => setSelectedCategory('All')}
+          >
+            <Text style={[styles.categoryChipText, selectedCategory === 'All' && styles.categoryChipTextActive]}>All</Text>
+          </TouchableOpacity>
+          {categories.map((category) => (
+            <TouchableOpacity
+              key={category._id}
+              style={[styles.categoryChip, selectedCategory === category._id && styles.categoryChipActive]}
+              onPress={() => setSelectedCategory(category._id)}
+            >
+              <Text
+                style={[styles.categoryChipText, selectedCategory === category._id && styles.categoryChipTextActive]}
+              >
+                {category.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionLabel}>Job Type</Text>
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRow}>
+          {jobTypes.map((type) => (
+            <TouchableOpacity
+              key={type}
+              style={[styles.categoryChip, selectedJobType === type && styles.categoryChipActive]}
+              onPress={() => setSelectedJobType(type)}
+            >
+              <Text style={[styles.categoryChipText, selectedJobType === type && styles.categoryChipTextActive]}>
+                {type}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
         {/* Jobs Count */}
-        <Text style={styles.jobsCount}>{allJobs.length} Jobs Available</Text>
+        <Text style={styles.jobsCount}>{filteredJobs.length} Jobs Available</Text>
+
+        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+
+        {isLoading ? (
+          <View style={styles.loadingRow}>
+            <ActivityIndicator color="#1e3a5f" />
+          </View>
+        ) : null}
 
         {/* Jobs List */}
         <View style={styles.jobsList}>
-          {allJobs.map((job) => (
+          {filteredJobs.map((job) => (
             <TouchableOpacity 
-              key={job.id} 
+              key={job._id} 
               style={styles.jobCard}
               onPress={() => onViewDetails?.(job)}
               activeOpacity={0.7}
             >
               <View style={styles.jobCardHeader}>
-                <View style={styles.jobLogo}>
-                  <Text style={styles.jobLogoText}>logo</Text>
-                </View>
                 <View style={styles.jobInfo}>
                   <Text style={styles.jobTitle}>{job.title}</Text>
-                  <Text style={styles.jobCompany}>{job.company}</Text>
+                  <Text style={styles.jobCompany}>
+                    {job.jobPoster?.firstName ? `${job.jobPoster.firstName} ${job.jobPoster.lastName || ''}`.trim() : 'Job Poster'}
+                  </Text>
                 </View>
                 <TouchableOpacity 
                   style={styles.bookmarkBtn}
                   onPress={(e) => {
                     e.stopPropagation?.();
-                    handleToggleSave(job.id, job);
+                    handleToggleSave(job._id, job);
                   }}
                 >
                   <Text style={styles.bookmarkIcon}>
-                    {savedJobIds.includes(job.id) ? '🔖' : '📄'}
+                    {savedJobIds.includes(job._id) ? '🔖' : '📄'}
                   </Text>
                 </TouchableOpacity>
               </View>
 
               <View style={styles.jobTags}>
-                {job.tags.map((tag, index) => (
+                {(job.skills || []).slice(0, 3).map((tag, index) => (
                   <View key={index} style={styles.tag}>
                     <Text style={styles.tagText}>{tag}</Text>
                   </View>
@@ -121,15 +243,17 @@ export default function Jobs({ onBack, onViewDetails, onSaveJob, activeTab: exte
 
               <View style={styles.jobFooter}>
                 <View style={styles.jobMetaLeft}>
-                  <Text style={styles.timeText}>{job.time}</Text>
+                  <Text style={styles.timeText}>{job.location}</Text>
                 </View>
                 <Text style={styles.viewDetails}>View details →</Text>
               </View>
 
               <View style={styles.jobBottomMeta}>
                 <View style={styles.metaTags}>
-                  <Text style={styles.metaText}>{job.type}</Text>
-                  <Text style={styles.metaText}>{job.duration}</Text>
+                  <Text style={styles.metaText}>{job.jobType}</Text>
+                  {job.category && typeof job.category !== 'string' ? (
+                    <Text style={styles.metaText}>{job.category.name}</Text>
+                  ) : null}
                 </View>
                 <Text style={styles.salary}>{job.salary}</Text>
               </View>
@@ -181,6 +305,42 @@ const styles = StyleSheet.create({
     gap: 10,
     flexWrap: 'wrap',
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  sectionLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1f2937',
+  },
+  categoryRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingVertical: 6,
+  },
+  categoryChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  categoryChipActive: {
+    backgroundColor: '#1e3a5f',
+    borderColor: '#1e3a5f',
+  },
+  categoryChipText: {
+    fontSize: 12,
+    color: '#6b7280',
+    fontWeight: '600',
+  },
+  categoryChipTextActive: {
+    color: '#fff',
+  },
   filterBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -201,6 +361,14 @@ const styles = StyleSheet.create({
     color: '#1f2937',
     marginTop: 8,
   },
+  errorText: {
+    marginTop: 8,
+    color: '#b91c1c',
+    fontSize: 12,
+  },
+  loadingRow: {
+    paddingVertical: 12,
+  },
   jobsList: { gap: 14 },
   jobCard: {
     backgroundColor: '#fff',
@@ -213,15 +381,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  jobLogo: {
-    width: 48,
-    height: 48,
-    borderRadius: 10,
-    backgroundColor: '#f3f4f6',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  jobLogoText: { fontSize: 11, color: '#9ca3af', fontWeight: '600' },
   jobInfo: { flex: 1 },
   jobTitle: { fontSize: 15, fontWeight: '700', color: '#1f2937', marginBottom: 2 },
   jobCompany: { fontSize: 13, color: '#6b7280' },

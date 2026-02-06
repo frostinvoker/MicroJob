@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import Navigation from '../../components/navigation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '../../config';
 
 type JobDetailsProps = {
   job: any;
@@ -14,6 +16,9 @@ type JobDetailsProps = {
 export default function JobDetails({ job, onBack, onSaveJob, isSaved = false, activeTab = 'Jobs', onTabPress }: JobDetailsProps) {
   const [saved, setSaved] = useState(isSaved);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [jobDetails, setJobDetails] = useState(job);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleTabPress = (tab: string) => {
     onTabPress?.(tab);
@@ -25,9 +30,7 @@ export default function JobDetails({ job, onBack, onSaveJob, isSaved = false, ac
   };
 
   const handleApply = () => {
-    console.log('Apply button clicked');
-    setShowSuccess(true);
-    console.log('showSuccess set to true');
+    applyForJob();
   };
 
   const handleFindMoreJobs = () => {
@@ -39,6 +42,55 @@ export default function JobDetails({ job, onBack, onSaveJob, isSaved = false, ac
     setShowSuccess(false);
     onTabPress?.('Home');
   };
+
+  const applyForJob = async () => {
+    if (!jobDetails?._id) return;
+    setIsLoading(true);
+    setErrorMessage('');
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      const response = await fetch(`${API_URL}/jobs/${jobDetails._id}/apply`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data?.message || 'Failed to apply.');
+      }
+      setShowSuccess(true);
+    } catch (error: any) {
+      const message = error?.message || 'Failed to apply.';
+      setErrorMessage(message);
+      Alert.alert('Error', message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchDetails = async () => {
+    if (!job?._id) return;
+    setIsLoading(true);
+    setErrorMessage('');
+    try {
+      const response = await fetch(`${API_URL}/jobs/${job._id}`);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data?.message || 'Failed to load job.');
+      }
+      setJobDetails(data);
+    } catch (error: any) {
+      setErrorMessage(error?.message || 'Failed to load job.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDetails();
+  }, [job?._id]);
 
   if (showSuccess) {
     console.log('Rendering success screen');
@@ -76,45 +128,49 @@ export default function JobDetails({ job, onBack, onSaveJob, isSaved = false, ac
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* Company Logo */}
-        <View style={styles.logoContainer}>
-          <View style={styles.logo}>
-            <Text style={styles.logoIcon}>🎵</Text>
-          </View>
-        </View>
-
         {/* Job Title */}
-        <Text style={styles.jobTitle}>Senior Janitor</Text>
-        <Text style={styles.jobMeta}>Senior • Remote</Text>
+        <Text style={styles.jobTitle}>{jobDetails?.title || 'Job Details'}</Text>
+        <Text style={styles.jobMeta}>{jobDetails?.jobType || ''} {jobDetails?.location ? `• ${jobDetails.location}` : ''}</Text>
+
+        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+
+        {isLoading ? (
+          <View style={styles.loadingRow}>
+            <ActivityIndicator color="#1e3a5f" />
+          </View>
+        ) : null}
 
         {/* Stats */}
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
             <Text style={styles.statIcon}>📍</Text>
             <Text style={styles.statLabel}>LOCATION</Text>
-            <Text style={styles.statValue}>Remote</Text>
+            <Text style={styles.statValue}>{jobDetails?.location || 'N/A'}</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statIcon}>⏰</Text>
-            <Text style={styles.statLabel}>TIME</Text>
-            <Text style={styles.statValue}>Full - Time</Text>
+            <Text style={styles.statLabel}>TYPE</Text>
+            <Text style={styles.statValue}>{jobDetails?.jobType || 'N/A'}</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statIcon}>💰</Text>
             <Text style={styles.statLabel}>SALARY</Text>
-            <Text style={styles.statValue}>150k to 250k</Text>
+            <Text style={styles.statValue}>{jobDetails?.salary || 'N/A'}</Text>
           </View>
         </View>
 
         {/* Posted Info */}
         <Text style={styles.postedInfo}>
-          This job post is managed by <Text style={styles.highlight}>Jonas Enriques</Text> Posted: 3 days ago
+          This job post is managed by{' '}
+          <Text style={styles.highlight}>
+            {jobDetails?.jobPoster?.firstName ? `${jobDetails.jobPoster.firstName} ${jobDetails.jobPoster.lastName || ''}`.trim() : 'the employer'}
+          </Text>
         </Text>
 
         {/* Skills */}
         <Text style={styles.sectionTitle}>Must have skills</Text>
         <View style={styles.skillsGrid}>
-          {['UI/UX', 'Mobile', 'UI/UX', 'Mobile', 'Figma', 'Figma', 'Figma'].map((skill, index) => (
+          {(jobDetails?.skills || []).map((skill, index) => (
             <View key={index} style={styles.skillTag}>
               <Text style={styles.skillText}>{skill}</Text>
             </View>
@@ -124,23 +180,20 @@ export default function JobDetails({ job, onBack, onSaveJob, isSaved = false, ac
         {/* Description */}
         <Text style={styles.sectionTitle}>Description</Text>
         <Text style={styles.description}>
-          We are looking for an experienced UX Designer to join our team. You will be responsible for creating intuitive and engaging user experiences for our millions of users worldwide.
+          {jobDetails?.description || 'No description provided.'}
         </Text>
 
         {/* Requirements */}
-        <Text style={styles.sectionTitle}>Requirements</Text>
-        <View style={styles.requirementsList}>
-          <Text style={styles.requirementItem}>• 5+ years of experience in product design</Text>
-          <Text style={styles.requirementItem}>• Proficiency in Figma, Sketch, and Adobe Suite</Text>
-          <Text style={styles.requirementItem}>• Strong portfolio showcasing mobile app designs</Text>
-          <Text style={styles.requirementItem}>• Experience working in agile environments</Text>
-        </View>
-
-        {/* About Company */}
-        <Text style={styles.sectionTitle}>About Spotify</Text>
-        <Text style={styles.description}>
-          ewqqwqdsadasdasdaslorererloreerloreewqqw qedsadasdasdaslorererloreerloreewqqwqeds adasdasdaslorererlore
-        </Text>
+        {jobDetails?.requirements?.length ? (
+          <>
+            <Text style={styles.sectionTitle}>Requirements</Text>
+            <View style={styles.requirementsList}>
+              {jobDetails.requirements.map((req: string, index: number) => (
+                <Text key={index} style={styles.requirementItem}>• {req}</Text>
+              ))}
+            </View>
+          </>
+        ) : null}
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
@@ -152,8 +205,8 @@ export default function JobDetails({ job, onBack, onSaveJob, isSaved = false, ac
               {saved ? 'Saved ✓' : 'Saved job'}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.actionBtn, styles.applyBtn]} onPress={handleApply}>
-            <Text style={styles.actionBtnText}>Apply now</Text>
+          <TouchableOpacity style={[styles.actionBtn, styles.applyBtn]} onPress={handleApply} disabled={isLoading}>
+            <Text style={styles.actionBtnText}>{isLoading ? 'Applying...' : 'Apply now'}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -179,19 +232,6 @@ const styles = StyleSheet.create({
   },
   backIcon: { fontSize: 24, color: '#fff' },
   scroll: { paddingHorizontal: 20, paddingBottom: 100 },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  logo: {
-    width: 80,
-    height: 80,
-    borderRadius: 16,
-    backgroundColor: '#22c55e',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoIcon: { fontSize: 40 },
   jobTitle: {
     fontSize: 24,
     fontWeight: '800',
@@ -252,6 +292,15 @@ const styles = StyleSheet.create({
     color: '#d1dce6',
     lineHeight: 22,
     marginBottom: 24,
+  },
+  loadingRow: {
+    paddingVertical: 8,
+  },
+  errorText: {
+    marginTop: 8,
+    color: '#fca5a5',
+    fontSize: 12,
+    textAlign: 'center',
   },
   requirementsList: {
     marginBottom: 24,

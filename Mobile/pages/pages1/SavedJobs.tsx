@@ -77,9 +77,6 @@ export default function SavedJobs({
                 onPress={() => onViewDetails?.(job)}
               >
                 <View style={styles.jobCardHeader}>
-                  <View style={styles.jobLogo}>
-                    <Text style={styles.jobLogoIcon}>🎵</Text>
-                  </View>
                   <View style={styles.jobInfo}>
                     <Text style={styles.jobTitle}>{job.title}</Text>
                     <Text style={styles.jobCompany}>{job.company}</Text>
@@ -192,15 +189,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 12,
   },
-  jobLogo: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
-    backgroundColor: '#22c55e',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  jobLogoIcon: { fontSize: 28 },
   jobInfo: { flex: 1 },
   jobTitle: { fontSize: 16, fontWeight: '700', color: '#fff', marginBottom: 4 },
   jobCompany: { fontSize: 13, color: '#d1dce6', marginBottom: 2 },

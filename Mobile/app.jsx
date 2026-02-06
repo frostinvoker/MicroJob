@@ -16,7 +16,9 @@ import PassChanged from './pages/passChanged';
 import CreatePass from './pages/createPass';
 import Dashboard from './pages/pages1/dashboard';
 import Jobs from './pages/pages1/Jobs';
+import JobDetails from './pages/pages1/JobDetails';
 import SavedJobs from './pages/pages1/SavedJobs';
+import AppliedJobs from './pages/pages1/AppliedJobs';
 import Profile from './pages/pages1/Profile';
 import NotificationsInbox from './pages/pages1/NotificationsInbox';
 import Settings from './pages/pages1/Settings';
@@ -25,6 +27,7 @@ export default function App() {
   const [currentScreen, setCurrentScreen] = useState(0);
   const [activeTab, setActiveTab] = useState('Home');
   const [isReady, setIsReady] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
   const transition = useRef(new Animated.Value(0)).current;
   const screenWidth = Dimensions.get('window').width;
 
@@ -45,10 +48,12 @@ export default function App() {
     PassChanged: 10,
     Dashboard: 11,
     Jobs: 12,
-    Saved: 13,
-    Messages: 14,
-    Profile: 15,
-    Settings: 16,
+    JobDetails: 13,
+    Saved: 14,
+    Applied: 15,
+    Messages: 16,
+    Profile: 17,
+    Settings: 18,
   };
 
   useEffect(() => {
@@ -142,9 +147,19 @@ export default function App() {
     setCurrentScreen(SCREEN.Jobs);
   };
 
+  const handleGoToJobDetails = (job) => {
+    setSelectedJob(job);
+    setCurrentScreen(SCREEN.JobDetails);
+  };
+
   const handleGoToSaved = () => {
     setActiveTab('Saved');
     setCurrentScreen(SCREEN.Saved);
+  };
+
+  const handleGoToApplied = () => {
+    setActiveTab('Saved');
+    setCurrentScreen(SCREEN.Applied);
   };
 
   const handleGoToMessages = () => {
@@ -203,11 +218,11 @@ export default function App() {
     <Screen2 onNext={handleNext} />,
     <Screen3 onNext={handleNext} />,
     <Screen4 onNext={handleGoToSignUp} />,
-    <SignUp onBack={handleBack} onNavigateToSignIn={handleGoToSignIn} onNavigateToSuccess={handleGoToSuccess} />,
+    <SignUp onBack={handleBack} onNavigateToSignIn={handleGoToSignIn} onNavigateToVerify={handleGoToVerify} />,
     <SignIn onBack={handleBack} onNavigateToSignUp={handleGoToSignUp} onNavigateToForgot={handleGoToForgot} onLogin={handleGoToDashboard} />,
     <SignSuccess onBackToLogin={handleGoToSignIn} />,
     <ForgotPass onBack={handleGoToSignIn} onSendReset={handleGoToVerify} />,
-    <VerifyEmail onVerify={handleGoToCreatePass} onResend={() => {}} onBack={handleGoToForgot} />,
+    <VerifyEmail onVerified={handleGoToDashboard} onBack={handleGoToSignIn} />,
     <CreatePass onBackToLogin={handleGoToSignIn} onReset={handleGoToPassChanged} />,
     <PassChanged onBackToLogin={handleGoToSignIn} />,
     <Dashboard
@@ -215,16 +230,31 @@ export default function App() {
       activeTab={activeTab}
       onTabPress={handleTabPress}
       onNavigateToJobs={handleGoToJobs}
+      onViewJobDetails={handleGoToJobDetails}
       onOpenNotifications={handleGoToMessages}
     />,
     <Jobs
       onBack={handleGoToDashboard}
+      onViewDetails={handleGoToJobDetails}
+      activeTab={activeTab}
+      onTabPress={handleTabPress}
+    />,
+    <JobDetails
+      job={selectedJob}
+      onBack={handleGoToJobs}
       activeTab={activeTab}
       onTabPress={handleTabPress}
     />,
     <SavedJobs
       activeTab={activeTab}
       onTabPress={handleTabPress}
+      onViewAppliedJobs={handleGoToApplied}
+    />,
+    <AppliedJobs
+      activeTab={activeTab}
+      onTabPress={handleTabPress}
+      onViewDetails={handleGoToJobDetails}
+      onViewSavedJobs={handleGoToSaved}
     />,
     <NotificationsInbox
       onBack={handleGoToDashboard}

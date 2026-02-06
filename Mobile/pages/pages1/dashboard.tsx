@@ -1,15 +1,68 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import Navigation from '../../components/navigation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '../../config';
 
-export default function Dashboard({ onLogout, onNavigateToJobs, onViewJobDetails, onSaveJob, savedJobIds = [], activeTab: externalActiveTab, onTabPress: externalOnTabPress, onOpenNotifications }: { onLogout?: () => void; onNavigateToJobs?: () => void; onViewJobDetails?: (job: any) => void; onSaveJob?: (job: any) => void; savedJobIds?: number[]; activeTab?: string; onTabPress?: (tab: string) => void; onOpenNotifications?: () => void }) {
+type Category = { _id: string; name: string };
+type Job = {
+  _id: string;
+  title: string;
+  description: string;
+  location: string;
+  salary: string;
+  jobType: string;
+  skills?: string[];
+  createdAt?: string;
+  category?: { _id: string; name: string } | string;
+  jobPoster?: { firstName?: string; lastName?: string; email?: string };
+};
+
+export default function Dashboard({ onLogout, onNavigateToJobs, onViewJobDetails, onSaveJob, savedJobIds = [], activeTab: externalActiveTab, onTabPress: externalOnTabPress, onOpenNotifications }: { onLogout?: () => void; onNavigateToJobs?: () => void; onViewJobDetails?: (job: any) => void; onSaveJob?: (job: any) => void; savedJobIds?: string[]; activeTab?: string; onTabPress?: (tab: string) => void; onOpenNotifications?: () => void }) {
   const [activeTab, setActiveTab] = useState(externalActiveTab || 'Home');
-  
-  const activeJobs = [
-    { id: 1, title: 'Design Modern Logo', company: 'Tech Solutions Inc.', budget: '$350', deadline: '3 days left', tags: ['UI/UX', 'Mobile', 'Figma'], type: 'Remote', duration: 'Full Time', salary: '150k - 250k/year', time: '3 days ago' },
-    { id: 2, title: 'Build Responsive', company: 'Fashion Brand Co.', budget: '$2500', deadline: '5 days left', tags: ['React', 'TypeScript', 'CSS'], type: 'Remote', duration: 'Full Time', salary: '120k - 200k/year', time: '5 days ago' },
-    { id: 3, title: 'Social Media', company: 'Startup Ventures', budget: '$800', deadline: '2 days left', tags: ['Content', 'Marketing', 'Design'], type: 'Hybrid', duration: 'Part Time', salary: '80k - 150k/year', time: '2 days ago' },
-  ];
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const recentJobs = useMemo(() => jobs.slice(0, 5), [jobs]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch(`${API_URL}/categories`);
+      const data = await response.json();
+      if (response.ok && Array.isArray(data)) {
+        setCategories(data.slice(0, 3));
+      }
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+    }
+  };
+
+  const fetchJobs = async () => {
+    setIsLoading(true);
+    setErrorMessage('');
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      const response = await fetch(`${API_URL}/jobs?excludeOwn=true`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      const data = await response.json().catch(() => []);
+      if (!response.ok) {
+        throw new Error(data?.message || 'Failed to load jobs.');
+      }
+      setJobs(Array.isArray(data) ? data : []);
+    } catch (error: any) {
+      setErrorMessage(error?.message || 'Failed to load jobs.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+    fetchJobs();
+  }, []);
 
   const handleTabPress = (tab: string) => {
     setActiveTab(tab);
@@ -57,21 +110,16 @@ export default function Dashboard({ onLogout, onNavigateToJobs, onViewJobDetails
           <TouchableOpacity><Text style={styles.seeAll}>See all</Text></TouchableOpacity>
         </View>
         <View style={styles.categoryRow}>
-          <View style={[styles.categoryCard, { backgroundColor: '#1e3a5f' }]}>
-            <Text style={styles.categoryIcon}>💼</Text>
-            <Text style={styles.categoryCount}>3.5k</Text>
-            <Text style={styles.categoryLabel}>Jobs</Text>
-          </View>
-          <View style={[styles.categoryCard, { backgroundColor: '#2563eb' }]}>
-            <Text style={styles.categoryIcon}>💻</Text>
-            <Text style={styles.categoryCount}>2.3k</Text>
-            <Text style={styles.categoryLabel}>Design</Text>
-          </View>
-          <View style={[styles.categoryCard, { backgroundColor: '#0a1929' }]}>
-            <Text style={styles.categoryIcon}>📱</Text>
-            <Text style={styles.categoryCount}>1.8k</Text>
-            <Text style={styles.categoryLabel}>Tech</Text>
-          </View>
+          {categories.map((category, index) => {
+            const colors = ['#1e3a5f', '#2563eb', '#0a1929'];
+            return (
+              <View key={category._id} style={[styles.categoryCard, { backgroundColor: colors[index % colors.length] }]}>
+                <Text style={styles.categoryIcon}>💼</Text>
+                <Text style={styles.categoryCount}>{category.name.length}</Text>
+                <Text style={styles.categoryLabel}>{category.name}</Text>
+              </View>
+            );
+          })}
         </View>
 
         {/* Recent Jobs */}
@@ -84,39 +132,49 @@ export default function Dashboard({ onLogout, onNavigateToJobs, onViewJobDetails
             <Text style={styles.seeAll}>See all</Text>
           </TouchableOpacity>
         </View>
+        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        {isLoading ? (
+          <View style={styles.loadingRow}>
+            <ActivityIndicator color="#1e3a5f" />
+          </View>
+        ) : null}
         <View style={styles.jobsList}>
-          {activeJobs.map(job => (
+          {recentJobs.map(job => (
             <TouchableOpacity 
-              key={job.id} 
+              key={job._id} 
               style={styles.jobCard}
               onPress={() => onViewJobDetails?.(job)}
             >
               <View style={styles.jobCardHeader}>
                 <View style={styles.jobLogo}>
-                  <Text style={styles.jobLogoText}>logo</Text>
+                  <Text style={styles.jobLogoText}>{job.title?.slice(0, 1) || 'J'}</Text>
                 </View>
                 <View style={styles.jobInfo}>
                   <Text style={styles.jobTitle}>{job.title}</Text>
-                  <Text style={styles.jobCompany}>{job.company}</Text>
+                  <Text style={styles.jobCompany}>
+                    {job.jobPoster?.firstName ? `${job.jobPoster.firstName} ${job.jobPoster.lastName || ''}`.trim() : 'Job Poster'}
+                  </Text>
                 </View>
                 <TouchableOpacity 
                   style={styles.bookmarkBtn}
                   onPress={() => onSaveJob?.(job)}
                 >
                   <Text style={styles.bookmarkIcon}>
-                    {savedJobIds.includes(job.id) ? '🔖' : '📄'}
+                    {savedJobIds.includes(job._id) ? '🔖' : '📄'}
                   </Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.jobTags}>
-                <View style={styles.tag}><Text style={styles.tagText}>{job.tags[0]}</Text></View>
-                <View style={styles.tag}><Text style={styles.tagText}>{job.tags[1]}</Text></View>
-                <View style={styles.tag}><Text style={styles.tagText}>{job.tags[2]}</Text></View>
+                {(job.skills || []).slice(0, 3).map((skill, index) => (
+                  <View key={index} style={styles.tag}><Text style={styles.tagText}>{skill}</Text></View>
+                ))}
               </View>
               <View style={styles.jobFooter}>
                 <View style={styles.jobMetaRow}>
-                  <Text style={styles.jobMetaText}>{job.type}</Text>
-                  <Text style={styles.jobMetaText}>{job.duration}</Text>
+                  <Text style={styles.jobMetaText}>{job.jobType}</Text>
+                  {job.category && typeof job.category !== 'string' ? (
+                    <Text style={styles.jobMetaText}>{job.category.name}</Text>
+                  ) : null}
                 </View>
                 <Text style={styles.jobSalary}>{job.salary}</Text>
               </View>
@@ -221,6 +279,11 @@ const styles = StyleSheet.create({
   categoryCount: { fontSize: 20, fontWeight: '800', color: '#fff' },
   categoryLabel: { fontSize: 13, color: '#e5e7eb', fontWeight: '500' },
   jobsList: { gap: 14 },
+  loadingRow: { paddingVertical: 8 },
+  errorText: {
+    color: '#b91c1c',
+    fontSize: 12,
+  },
   jobCard: { 
     backgroundColor: '#fff', 
     borderRadius: 14, 

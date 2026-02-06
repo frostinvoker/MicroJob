@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { API_URL } from '../config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function SignUp({ onBack, onNavigateToSignIn, onNavigateToSuccess }: { onBack: () => void; onNavigateToSignIn: () => void; onNavigateToSuccess: () => void }) {
+export default function SignUp({ onBack, onNavigateToSignIn, onNavigateToVerify }: { onBack: () => void; onNavigateToSignIn: () => void; onNavigateToVerify: () => void }) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -68,27 +68,9 @@ export default function SignUp({ onBack, onNavigateToSignIn, onNavigateToSuccess
       const data = await response.json();
 
       if (response.ok) {
-        // Auto-login after registration
-        const loginResponse = await fetch(`${API_URL}/users/login`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: email.toLowerCase().trim(),
-            password,
-          }),
-        });
-
-        const loginData = await loginResponse.json();
-        if (loginResponse.ok && loginData.token) {
-          await AsyncStorage.setItem('auth_token', loginData.token);
-          await AsyncStorage.setItem('auth_user', JSON.stringify(loginData.user));
-          await AsyncStorage.setItem('has_onboarded', 'true');
-        }
-
-        Alert.alert('Success', 'Account created successfully!');
-        onNavigateToSuccess();
+        await AsyncStorage.setItem('pending_verification_email', email.toLowerCase().trim());
+        Alert.alert('Success', 'Account created! Please verify your email.');
+        onNavigateToVerify();
       } else {
         Alert.alert('Error', data.message || 'Registration failed');
       }
