@@ -144,7 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       | "employer"
       | "worker"
       | "both";
-    const accountOptions =
+    const accountOptions: ("employer" | "worker")[] =
       accountPreference === "both" ? ["employer", "worker"] : [accountPreference];
     const accountType =
       accountPreference === "employer" ? "employer" : "worker";

@@ -19,7 +19,7 @@ export function SignUp() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [showOTP, setShowOTP] = useState(false);
-  const [userType, setUserType] = useState<"hire" | "work" | "both">("both");
+  const [userType, setUserType] = useState<"employer" | "worker" | "both">("both");
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
@@ -151,15 +151,15 @@ export function SignUp() {
               {/* Hire */}
               <button
                 type="button"
-                onClick={() => setUserType("hire")}
+                onClick={() => setUserType("employer")}
                 className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-[12px] border-2 transition-all ${
-                  userType === "hire"
+                  userType === "employer"
                     ? "border-[#1C4D8D] bg-[#F0F7FF]"
                     : "border-[#E5E7EB] bg-white hover:border-[#D1D5DB]"
                 }`}
               >
-                <Briefcase className={`w-6 h-6 ${userType === "hire" ? "text-[#1C4D8D]" : "text-[#9CA3AF]"}`} />
-                <span className={`text-[13px] font-semibold ${userType === "hire" ? "text-[#1C4D8D]" : "text-[#6B7280]"}`}>
+                <Briefcase className={`w-6 h-6 ${userType === "employer" ? "text-[#1C4D8D]" : "text-[#9CA3AF]"}`} />
+                <span className={`text-[13px] font-semibold ${userType === "employer" ? "text-[#1C4D8D]" : "text-[#6B7280]"}`}>
                   Hire
                 </span>
               </button>
@@ -167,15 +167,15 @@ export function SignUp() {
               {/* Work */}
               <button
                 type="button"
-                onClick={() => setUserType("work")}
+                onClick={() => setUserType("worker")}
                 className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-[12px] border-2 transition-all ${
-                  userType === "work"
+                  userType === "worker"
                     ? "border-[#1C4D8D] bg-[#F0F7FF]"
                     : "border-[#E5E7EB] bg-white hover:border-[#D1D5DB]"
                 }`}
               >
-                <UserPlus className={`w-6 h-6 ${userType === "work" ? "text-[#1C4D8D]" : "text-[#9CA3AF]"}`} />
-                <span className={`text-[13px] font-semibold ${userType === "work" ? "text-[#1C4D8D]" : "text-[#6B7280]"}`}>
+                <UserPlus className={`w-6 h-6 ${userType === "worker" ? "text-[#1C4D8D]" : "text-[#9CA3AF]"}`} />
+                <span className={`text-[13px] font-semibold ${userType === "worker" ? "text-[#1C4D8D]" : "text-[#6B7280]"}`}>
                   Work
                 </span>
               </button>
