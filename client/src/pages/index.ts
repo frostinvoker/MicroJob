@@ -11,3 +11,4 @@ export { default as Home } from './Home';
 export { default as SignIn } from './signIn';
 export { default as SignUp } from './signUp';
 export { default as JobDetails } from './JobDetails';
+export { default as EWallet } from './EWallet';

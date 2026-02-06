@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import Sidebar from "../components/Sidebar";
 
 const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState("personal");
@@ -59,14 +58,9 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <Sidebar userName="Jonas" userEmail="jonas@example.com" balance="₱67.67" messageCount={2} />
-
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto ml-64">
-        {/* Header Section */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-8 mb-8 relative overflow-hidden">
+    <div>
+      {/* Header Section */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-8 mb-8 relative overflow-hidden">
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-10 left-20 w-40 h-40 bg-white rounded-full"></div>
             <div className="absolute top-5 right-32 text-4xl">✦ ✦ ✦</div>
@@ -76,11 +70,11 @@ const Settings: React.FC = () => {
             <h1 className="text-4xl font-bold mb-2">Settings</h1>
             <p className="text-blue-100">Manage your profile and account settings</p>
           </div>
-        </div>
+      </div>
 
-        {/* Content */}
-        <div className="px-8 pb-20">
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      {/* Content */}
+      <div className="px-8 pb-20">
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
             {/* Tabs */}
             <div className="flex border-b border-gray-200">
               <button
@@ -344,7 +338,6 @@ const Settings: React.FC = () => {
                 </div>
               )}
             </div>
-          </div>
         </div>
       </div>
     </div>

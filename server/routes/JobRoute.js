@@ -7,8 +7,8 @@ import {
     getApplicantsList, 
     createJob, 
     changeJobStatus, 
-    applyForJob, 
-    selectApplicant 
+    selectApplicant,
+    getMyJobs
 } from '../controllers/JobController.js'; 
 
 import verifyToken from '../middleware/auth.js';
@@ -18,11 +18,11 @@ const router = express.Router();
 router.get('/', getJobList); 
 router.get('/available', getAvailableJobs);
 router.get('/category/:categoryId', getJobByCategory);
+router.get('/mine', verifyToken, getMyJobs);
 router.get('/:id', getJobDetails);
 
 router.post('/', verifyToken, createJob);
 router.get('/:jobId/applicants', verifyToken, getApplicantsList);
-router.post('/:jobId/apply', verifyToken, applyForJob);
 router.patch('/:jobId/select/:applicantId', verifyToken, selectApplicant);
 router.patch('/:id/status', verifyToken, changeJobStatus);
 

@@ -1,73 +1,90 @@
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer";
+
+const otpStore = new Map();
+const OTP_TTL_MS = 5 * 60 * 1000;
+
+function getEmailTransporter() {
+    const host = process.env.SMTP_HOST;
+    const port = Number(process.env.SMTP_PORT || 0);
+    const user = process.env.SMTP_USER;
+    const pass = process.env.SMTP_PASS;
+
+    if (!host || !port || !user || !pass) {
+        return null;
+    }
+
+    const secure = port === 465;
+    return nodemailer.createTransport({
+        host,
+        port,
+        secure,
+        auth: { user, pass },
+    });
+}
 
 export async function getUserList(req, res) {
     try {
         const users = await User.find({});
         res.status(200).json(users);
     } catch (error) {
-        res.status(500).json({message: "Failed to retrieve users."});
+        res.status(500).json({ message: "Failed to retrieve users." });
     }
 }
+
 export async function register(req, res) {
     try {
-        const {phoneNumber, email, firstName, lastName, username, password, role} = req.body;
-        
-        // Handle both web (username) and mobile (firstName/lastName) formats
+        const { phoneNumber, email, firstName, lastName, username, password, role } = req.body;
+
         let finalFirstName = firstName;
         let finalLastName = lastName;
-        
+
         if (username && !firstName && !lastName) {
-            // Web client format - split username into first and last name
-            const nameParts = username.trim().split(' ');
-            finalFirstName = nameParts[0] || '';
-            finalLastName = nameParts.slice(1).join(' ') || nameParts[0] || '';
+            const nameParts = username.trim().split(" ");
+            finalFirstName = nameParts[0] || "";
+            finalLastName = nameParts.slice(1).join(" ") || nameParts[0] || "";
         }
-        
-        // Validation
+
         if (!finalFirstName || !password || !email) {
-            return res.status(400).json({message: "Missing Fields."});
+            return res.status(400).json({ message: "Missing Fields." });
         }
-        
-        // Ensure lastName has a value
+
         if (!finalLastName) {
             finalLastName = finalFirstName;
         }
-        
-        // Check if user exists by phone or email
+
         if (phoneNumber) {
-            const phoneExists = await User.findOne({phoneNumber});
-            if(phoneExists){
-                return res.status(409).json({message: "Phone Number is already registered."})
-            }
-        }
-        
-        if (email) {
-            const emailExists = await User.findOne({email});
-            if(emailExists){
-                return res.status(409).json({message: "Email is already registered."})
+            const phoneExists = await User.findOne({ phoneNumber });
+            if (phoneExists) {
+                return res.status(409).json({ message: "Phone Number is already registered." });
             }
         }
 
-        // Validate role
+        const emailExists = await User.findOne({ email });
+        if (emailExists) {
+            return res.status(409).json({ message: "Email is already registered." });
+        }
+
         const validRoles = ["hire", "work", "both", "admin", "superadmin"];
         const userRole = role && validRoles.includes(role) ? role : "work";
         console.log("Register - User role being set to:", userRole);
 
         const user = new User({
-            phoneNumber, 
-            email, 
-            firstName: finalFirstName, 
+            phoneNumber,
+            email,
+            firstName: finalFirstName,
             lastName: finalLastName,
-            role: userRole
+            role: userRole,
+            status: "pending",
         });
         await user.setPassword(password);
         await user.save();
 
-        return res.status(201).json({message: "Successfully registered."});
+        return res.status(201).json({ message: "Successfully registered." });
     } catch (error) {
         console.error("Registration Failed.");
-        return res.status(500).json({message: "Registration Failed."});
+        return res.status(500).json({ message: "Registration Failed." });
     }
 }
 
@@ -142,4 +159,113 @@ export async function logout(req, res) {
         secure: process.env.NODE_ENV === 'production'
     });
     return res.status(200).json({message: "Logout successful."});
+}
+
+export async function sendOtp(req, res) {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ message: "Email is required." });
+        }
+
+        const transporter = getEmailTransporter();
+        if (!transporter) {
+            return res.status(500).json({ message: "Email service is not configured." });
+        }
+
+        const user = await User.findOne({ email: email.toLowerCase().trim() });
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        otpStore.set(email.toLowerCase().trim(), {
+            code,
+            expiresAt: Date.now() + OTP_TTL_MS,
+        });
+
+        const fromAddress = process.env.SMTP_FROM || process.env.SMTP_USER;
+        const displayName = user.firstName || "there";
+        const subject = "MicroJobs email verification";
+        const text = `Hi ${displayName},\n\nUse this code to verify your email for MicroJobs: ${code}\n\nThis code expires in 5 minutes. If you did not request this, you can ignore this message.`;
+        const html = `
+            <p>Hi ${displayName},</p>
+            <p>Use this code to verify your email for MicroJobs:</p>
+            <p style="font-size: 20px; font-weight: bold; letter-spacing: 2px;">${code}</p>
+            <p>This code expires in 5 minutes.</p>
+            <p>If you did not request this, you can ignore this message.</p>
+        `;
+
+        await transporter.sendMail({
+            from: `MicroJobs <${fromAddress}>`,
+            to: email,
+            subject,
+            text,
+            html,
+        });
+
+        return res.status(200).json({ message: "OTP sent." });
+    } catch (error) {
+        console.error("Send OTP error:", error);
+        const detail = error?.message ? ` ${error.message}` : "";
+        return res.status(500).json({ message: `Failed to send OTP.${detail}`.trim() });
+    }
+}
+
+export async function verifyOtp(req, res) {
+    try {
+        const { email, code } = req.body;
+
+        if (!email || !code) {
+            return res.status(400).json({ message: "Email and code are required." });
+        }
+
+        const key = email.toLowerCase().trim();
+        const record = otpStore.get(key);
+        if (!record) {
+            return res.status(400).json({ message: "OTP not found or expired." });
+        }
+
+        if (record.expiresAt < Date.now()) {
+            otpStore.delete(key);
+            return res.status(400).json({ message: "OTP expired." });
+        }
+
+        if (record.code !== code) {
+            return res.status(400).json({ message: "Invalid OTP." });
+        }
+
+        const user = await User.findOne({ email: key });
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        user.status = "active";
+        await user.save();
+
+        const token = jwt.sign(
+            { id: user._id, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        otpStore.delete(key);
+
+        return res.status(200).json({
+            message: "Email verified and login successful.",
+            token,
+            user: {
+                id: user._id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                phoneNumber: user.phoneNumber,
+                email: user.email,
+                role: user.role,
+            },
+        });
+    } catch (error) {
+        console.error("Verify OTP error:", error);
+        return res.status(500).json({ message: "Failed to verify OTP." });
+    }
 }

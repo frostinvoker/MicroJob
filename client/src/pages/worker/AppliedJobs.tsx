@@ -1,66 +1,54 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "../../components/Sidebar";
-import { useAuth } from "../../hooks/useAuth";
+import { jobsAPI } from "../../services/jobs";
 
-interface Job {
-  id: number;
+interface JobData {
+  _id: string;
   title: string;
-  company: string;
-  companyLogo?: string;
   location: string;
   salary: string;
-  type: string[];
-  appliedDate: string;
+  jobType: "Fulltime" | "Freelance" | "Remote" | "Part-time";
+  description: string;
+  skills?: string[];
+  applicants?: string[];
+  deadline?: string;
+}
+
+interface Application {
+  _id: string;
   status: "Pending" | "Reviewed" | "Accepted" | "Rejected";
+  appliedDate: string;
+  job: JobData;
 }
 
 const AppliedJobs: React.FC = () => {
   const navigate = useNavigate();
-  const authUser = useAuth();
   const [selectedFilter, setSelectedFilter] = useState<string>("All");
-
-  const appliedJobs: Job[] = [
-    {
-      id: 1,
-      title: "Front end Developer",
-      company: "Spotify",
-      companyLogo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/2048px-Spotify_logo_without_text.svg.png",
-      location: "Pangasinan, PH",
-      salary: "150k to 250k",
-      type: ["UI/UX", "NodeJs", "Figma"],
-      appliedDate: "Applied 2 days ago",
-      status: "Pending",
-    },
-    {
-      id: 2,
-      title: "Front end Developer",
-      company: "Spotify",
-      companyLogo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/2048px-Spotify_logo_without_text.svg.png",
-      location: "Pangasinan, PH",
-      salary: "150k to 250k",
-      type: ["UI/UX", "NodeJs", "Figma"],
-      appliedDate: "Applied 5 days ago",
-      status: "Reviewed",
-    },
-    {
-      id: 3,
-      title: "Front end Developer",
-      company: "Spotify",
-      companyLogo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/2048px-Spotify_logo_without_text.svg.png",
-      location: "Pangasinan, PH",
-      salary: "150k to 250k",
-      type: ["UI/UX", "NodeJs", "Figma"],
-      appliedDate: "Applied 1 week ago",
-      status: "Pending",
-    },
-  ];
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const filterOptions = ["All", "Pending", "Reviewed", "Accepted", "Rejected"];
 
-  const filteredJobs = selectedFilter === "All" 
-    ? appliedJobs 
-    : appliedJobs.filter(job => job.status === selectedFilter);
+  useEffect(() => {
+    const fetchApplications = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const statusParam = selectedFilter === "All" ? undefined : selectedFilter;
+        const response = await jobsAPI.getUserApplications(statusParam);
+        setApplications(response.data || []);
+      } catch (err: any) {
+        setError(err?.response?.data?.message || "Failed to load applications.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApplications();
+  }, [selectedFilter]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -72,103 +60,205 @@ const AppliedJobs: React.FC = () => {
     }
   };
 
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredApplications = applications.filter((application) => {
+    if (!normalizedQuery) return true;
+    const job = application.job;
+    return (
+      job?.title?.toLowerCase().includes(normalizedQuery) ||
+      job?.jobType?.toLowerCase().includes(normalizedQuery)
+    );
+  });
+
+  const suggestions = (() => {
+    if (!normalizedQuery) return [] as string[];
+    const pool = applications.flatMap((application) => {
+      const job = application.job;
+      return [job?.title, job?.jobType].filter(Boolean) as string[];
+    });
+    const unique = Array.from(new Set(pool));
+    return unique
+      .filter((item) => item.toLowerCase().includes(normalizedQuery))
+      .slice(0, 6);
+  })();
+
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <Sidebar userName={authUser?.firstName + " " + authUser?.lastName || "Jonas Enriquez"} userEmail={authUser?.email || "jonas@example.com"} balance="₱67.67" messageCount={2} userRole={authUser?.role || "work"} />
-
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto ml-64">
-        {/* Header Section */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-8 mb-8">
-          <h1 className="text-4xl font-bold mb-2">Applied Jobs</h1>
-          <p className="text-blue-100">Track your job applications and their status</p>
-        </div>
-
-        {/* Content */}
-        <div className="px-8 pb-20">
-          {/* Filter Tabs */}
-          <div className="flex gap-3 mb-8">
-            {filterOptions.map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setSelectedFilter(filter)}
-                className={`px-6 py-2 rounded-full font-semibold transition ${
-                  selectedFilter === filter
-                    ? "bg-blue-600 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                {filter}
-              </button>
-            ))}
+    <div>
+      {/* Top Bar */}
+      <div className="bg-white px-8 py-6 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+          
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Applied Jobs</h1>
+              <p className="text-gray-500 text-sm">You have {applications.length} job applications</p>
+            </div>
           </div>
 
-          {/* Jobs Count */}
-          <div className="mb-6">
-            <h2 className="text-xl font-bold text-gray-900">
-              {filteredJobs.length} Application{filteredJobs.length !== 1 ? "s" : ""}
-            </h2>
-            <p className="text-gray-600 text-sm">Your recent job applications</p>
-          </div>
-
-          {/* Job Cards Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredJobs.map((job) => (
-              <div
-                key={job.id}
-                className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition cursor-pointer relative"
-                onClick={() => navigate(`/job-details/${job.id}`)}
-              >
-                {/* Status Badge */}
-                <div className="absolute top-4 right-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(job.status)}`}>
-                    {job.status}
-                  </span>
-                </div>
-
-                {/* Company Logo */}
-                <div className="bg-white rounded-2xl p-3 w-16 h-16 flex items-center justify-center mb-4">
-                  {job.companyLogo ? (
-                    <img src={job.companyLogo} alt={job.company} className="w-12 h-12 object-contain" />
-                  ) : (
-                    <span className="text-2xl">🏢</span>
-                  )}
-                </div>
-
-                {/* Job Title */}
-                <h3 className="text-xl font-bold mb-1">{job.title}</h3>
-                <p className="text-blue-200 text-sm mb-3">{job.company}</p>
-                <p className="text-blue-100 text-sm mb-4">{job.location}</p>
-
-                {/* Skills/Tags */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {job.type.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-xs font-semibold"
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search applications..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
+                className="w-72 px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="absolute right-3 top-2.5 text-gray-400">🔍</span>
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute z-10 mt-2 w-full rounded-xl border border-gray-200 bg-white shadow-lg">
+                  {suggestions.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onMouseDown={() => {
+                        setSearchQuery(item);
+                        setShowSuggestions(false);
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
                     >
-                      {tag}
-                    </span>
+                      {item}
+                    </button>
                   ))}
                 </div>
+              )}
+            </div>
+            <button className="relative h-9 w-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-600">
+              🔔
+              <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
+                3
+              </span>
+            </button>
+            <div className="h-9 w-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold">
+              JD
+            </div>
+          </div>
+        </div>
 
-                {/* Footer */}
-                <div className="flex items-center justify-between pt-4 border-t border-white border-opacity-20">
-                  <span className="text-sm text-blue-100">{job.appliedDate}</span>
-                  <span className="text-lg font-bold">{job.salary}</span>
+        <div className="flex items-center gap-2 mt-6">
+          {filterOptions.map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setSelectedFilter(filter)}
+              className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${
+                selectedFilter === filter
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              {filter}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="px-8 py-6">
+          {/* Job Cards */}
+          {loading && (
+            <div className="bg-white rounded-2xl p-8 shadow-sm text-center text-gray-600">
+              Loading applications...
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-red-700 mb-6">
+              {error}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {filteredApplications.map((application) => (
+              <div
+                key={application._id}
+                className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg transition cursor-pointer border border-gray-200"
+                onClick={() => navigate(`/job-details/${application.job?._id}`, { 
+                  state: { isApplied: true, status: application.status }
+                })}
+              >
+                <div className="flex items-start gap-4">
+                  {/* Company Logo */}
+                  <div className="h-14 w-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg">
+                    {application.job?.title?.charAt(0) || "J"}
+                  </div>
+
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900">{application.job?.title}</h3>
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <span>{application.job?.location}</span>
+                        </div>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(application.status)}`}>
+                        {application.status}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 mt-3">
+                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
+                        {application.job?.jobType}
+                      </span>
+                      <span className="text-green-600 font-semibold text-sm">{application.job?.salary}</span>
+                      <span className="text-gray-500 text-sm">/ month</span>
+                    </div>
+
+                    <p className="text-sm text-gray-600 mt-3 line-clamp-3">
+                      {application.job?.description}
+                    </p>
+
+                    <div className="mt-4">
+                      <p className="text-xs text-gray-500 mb-2">Required Skills:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {(application.job?.skills || []).map((tag) => (
+                          <span
+                            key={tag}
+                            className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-200">
+                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                        <span>🕒 Applied {new Date(application.appliedDate).toLocaleDateString()}</span>
+                        <span>👥 {application.job?.applicants?.length || 0} applicants</span>
+                        <span>📅 Deadline: {application.job?.deadline ? new Date(application.job.deadline).toLocaleDateString() : "N/A"}</span>
+                      </div>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/job-details/${application.job?._id}`, { 
+                            state: { isApplied: true, status: application.status }
+                          });
+                        }}
+                        className="bg-blue-600 text-white px-6 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
 
           {/* Empty State */}
-          {filteredJobs.length === 0 && (
+          {!loading && filteredApplications.length === 0 && (
             <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
               <div className="text-6xl mb-4">📋</div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">No Applications Found</h3>
               <p className="text-gray-600 mb-6">
-                You haven't applied to any jobs with this status yet.
+                {searchQuery
+                  ? "No applications match your search."
+                  : "You haven't applied to any jobs with this status yet."}
               </p>
               <button
                 onClick={() => navigate("/find-jobs")}
@@ -178,7 +268,6 @@ const AppliedJobs: React.FC = () => {
               </button>
             </div>
           )}
-        </div>
       </div>
     </div>
   );

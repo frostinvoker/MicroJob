@@ -39,6 +39,7 @@ router.post('/register', async (req, res) => {
         password,
         email: email?.toLowerCase() || null,
         role: userRole,
+        status: 'pending',
       });
 
       return res.status(201).json({
@@ -75,6 +76,7 @@ router.post('/register', async (req, res) => {
       email: email.toLowerCase(),
       password,
       role: userRole,
+      status: 'pending',
     });
 
     return res.status(201).json({

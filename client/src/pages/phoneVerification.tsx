@@ -1,15 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { sendOtp, verifyOtp } from '../api/auth';
 
 const PhoneVerification: React.FC = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState<'phone' | 'otp'>('phone');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [step, setStep] = useState<'email' | 'otp'>('email');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(30);
   const [canResend, setCanResend] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const email = localStorage.getItem('pending_verification_email') || '';
 
   // Timer countdown for resend code
   useEffect(() => {
@@ -27,26 +29,28 @@ const PhoneVerification: React.FC = () => {
     }
   }, [step, timer]);
 
-  const handlePhoneSubmit = async (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (phoneNumber.length < 10) {
-      alert('Please enter a valid phone number');
+    setErrorMessage('');
+    if (!email) {
+      alert('Missing signup email. Please sign up again.');
       return;
     }
 
     setIsLoading(true);
     try {
-      // API call to send OTP
-      // await sendOTP(phoneNumber);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await sendOtp({ email });
       
       setStep('otp');
       setTimer(30);
       setCanResend(false);
     } catch (error) {
       console.error('Error sending OTP:', error);
+      const err = error as { code?: string; message?: string };
+      const detail = err?.code ? `${err.code} ${err.message || ''}`.trim() : err?.message || '';
+      if (detail) {
+        setErrorMessage(detail);
+      }
       alert('Failed to send verification code');
     } finally {
       setIsLoading(false);
@@ -74,6 +78,7 @@ const PhoneVerification: React.FC = () => {
 
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage('');
     const otpCode = otp.join('');
     
     if (otpCode.length !== 6) {
@@ -83,16 +88,22 @@ const PhoneVerification: React.FC = () => {
 
     setIsLoading(true);
     try {
-      // API call to verify OTP
-      // await verifyOTP(phoneNumber, otpCode);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      alert('Phone number verified successfully!');
-      navigate('/dashboard');
+      const response = await verifyOtp({ email, code: otpCode });
+      if (response?.token && response?.user) {
+        localStorage.setItem('auth_user', JSON.stringify(response.user));
+        localStorage.setItem('auth_token', response.token);
+        window.dispatchEvent(new Event('auth_user_updated'));
+      }
+      localStorage.removeItem('pending_verification_email');
+      alert('Email verified successfully!');
+      navigate('/dashboard', { replace: true });
     } catch (error) {
       console.error('Error verifying OTP:', error);
+      const err = error as { code?: string; message?: string };
+      const detail = err?.code ? `${err.code} ${err.message || ''}`.trim() : err?.message || '';
+      if (detail) {
+        setErrorMessage(detail);
+      }
       alert('Invalid verification code');
     } finally {
       setIsLoading(false);
@@ -103,12 +114,9 @@ const PhoneVerification: React.FC = () => {
     if (!canResend) return;
 
     setIsLoading(true);
+    setErrorMessage('');
     try {
-      // API call to resend OTP
-      // await sendOTP(phoneNumber);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await sendOtp({ email });
       
       setTimer(30);
       setCanResend(false);
@@ -116,6 +124,11 @@ const PhoneVerification: React.FC = () => {
       alert('Verification code sent!');
     } catch (error) {
       console.error('Error resending OTP:', error);
+      const err = error as { code?: string; message?: string };
+      const detail = err?.code ? `${err.code} ${err.message || ''}`.trim() : err?.message || '';
+      if (detail) {
+        setErrorMessage(detail);
+      }
       alert('Failed to resend code');
     } finally {
       setIsLoading(false);
@@ -127,10 +140,10 @@ const PhoneVerification: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1a2942] to-[#0f1820] p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1a2942] to-[#0f1820] p-4 page-transition">
       <div className="w-full max-w-md">
-        {/* Phone Number Input Screen */}
-        {step === 'phone' && (
+        {/* Email Input Screen */}
+        {step === 'email' && (
           <div className="bg-white rounded-3xl shadow-2xl p-8">
             {/* Back Button */}
             <button
@@ -173,23 +186,27 @@ const PhoneVerification: React.FC = () => {
 
             {/* Title */}
             <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">
-              Phone Number
+              Email Verification
             </h2>
             <p className="text-center text-gray-500 text-sm mb-8">
-              Lorem ipsum Lorem ipsum
+              We will send a 6-digit code to your email address.
             </p>
 
             {/* Form */}
-            <form onSubmit={handlePhoneSubmit}>
+            <form onSubmit={handleEmailSubmit}>
+              {errorMessage && (
+                <p className="mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">
+                  {errorMessage}
+                </p>
+              )}
               <div className="mb-6">
                 <div className="relative">
                   <input
-                    type="tel"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                    placeholder="+[63]"
-                    className="w-full px-4 py-3 pl-12 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1e3a5f] focus:border-transparent"
-                    maxLength={11}
+                    type="email"
+                    value={email}
+                    readOnly
+                    placeholder="you@example.com"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#1e3a5f] focus:border-transparent"
                   />
                   <svg
                     className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
@@ -201,7 +218,7 @@ const PhoneVerification: React.FC = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                      d="M3 8l9 6 9-6M5 6h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z"
                     />
                   </svg>
                 </div>
@@ -209,10 +226,10 @@ const PhoneVerification: React.FC = () => {
 
               <button
                 type="submit"
-                disabled={isLoading || phoneNumber.length < 10}
+                disabled={isLoading || !email}
                 className="w-full bg-[#1e3a5f] text-white py-3 rounded-xl font-semibold hover:bg-[#2d5080] transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-4"
               >
-                {isLoading ? 'Sending...' : 'Verify Phone Number'}
+                {isLoading ? 'Sending...' : 'Send Verification Code'}
               </button>
 
               <button
@@ -231,7 +248,7 @@ const PhoneVerification: React.FC = () => {
           <div className="bg-white rounded-3xl shadow-2xl p-8">
             {/* Back Button */}
             <button
-              onClick={() => setStep('phone')}
+              onClick={() => setStep('email')}
               className="mb-6 flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
             >
               <svg
@@ -270,13 +287,19 @@ const PhoneVerification: React.FC = () => {
 
             {/* Title */}
             <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">
-              Verify Phone number
+              Verify Email
             </h2>
             <p className="text-center text-gray-500 text-sm mb-2">
               We've sent a 6-digit code to
             </p>
+
+            {errorMessage && (
+              <p className="mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">
+                {errorMessage}
+              </p>
+            )}
             <p className="text-center text-gray-700 font-medium mb-8">
-              +{phoneNumber}
+              {email}
             </p>
 
             {/* Form */}

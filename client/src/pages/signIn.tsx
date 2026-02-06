@@ -27,7 +27,7 @@ const SignIn: React.FC = () => {
       localStorage.setItem("auth_user", JSON.stringify(user));
       console.log("SignIn - Stored in localStorage:", localStorage.getItem("auth_user"));
       console.log("SignIn - Role in localStorage:", JSON.parse(localStorage.getItem("auth_user") || '{}').role);
-      if (rememberMe) localStorage.setItem("auth_token", token);
+      localStorage.setItem("auth_token", token);
         window.dispatchEvent(new Event("auth_user_updated"));
       // Redirect to dashboard
       navigate("/dashboard", { replace: true });
@@ -39,7 +39,7 @@ const SignIn: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-t from-cyan-400 to-indigo-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-t from-cyan-400 to-indigo-900 flex items-center justify-center px-4 page-transition">
       <style>{`
         @keyframes slideInRight {
           from {

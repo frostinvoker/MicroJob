@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -12,8 +12,8 @@ import {
   Legend,
   Filler,
 } from "chart.js";
-import Sidebar from "../components/Sidebar";
 import { useAuth } from "../hooks/useAuth";
+import { jobsAPI } from "../services/jobs";
 
 ChartJS.register(
   CategoryScale,
@@ -34,6 +34,10 @@ const Dashboard: React.FC = () => {
   const [userEmail, setUserEmail] = useState("you@example.com");
   const [activeVacancyTab, setActiveVacancyTab] = useState("Application Sent");
   const [showNotifications, setShowNotifications] = useState(false);
+  const [applications, setApplications] = useState<Array<{ status: string; createdAt?: string; job?: { _id: string; title: string; location?: string; salary?: string; jobType?: string } }>>([]);
+  const [appsLoading, setAppsLoading] = useState(false);
+  const [jobs, setJobs] = useState<Array<{ _id: string; title: string; location?: string; salary?: string; jobType?: string; category?: { name?: string }; jobPoster?: { _id?: string; id?: string } }>>([]);
+  const [jobsLoading, setJobsLoading] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("auth_user");
@@ -55,84 +59,88 @@ const Dashboard: React.FC = () => {
     console.log("Dashboard - authUser from useAuth hook:", authUser);
   }, [authUser]);
 
-  const recommendations = [
-    {
-      id: 1,
-      title: "Senior React Developer",
-      company: "Tech Solutions Inc.",
-      salary: "₱80,000 - ₱120,000",
-      description: "We're looking for an experienced React developer...",
-      location: "Manila, PH",
-      type: "Remote",
-      daysAgo: "2 days ago",
-      initials: "TS"
-    },
-    {
-      id: 2,
-      title: "Full Stack Developer",
-      company: "Innovation Labs",
-      salary: "₱70,000 - ₱100,000",
-      description: "Join our dynamic team building next-generation SaaS...",
-      location: "Cebu, PH",
-      type: "Hybrid",
-      daysAgo: "5 days ago",
-      initials: "IL"
-    },
-    {
-      id: 3,
-      title: "Mobile Developer",
-      company: "Digital Ventures",
-      salary: "₱75,000 - ₱110,000",
-      description: "Build amazing mobile experiences with React Native...",
-      location: "Makati, PH",
-      type: "On-site",
-      daysAgo: "1 week ago",
-      initials: "DV"
-    },
-  ];
+  useEffect(() => {
+    const fetchApplications = async () => {
+      setAppsLoading(true);
+      try {
+        const response = await jobsAPI.getUserApplications();
+        setApplications(response.data || []);
+      } catch (err) {
+        console.warn("Failed to load applications for dashboard", err);
+      } finally {
+        setAppsLoading(false);
+      }
+    };
 
-  const companies = [
-    { id: 1, name: "Google Philippines", abbreviation: "GP", vacancies: "24 Vacancies", employees: "10,000+ employees", category: "Technology" },
-    { id: 2, name: "Microsoft", abbreviation: "MS", vacancies: "18 Vacancies", employees: "5,000+ employees", category: "Software" },
-    { id: 3, name: "Amazon Web Services", abbreviation: "AWS", vacancies: "32 Vacancies", employees: "8,000+ employees", category: "Cloud Services" },
-    { id: 4, name: "Meta Platforms", abbreviation: "MP", vacancies: "15 Vacancies", employees: "3,000+ employees", category: "Social Media" },
-  ];
+    const fetchJobs = async () => {
+      setJobsLoading(true);
+      try {
+        const response = await jobsAPI.getJobs({ excludeOwn: true });
+        setJobs(response.data || []);
+      } catch (err) {
+        console.warn("Failed to load jobs for dashboard", err);
+      } finally {
+        setJobsLoading(false);
+      }
+    };
 
-  const recentActivities = [
-    {
-      id: 1,
-      type: "accepted",
-      title: "Your application has been accepted for Senior Frontend Developer",
-      time: "1m ago",
-      icon: "✓"
-    },
-    {
-      id: 2,
-      type: "scheduled",
-      title: "Interview scheduled with Tech Corp on Friday at 2:00 PM",
-      time: "15m ago",
-      icon: "🕐"
-    },
-    {
-      id: 3,
-      type: "message",
-      title: "New message from HR Manager at Innovation Labs",
-      time: "1h ago",
-      icon: "✉️"
-    },
-    {
-      id: 4,
-      type: "viewed",
-      title: "Application viewed by Google Inc.",
-      time: "2h ago",
-      icon: "👁️"
-    },
-  ];
+    if (authUser?.role === "work" || authUser?.role === "both") {
+      fetchApplications();
+      fetchJobs();
+    }
+  }, [authUser?.role]);
 
-  const techStack = [
-    { name: "React", color: "bg-blue-600", initial: "R" },
-    { name: "Node.js", color: "bg-green-600", initial: "N" },
-    { name: "TypeScript", color: "bg-yellow-600", initial: "TS" },
+  const statusCounts = useMemo(() => {
+    return applications.reduce(
+      (acc, app) => {
+        const key = app.status || "Pending";
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+  }, [applications]);
+
+  if (authUser?.role === "hire") {
+    return <Navigate to="/employer/applications" replace />;
+  }
+
+  const appliedJobIds = useMemo(
+    () => new Set(applications.map((app) => app.job?._id).filter(Boolean) as string[]),
+    [applications]
+  );
+
+  const filteredJobs = jobs.filter((job) => {
+    if (appliedJobIds.has(job._id)) return false;
+    return true;
+  });
+
+  const recommendedJobs = filteredJobs.slice(0, 3);
+  const featuredJobs = filteredJobs.slice(0, 4);
+
+  const recentActivities = applications.slice(0, 4).map((app, index) => {
+    const status = app.status || "Pending";
+    const iconMap: Record<string, string> = {
+      Pending: "⏳",
+      Reviewed: "👀",
+      Accepted: "✅",
+      Rejected: "❌",
+    };
+    return {
+      id: `${app.job?._id || "app"}-${index}`,
+      type: status.toLowerCase(),
+      title: `Application ${status.toLowerCase()} for ${app.job?.title || "a job"}`,
+      time: app.createdAt ? new Date(app.createdAt).toLocaleDateString() : "Just now",
+      icon: iconMap[status] || "📌",
+    };
+  });
+
+  const analyticsLabels = ["Pending", "Reviewed", "Accepted", "Rejected"];
+  const analyticsValues = [
+    statusCounts.Pending || 0,
+    statusCounts.Reviewed || 0,
+    statusCounts.Accepted || 0,
+    statusCounts.Rejected || 0,
   ];
 
   const notifications = [
@@ -160,13 +168,7 @@ const Dashboard: React.FC = () => {
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <Sidebar userName={userName} userEmail={userEmail} balance="₱67.67" messageCount={2} userRole={authUser?.role || "work"} />
-
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto ml-64">
-        <div className="p-8 pb-20">
+    <div className="p-8 pb-20">
           {/* Header with Search and Icons */}
           <div className="flex items-center justify-between gap-6 mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
@@ -244,45 +246,45 @@ const Dashboard: React.FC = () => {
             <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-blue-100 text-sm mb-2">Interviews Schedule</p>
-                  <p className="text-4xl font-bold">12</p>
+                  <p className="text-blue-100 text-sm mb-2">Pending</p>
+                  <p className="text-4xl font-bold">{statusCounts.Pending || 0}</p>
                 </div>
-                <div className="text-2xl">📅</div>
+                <div className="text-2xl">🕒</div>
               </div>
-              <p className="text-xs text-blue-100 mt-3">↑ +12%</p>
+              <p className="text-xs text-blue-100 mt-3">{appsLoading ? "Loading..." : "Applications"}</p>
             </div>
 
             <div className="bg-gradient-to-br from-blue-700 to-blue-900 rounded-2xl p-6 text-white">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-blue-200 text-sm mb-2">Application Sent</p>
-                  <p className="text-4xl font-bold">37</p>
+                  <p className="text-blue-200 text-sm mb-2">Reviewed</p>
+                  <p className="text-4xl font-bold">{statusCounts.Reviewed || 0}</p>
                 </div>
-                <div className="text-2xl">✈️</div>
+                <div className="text-2xl">👀</div>
               </div>
-              <p className="text-xs text-blue-200 mt-3">↑ +8%</p>
+              <p className="text-xs text-blue-200 mt-3">{appsLoading ? "Loading..." : "Applications"}</p>
             </div>
 
             <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-2xl p-6 text-white">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-blue-100 text-sm mb-2">E-wallet</p>
-                  <p className="text-4xl font-bold">12</p>
+                  <p className="text-blue-100 text-sm mb-2">Accepted</p>
+                  <p className="text-4xl font-bold">{statusCounts.Accepted || 0}</p>
                 </div>
-                <div className="text-2xl">💳</div>
+                <div className="text-2xl">✅</div>
               </div>
-              <p className="text-xs text-blue-100 mt-3">↑ +5%</p>
+              <p className="text-xs text-blue-100 mt-3">{appsLoading ? "Loading..." : "Applications"}</p>
             </div>
 
             <div className="bg-gradient-to-br from-blue-800 to-blue-900 rounded-2xl p-6 text-white">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-blue-200 text-sm mb-2">Unread Messages</p>
-                  <p className="text-4xl font-bold">8</p>
+                  <p className="text-blue-200 text-sm mb-2">Rejected</p>
+                  <p className="text-4xl font-bold">{statusCounts.Rejected || 0}</p>
                 </div>
-                <div className="text-2xl">✉️</div>
+                <div className="text-2xl">❌</div>
               </div>
-              <p className="text-xs text-blue-200 mt-3">↓ -3%</p>
+              <p className="text-xs text-blue-200 mt-3">{appsLoading ? "Loading..." : "Applications"}</p>
             </div>
           </div>
 
@@ -307,21 +309,6 @@ const Dashboard: React.FC = () => {
                 <p className="text-gray-600 text-xs">All requirements completed</p>
               </div>
 
-              {/* Tech Stack */}
-              <div className="bg-white rounded-xl p-6 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-gray-900">Tech Stack</h3>
-                  <span className="text-sm text-gray-600">{techStack.length} Skills</span>
-                </div>
-                <div className="space-y-3">
-                  {techStack.map((tech, idx) => (
-                    <div key={idx} className={`${tech.color} rounded-lg p-3 text-white font-semibold text-center`}>
-                      {tech.name}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
               {/* Recent Activities */}
               <div className="bg-white rounded-xl p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
@@ -333,8 +320,8 @@ const Dashboard: React.FC = () => {
                     <div key={activity.id} className="flex gap-3 pb-4 border-b border-gray-200 last:border-b-0">
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
                         activity.type === "accepted" ? "bg-green-100" :
-                        activity.type === "scheduled" ? "bg-blue-100" :
-                        activity.type === "message" ? "bg-yellow-100" :
+                        activity.type === "reviewed" ? "bg-blue-100" :
+                        activity.type === "rejected" ? "bg-red-100" :
                         "bg-gray-100"
                       }`}>
                         <span className="text-lg">{activity.icon}</span>
@@ -381,50 +368,22 @@ const Dashboard: React.FC = () => {
                 <div className="h-96 relative mb-6">
                   <Line
                     data={{
-                      labels: ["Week 01", "Week 02", "Week 03", "Week 04", "Week 05", "Week 06", "Week 07", "Week 08", "Week 09", "Week 10"],
+                      labels: analyticsLabels,
                       datasets: [
                         {
-                          label: "Application Sent",
-                          data: [5, 8, 11, 15, 18, 22, 25, 28, 32, 35],
+                          label: "Applications",
+                          data: analyticsValues,
                           borderColor: "#3b82f6",
                           backgroundColor: "rgba(59, 130, 246, 0.1)",
                           borderWidth: 3,
                           fill: true,
-                          tension: 0.4,
+                          tension: 0.35,
                           pointRadius: 5,
                           pointBackgroundColor: "#3b82f6",
                           pointBorderColor: "#ffffff",
                           pointBorderWidth: 2,
                           pointHoverRadius: 7,
-                        },
-                        {
-                          label: "Interviews",
-                          data: [3, 4, 7, 10, 12, 15, 18, 19, 23, 27],
-                          borderColor: "#10b981",
-                          backgroundColor: "rgba(16, 185, 129, 0.1)",
-                          borderWidth: 3,
-                          fill: true,
-                          tension: 0.4,
-                          pointRadius: 5,
-                          pointBackgroundColor: "#10b981",
-                          pointBorderColor: "#ffffff",
-                          pointBorderWidth: 2,
-                          pointHoverRadius: 7,
-                        },
-                        {
-                          label: "Rejected",
-                          data: [2, 2, 3, 4, 5, 5, 6, 6, 7, 8],
-                          borderColor: "#ef4444",
-                          backgroundColor: "rgba(239, 68, 68, 0.1)",
-                          borderWidth: 3,
-                          fill: true,
-                          tension: 0.4,
-                          pointRadius: 5,
-                          pointBackgroundColor: "#ef4444",
-                          pointBorderColor: "#ffffff",
-                          pointBorderWidth: 2,
-                          pointHoverRadius: 7,
-                        },
+                        }
                       ],
                     }}
                     options={{
@@ -432,7 +391,7 @@ const Dashboard: React.FC = () => {
                       maintainAspectRatio: false,
                       plugins: {
                         legend: {
-                          display: true,
+                          display: false,
                           position: "bottom",
                           labels: {
                             usePointStyle: true,
@@ -502,31 +461,23 @@ const Dashboard: React.FC = () => {
                   />
                 </div>
 
-                {/* Legend */}
-                <div className="flex gap-6 text-sm mb-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                    <span className="text-gray-600">Application Sent</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span className="text-gray-600">Interviews</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                    <span className="text-gray-600">Rejected</span>
-                  </label>
-                </div>
-
                 {/* Stats Summary */}
-                <div className="flex items-center gap-6 text-sm">
+                <div className="flex flex-wrap items-center gap-6 text-sm">
                   <div>
-                    <span className="font-semibold text-blue-600">37</span>
-                    <span className="text-gray-600 ml-1">Application Sent</span>
+                    <span className="font-semibold text-blue-600">{statusCounts.Pending || 0}</span>
+                    <span className="text-gray-600 ml-1">Pending</span>
                   </div>
                   <div>
-                    <span className="font-semibold text-green-600">2</span>
-                    <span className="text-gray-600 ml-1">Interviews</span>
+                    <span className="font-semibold text-blue-600">{statusCounts.Reviewed || 0}</span>
+                    <span className="text-gray-600 ml-1">Reviewed</span>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-blue-600">{statusCounts.Accepted || 0}</span>
+                    <span className="text-gray-600 ml-1">Accepted</span>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-blue-600">{statusCounts.Rejected || 0}</span>
+                    <span className="text-gray-600 ml-1">Rejected</span>
                   </div>
                 </div>
               </div>
@@ -538,64 +489,70 @@ const Dashboard: React.FC = () => {
                   <a href="#" className="text-blue-600 text-sm font-semibold">View All ↗</a>
                 </div>
                 <div className="grid grid-cols-1 gap-4">
-                  {recommendations.map((job) => (
-                    <div key={job.id} className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition cursor-pointer" onClick={() => navigate(`/job-details/${job.id}`)}>
+                  {recommendedJobs.map((job) => (
+                    <div key={job._id} className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition cursor-pointer" onClick={() => navigate(`/job-details/${job._id}`)}>
                       <div className="flex gap-4">
                         <div className={`w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg flex-shrink-0`}>
-                          {job.initials}
+                          {job.title.charAt(0)}
                         </div>
                         <div className="flex-1">
                           <div className="flex items-start justify-between mb-2">
                             <h4 className="font-bold text-gray-900">{job.title}</h4>
-                            <span className="text-xs text-gray-500">⏱️ {job.daysAgo}</span>
+                            <span className="text-xs text-gray-500">⏱️ Recently</span>
                           </div>
-                          <p className="text-gray-600 text-sm mb-1">📍 {job.company}</p>
-                          <p className="text-gray-900 font-semibold text-sm mb-2">{job.salary}</p>
-                          <p className="text-gray-600 text-xs mb-3 line-clamp-2">{job.description}</p>
+                          <p className="text-gray-600 text-sm mb-1">📍 {job.location || "N/A"}</p>
+                          <p className="text-gray-900 font-semibold text-sm mb-2">{job.salary || ""}</p>
                           <div className="flex items-center justify-between">
                             <div className="flex gap-2">
-                              <span className="text-xs text-gray-600">📍 {job.location}</span>
-                              <span className="text-xs">👥 24</span>
+                              <span className="text-xs text-gray-600">{job.category?.name || "General"}</span>
                             </div>
                             <button className={`px-3 py-1 rounded-lg text-xs font-semibold text-white ${
-                              job.type === "Remote" ? "bg-blue-600" :
-                              job.type === "Hybrid" ? "bg-yellow-600" :
+                              job.jobType === "Remote" ? "bg-blue-600" :
+                              job.jobType === "Part-time" ? "bg-yellow-600" :
                               "bg-green-600"
                             }`}>
-                              {job.type}
+                              {job.jobType || "Fulltime"}
                             </button>
                           </div>
                         </div>
                       </div>
                     </div>
                   ))}
+                  {!jobsLoading && recommendedJobs.length === 0 && (
+                    <div className="bg-white rounded-xl p-6 shadow-sm text-sm text-gray-600">
+                      No recommendations yet.
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Featured Companies */}
+              {/* Featured Jobs */}
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-gray-900 text-lg">Featured Companies</h3>
+                  <h3 className="font-bold text-gray-900 text-lg">Featured Jobs</h3>
                   <a href="#" className="text-blue-600 text-sm font-semibold">Explore All ↗</a>
                 </div>
                 <div className="grid grid-cols-4 gap-4">
-                  {companies.map((company) => (
-                    <div key={company.id} className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition">
-                      <div className="w-16 h-16 bg-gray-300 rounded-lg mx-auto mb-4 flex items-center justify-center font-bold text-gray-700">
-                        {company.abbreviation}
+                  {featuredJobs.map((job) => (
+                    <div key={job._id} className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition cursor-pointer" onClick={() => navigate(`/job-details/${job._id}`)}>
+                      <div className="w-16 h-16 bg-blue-600 rounded-lg mx-auto mb-4 flex items-center justify-center font-bold text-white">
+                        {job.title.charAt(0)}
                       </div>
-                      <h4 className="font-bold text-gray-900 text-sm mb-2 text-center">{company.name}</h4>
-                      <p className="text-green-600 text-xs font-semibold mb-2 text-center">📋 {company.vacancies}</p>
-                      <p className="text-gray-600 text-xs text-center mb-2">👥 {company.employees}</p>
-                      <p className="text-gray-600 text-xs text-center">📂 {company.category}</p>
+                      <h4 className="font-bold text-gray-900 text-sm mb-2 text-center">{job.title}</h4>
+                      <p className="text-green-600 text-xs font-semibold mb-2 text-center">{job.salary || ""}</p>
+                      <p className="text-gray-600 text-xs text-center mb-2">📍 {job.location || "N/A"}</p>
+                      <p className="text-gray-600 text-xs text-center">📂 {job.category?.name || "General"}</p>
                     </div>
                   ))}
+                  {!jobsLoading && featuredJobs.length === 0 && (
+                    <div className="bg-white rounded-xl p-6 shadow-sm text-sm text-gray-600">
+                      No featured jobs yet.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
     </div>
   );
 };

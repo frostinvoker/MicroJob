@@ -37,6 +37,7 @@ import CategoryRoute from './routes/CategoryRoute.js';
 import JobRoute from './routes/JobRoute.js';
 import UserRoute from './routes/UserRoute.js';
 import authRoutes from './routes/authRoutes.js';
+import JobApplicationRoute from './routes/JobApplicationRoute.js';
 
 app.get('/', (req, res) => {
     res.json({ message: 'Backend server is running' });
@@ -49,6 +50,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/categories', CategoryRoute);
 app.use('/api/jobs', JobRoute);
 app.use('/api/users', UserRoute);
+app.use('/api', JobApplicationRoute);
 
 //Error handler
 app.use((err, req, res, next) => {

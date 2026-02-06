@@ -1,6 +1,18 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/MicroIcon.png";
+import bagIcon1 from "../assets/dashboard/bagIcon1.png";
+import bagtransIcon from "../assets/dashboard/bagtransIcon.png";
+import clockIcon from "../assets/dashboard/clockIcon.png";
+import helpIcon from "../assets/dashboard/helpIcon.png";
+import logoutIcon from "../assets/dashboard/logoutIcon.png";
+import mailIcon from "../assets/dashboard/mailIcon.png";
+import messageIcon from "../assets/dashboard/messageIcon.png";
+import messageIcon1 from "../assets/dashboard/messageIcon1.png";
+import searchIcon from "../assets/dashboard/searchIcon.png";
+import settingsIcon from "../assets/dashboard/settingsIcon.png";
+import starIcon from "../assets/dashboard/starIcon.png";
+import walletIcon from "../assets/dashboard/walletIcon.png";
 import { useAuth } from "../hooks/useAuth";
 
 interface SidebarProps {
@@ -22,6 +34,11 @@ const Sidebar: React.FC<SidebarProps> = ({
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [roleSelectorOpen, setRoleSelectorOpen] = useState(false);
+  const [activeRole, setActiveRole] = useState<"work" | "hire">(() => {
+    const stored = localStorage.getItem("sidebar_active_role");
+    return stored === "hire" ? "hire" : "work";
+  });
   const authUser = useAuth();
   
   // Get role from auth user (backend source of truth)
@@ -41,6 +58,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const employerMenuItems = [
     { icon: "➕", label: "Post a Job", path: "/employer/post-job" },
     { icon: "📋", label: "My Job Posts", path: "/employer/job-posts" },
+    { icon: "applied-jobs", label: "Applications", path: "/employer/applications" },
   ];
 
   const commonMenuItems = [
@@ -48,24 +66,23 @@ const Sidebar: React.FC<SidebarProps> = ({
     { icon: "e-wallet", label: "E-Wallet", path: "/e-wallet" },
   ];
 
+  const effectiveRole = userRoleFromAuth === "both" ? activeRole : userRoleFromAuth;
+
+
   // Build menu items array based on role
   let menuItems: any[] = [];
   
-  console.log("[Sidebar] Building menu for role:", userRoleFromAuth);
+  console.log("[Sidebar] Building menu for role:", effectiveRole);
   
-  if (userRoleFromAuth === "work") {
+  if (effectiveRole === "work") {
     // Worker: Only Apply Jobs + Applied Jobs
     menuItems = [...workerMenuItems, ...commonMenuItems];
     console.log("[Sidebar] Using WORKER menu items");
-  } else if (userRoleFromAuth === "hire") {
+  } else if (effectiveRole === "hire") {
     // Employer: Only Post Jobs + My Job Posts
     menuItems = [...employerMenuItems, ...commonMenuItems];
     console.log("[Sidebar] Using EMPLOYER menu items");
-  } else if (userRoleFromAuth === "both") {
-    // Both: All items
-    menuItems = [...workerMenuItems, ...employerMenuItems, ...commonMenuItems];
-    console.log("[Sidebar] Using BOTH menu items");
-  } else if (userRoleFromAuth === "admin" || userRoleFromAuth === "superadmin") {
+  } else if (effectiveRole === "admin" || effectiveRole === "superadmin") {
     // Admin: All items
     menuItems = [...workerMenuItems, ...employerMenuItems, ...commonMenuItems];
     console.log("[Sidebar] Using ADMIN menu items");
@@ -83,6 +100,30 @@ const Sidebar: React.FC<SidebarProps> = ({
     { icon: "support", label: "Support", path: "/support" },
   ];
 
+  const iconMap: Record<string, string> = {
+    dashboard: starIcon,
+    "find-jobs": searchIcon,
+    "applied-jobs": mailIcon,
+    "post-job": bagtransIcon,
+    "job-posts": bagIcon1,
+    applications: messageIcon1,
+    messages: messageIcon,
+    "e-wallet": walletIcon,
+    notifications: clockIcon,
+    settings: settingsIcon,
+    support: helpIcon,
+    logout: logoutIcon,
+  };
+
+  const renderIcon = (iconKey: string) => (
+    <img
+      src={iconMap[iconKey] || starIcon}
+      alt=""
+      aria-hidden="true"
+      className="h-5 w-5 grayscale"
+    />
+  );
+
   return (
     <div
       className={`bg-white text-gray-800 shadow-lg fixed h-screen overflow-y-auto flex flex-col transition-all duration-300 ${
@@ -96,9 +137,9 @@ const Sidebar: React.FC<SidebarProps> = ({
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => navigate("/")}
         >
-          <img src={logo} alt="Micro Jobs Logo" className="h-8 w-8" />
+          <img src={logo} alt="MicroJobs Logo" className="h-8 w-8" />
           {!isCollapsed && (
-            <span className="text-xl font-bold text-black">Micro Jobs</span>
+            <span className="text-xl font-bold text-black">MicroJobs</span>
           )}
         </div>
         <button
@@ -114,24 +155,67 @@ const Sidebar: React.FC<SidebarProps> = ({
       <nav className="space-y-1 flex-1 flex flex-col">
         {/* Main Section */}
         <div className="space-y-1 pb-4 border-b border-gray-200">
-          {/* Dashboard Button */}
-          <button
-            onClick={() => navigate("/dashboard")}
-            className={`w-full flex items-center justify-center lg:justify-start gap-3 px-4 py-3 rounded-lg font-semibold transition relative ${
-              location.pathname === "/dashboard"
-                ? "text-blue-600 bg-blue-50"
-                : "text-gray-700 hover:bg-gray-100"
-            } ${isCollapsed ? "px-2" : ""}`}
-            title={isCollapsed ? "Dashboard" : ""}
-          >
-            <img 
-              src="/icons/dashboard.svg" 
-              alt="Dashboard" 
-              className="w-5 h-5 flex-shrink-0"
-              onError={(e) => (e.currentTarget.style.display = 'none')}
-            />
-            {!isCollapsed && <span>Dashboard</span>}
-          </button>
+          {/* Role Selector */}
+          {!isCollapsed && (
+            <div className="mb-3">
+              {userRoleFromAuth === "both" ? (
+                <>
+                  <button
+                    onClick={() => setRoleSelectorOpen(!roleSelectorOpen)}
+                    className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-sky-50 text-sky-700 font-semibold border border-sky-100"
+                  >
+                    <span>{activeRole === "hire" ? "Employer" : "Worker"}</span>
+                    <span className="text-sky-500">▾</span>
+                  </button>
+                  {roleSelectorOpen && (
+                    <div className="mt-2 rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                      <button
+                        onClick={() => {
+                          setRoleSelectorOpen(false);
+                          setActiveRole("work");
+                          localStorage.setItem("sidebar_active_role", "work");
+                          navigate("/find-jobs");
+                        }}
+                        className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50"
+                      >
+                        Worker
+                      </button>
+                      <button
+                        onClick={() => {
+                          setRoleSelectorOpen(false);
+                          setActiveRole("hire");
+                          localStorage.setItem("sidebar_active_role", "hire");
+                          navigate("/employer/applications");
+                        }}
+                        className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50"
+                      >
+                        Employer
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-sky-50 text-sky-700 font-semibold border border-sky-100">
+                  <span>{userRoleFromAuth === "hire" ? "Employer" : "Worker"}</span>
+                </div>
+              )}
+            </div>
+          )}
+          {/* Dashboard Button (hide for employer) */}
+          {effectiveRole !== "hire" && (
+            <button
+              onClick={() => navigate("/dashboard")}
+              className={`w-full flex items-center justify-center lg:justify-start gap-3 px-4 py-3 rounded-lg font-semibold transition relative ${
+                location.pathname === "/dashboard"
+                  ? "text-blue-600 bg-blue-50"
+                  : "text-gray-700 hover:bg-gray-100"
+              } ${isCollapsed ? "px-2" : ""}`}
+              title={isCollapsed ? "Dashboard" : ""}
+            >
+              {renderIcon("dashboard")}
+              {!isCollapsed && <span>Dashboard</span>}
+            </button>
+          )}
 
           {/* Menu Items based on role */}
           {menuItems.map((item) => (
@@ -145,12 +229,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               } ${isCollapsed ? "px-2" : ""}`}
               title={isCollapsed ? item.label : ""}
             >
-              <img 
-                src={`/icons/${item.icon}.svg`} 
-                alt={item.label} 
-                className="w-5 h-5 flex-shrink-0"
-                onError={(e) => (e.currentTarget.style.display = 'none')}
-              />
+              {renderIcon(item.icon)}
               {!isCollapsed && <span>{item.label}</span>}
               {item.notification && (
                 <span className={`w-2 h-2 bg-blue-600 rounded-full ${isCollapsed ? "absolute right-2 top-2" : ""}`}></span>
@@ -172,12 +251,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               } ${isCollapsed ? "px-2" : ""}`}
               title={isCollapsed ? item.label : ""}
             >
-              <img 
-                src={`/icons/${item.icon}.svg`} 
-                alt={item.label} 
-                className="w-5 h-5 flex-shrink-0"
-                onError={(e) => (e.currentTarget.style.display = 'none')}
-              />
+              {renderIcon(item.icon)}
               {!isCollapsed && <span>{item.label}</span>}
               {item.notification && (
                 <span className={`w-2 h-2 bg-blue-600 rounded-full ${isCollapsed ? "absolute right-2 top-2" : ""}`}></span>
@@ -193,14 +267,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             className="w-full flex items-center justify-center lg:justify-start gap-3 px-4 py-3 rounded-lg font-semibold text-red-600 hover:bg-red-50 transition relative"
             title={isCollapsed ? "Logout" : ""}
           >
-            <img 
-              src="/icons/logout.svg" 
-              alt="Logout" 
-              className="w-5 h-5 flex-shrink-0"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-              }}
-            />
+            {renderIcon("logout")}
             {!isCollapsed && <span>Logout</span>}
           </button>
 

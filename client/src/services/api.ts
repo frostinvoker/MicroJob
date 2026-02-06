@@ -39,6 +39,14 @@ export function loginUser(payload: { emailOrUsername: string; password: string }
   return request<AuthResponse>('/users/login', { method: 'POST', body: payload });
 }
 
+export function sendOtp(payload: { email: string }) {
+  return request<{ message: string; code?: string }>('/users/otp/send', { method: 'POST', body: payload });
+}
+
+export function verifyOtp(payload: { email: string; code: string }) {
+  return request<AuthResponse>('/users/otp/verify', { method: 'POST', body: payload });
+}
+
 export function logoutUser() {
   return request('/users/logout', { method: 'POST' });
 }

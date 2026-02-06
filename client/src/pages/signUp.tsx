@@ -37,9 +37,10 @@ const SignUp: React.FC = () => {
       console.log("SignUp - Sending registration with role:", userType);
       await registerUser({ username: fullName.trim(), email: email.trim(), password, role: userType });
       console.log("SignUp - Registration successful");
+      localStorage.setItem("pending_verification_email", email.trim().toLowerCase());
       setSuccess("Account created! Redirecting to sign in...");
       // Redirect to signin after successful registration
-      setTimeout(() => navigate("/signin", { replace: true }), 1500);
+      setTimeout(() => navigate("/phone-verification", { replace: true }), 1500);
     } catch (err: any) {
       console.error("SignUp - Registration failed:", err);
       setError(err?.message || "Unable to sign up");
@@ -49,7 +50,7 @@ const SignUp: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-t from-cyan-400 to-indigo-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-t from-cyan-400 to-indigo-900 flex items-center justify-center px-4 page-transition">
       <style>{`
         @keyframes slideInRight {
           from {

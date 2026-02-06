@@ -9,16 +9,38 @@ const JobSchema = new mongoose.Schema(
         },
         description: {
             type: String,
-            maxlength: 300,
+            maxlength: 1000,
             required: true,
         },
+        location: {
+            type: String,
+            required: true
+        },
+        salary: {
+            type: String,
+            required: true
+        },
+        jobType: {
+            type: String,
+            enum: ['Fulltime', 'Freelance', 'Remote', 'Part-time'],
+            required: true
+        },
+        deadline: {
+            type: Date,
+            required: true
+        },
+        skills: [{
+            type: String
+        }],
+        responsibilities: [{
+            type: String
+        }],
+        requirements: [{
+            type: String
+        }],
         image: {
             type: String,
-            required: true,
-        },
-        price: {
-            type: Number,
-            required: true,
+            default: null,
         },
         status: {
             type: String,
@@ -39,9 +61,9 @@ const JobSchema = new mongoose.Schema(
             ref: 'User',
         }],
         selectedApplicant: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        default: null
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            default: null
         },
     },
     { timestamps: true, versionKey: false }

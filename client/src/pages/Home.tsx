@@ -22,7 +22,7 @@ import shieldIcon from "../assets/shieldIcon.png";
 const Home: React.FC = () => {
   const navigate = useNavigate();
   return (
-    <div>
+    <div className="page-transition">
       <Navbar />
 
       {/* Hero Section */}

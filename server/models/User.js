@@ -8,8 +8,8 @@ const UserSchema = new mongoose.Schema(
             required: false, // Changed to optional - can be added in settings later
             unique: true,
             sparse: true, // Allows multiple null values for unique field
-            minlength: 11,
-            maxlength: 11,
+            minlength: 10,
+            maxlength: 10,
         },
         email: {
             type: String,
@@ -37,8 +37,8 @@ const UserSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ["active", "disabled"],
-            default: "active",
+            enum: ["pending", "active", "disabled"],
+            default: "pending",
         },
         passwordHashed: {
             type: String,
