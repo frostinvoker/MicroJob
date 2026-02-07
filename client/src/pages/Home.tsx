@@ -363,6 +363,15 @@ const Home: React.FC = () => {
                 <li><a href="#" className="text-gray-600 hover:text-gray-900 text-sm">Careers</a></li>
                 <li><a href="#" className="text-gray-600 hover:text-gray-900 text-sm">Trust & Safety</a></li>
                 <li><a href="#" className="text-gray-600 hover:text-gray-900 text-sm">Help Center</a></li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/admin-dashboard")}
+                    className="text-gray-600 hover:text-gray-900 text-sm bg-transparent border-0 p-0"
+                  >
+                    Admin Dashboard
+                  </button>
+                </li>
               </ul>
             </div>
           </div>

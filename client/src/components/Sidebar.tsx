@@ -21,6 +21,8 @@ interface SidebarProps {
   balance?: string;
   messageCount?: number;
   userRole?: "hire" | "work" | "both" | "admin" | "superadmin"; // Optional override
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -28,11 +30,14 @@ const Sidebar: React.FC<SidebarProps> = ({
   userEmail = "joserizal@gmail.com",
   balance = "$67.67",
   messageCount = 2,
-  userRole = "work", // Default to work, NOT both
+  userRole,
+  isCollapsed: isCollapsedProp,
+  onToggleCollapse,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const isSidebarCollapsed = isCollapsedProp ?? isCollapsed;
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [roleSelectorOpen, setRoleSelectorOpen] = useState(false);
   const [activeRole, setActiveRole] = useState<"work" | "hire">(() => {
@@ -41,12 +46,13 @@ const Sidebar: React.FC<SidebarProps> = ({
   });
   const authUser = useAuth();
   
-  // Get role from auth user (backend source of truth)
-  const userRoleFromAuth = authUser?.role || "work";
+  // Get role from auth user (backend source of truth), allow prop override
+  const userRoleFromAuth = userRole ?? authUser?.role ?? "work";
   
   // Debug logging
   console.log("[Sidebar] Full authUser object:", authUser);
   console.log("[Sidebar] Role from authUser:", userRoleFromAuth);
+  console.log("[Sidebar] Role override prop:", userRole);
   console.log("[Sidebar] localStorage auth_user:", localStorage.getItem("auth_user"));
 
   // Menu items based on user role
@@ -66,7 +72,26 @@ const Sidebar: React.FC<SidebarProps> = ({
     { icon: "e-wallet", label: "E-Wallet", path: "/e-wallet" },
   ];
 
+  const baseAdminMenuItems = [
+    { icon: "dashboard", label: "Dashboard", path: "/admin-dashboard" },
+    { icon: "users", label: "Users", path: "/admin/users" },
+    { icon: "job-posting-monitoring", label: "Job Posting Monitoring", path: "/admin/job-posting-monitoring" },
+    { icon: "e-wallet-monitoring", label: "E-Wallet Monitoring", path: "/admin/e-wallet-monitoring" },
+    { icon: "administrator", label: "Administrator", path: "/admin/administrator" },
+  ];
+
+  const adminMenuItems = [
+    ...baseAdminMenuItems,
+    { icon: "settings", label: "Settings", path: "/admin/system-admin" },
+  ];
+
+  const superAdminMenuItems = [
+    ...baseAdminMenuItems,
+    { icon: "system-admin", label: "System Admin", path: "/admin/system-admin" },
+  ];
+
   const effectiveRole = userRoleFromAuth === "both" ? activeRole : userRoleFromAuth;
+  const isAdminView = effectiveRole === "admin" || effectiveRole === "superadmin";
 
 
   // Build menu items array based on role
@@ -83,8 +108,8 @@ const Sidebar: React.FC<SidebarProps> = ({
     menuItems = [...employerMenuItems, ...commonMenuItems];
     console.log("[Sidebar] Using EMPLOYER menu items");
   } else if (effectiveRole === "admin" || effectiveRole === "superadmin") {
-    // Admin: All items
-    menuItems = [...workerMenuItems, ...employerMenuItems, ...commonMenuItems];
+    // Admin: Dedicated admin menu
+    menuItems = effectiveRole === "superadmin" ? superAdminMenuItems : adminMenuItems;
     console.log("[Sidebar] Using ADMIN menu items");
   } else {
     // Unknown: Default to worker
@@ -94,11 +119,14 @@ const Sidebar: React.FC<SidebarProps> = ({
   
   console.log("[Sidebar] Final menu items:", menuItems.map(i => i.label));
 
-  const bottomMenuItems = [
-    { icon: "notifications", label: "Notifications", path: "/notifications", notification: true },
-    { icon: "settings", label: "Settings", path: "/settings" },
-    { icon: "support", label: "Support", path: "/support" },
-  ];
+  const bottomMenuItems =
+    effectiveRole === "admin" || effectiveRole === "superadmin"
+      ? []
+      : [
+          { icon: "notifications", label: "Notifications", path: "/notifications", notification: true },
+          { icon: "settings", label: "Settings", path: "/settings" },
+          { icon: "support", label: "Support", path: "/support" },
+        ];
 
   const iconMap: Record<string, string> = {
     dashboard: starIcon,
@@ -109,54 +137,129 @@ const Sidebar: React.FC<SidebarProps> = ({
     applications: messageIcon1,
     messages: messageIcon,
     "e-wallet": walletIcon,
+    "job-posting-monitoring": bagIcon1,
+    "e-wallet-monitoring": walletIcon,
+    users: messageIcon,
+    administrator: settingsIcon,
     notifications: clockIcon,
     settings: settingsIcon,
     support: helpIcon,
     logout: logoutIcon,
   };
 
-  const renderIcon = (iconKey: string) => (
-    <img
-      src={iconMap[iconKey] || starIcon}
-      alt=""
-      aria-hidden="true"
-      className="h-5 w-5 grayscale"
-    />
-  );
+  const vectorIcons: Record<string, React.ReactNode> = {
+    dashboard: (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="3" y="3" width="7" height="7" rx="2" />
+        <rect x="14" y="3" width="7" height="7" rx="2" />
+        <rect x="3" y="14" width="7" height="7" rx="2" />
+        <rect x="14" y="14" width="7" height="7" rx="2" />
+      </svg>
+    ),
+    users: (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="8" cy="7" r="4" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
+    "job-posting-monitoring": (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="3" y="7" width="18" height="13" rx="2" />
+        <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+      </svg>
+    ),
+    "e-wallet-monitoring": (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M3 7h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H3z" />
+        <path d="M17 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2" />
+        <circle cx="16" cy="12" r="1" />
+      </svg>
+    ),
+    administrator: (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M12 2l7 4v6c0 5-3.5 9-7 10-3.5-1-7-5-7-10V6l7-4z" />
+      </svg>
+    ),
+    settings: (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.08A1.65 1.65 0 0 0 10.91 3V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.08a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.08a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+      </svg>
+    ),
+    "system-admin": (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M12 2l7 4v6c0 5-3.5 9-7 10-3.5-1-7-5-7-10V6l7-4z" />
+        <path d="M12 8l1.5 3 3.3.5-2.4 2.3.6 3.4-3-1.6-3 1.6.6-3.4-2.4-2.3 3.3-.5z" />
+      </svg>
+    ),
+  };
+
+  const renderIcon = (iconKey: string) => {
+    if (isAdminView && vectorIcons[iconKey]) {
+      return <span className="inline-flex items-center justify-center">{vectorIcons[iconKey]}</span>;
+    }
+    return (
+      <img
+        src={iconMap[iconKey] || starIcon}
+        alt=""
+        aria-hidden="true"
+        className="h-5 w-5 grayscale"
+      />
+    );
+  };
+
+  const getInitials = (name: string) => {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return "?";
+    const first = parts[0]?.[0] ?? "";
+    const last = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? "" : "";
+    return `${first}${last}`.toUpperCase();
+  };
+
+  const menuButtonBase = `w-full flex items-center gap-3 transition relative ${
+    isSidebarCollapsed ? "justify-center px-2" : "justify-start px-4"
+  } ${isAdminView ? "rounded-2xl py-3 text-[15px] font-semibold" : "rounded-lg py-3 font-semibold"}`;
+  const menuButtonActive = "text-blue-600 bg-blue-50";
+  const menuButtonInactive = isAdminView ? "text-slate-600 hover:bg-gray-100" : "text-gray-700 hover:bg-gray-100";
 
   return (
     <div
-      className={`bg-white text-gray-800 shadow-lg fixed h-screen overflow-y-auto flex flex-col transition-all duration-300 ${
-        isCollapsed ? "w-20" : "w-64"
-      }`}
-      style={{ padding: isCollapsed ? "12px" : "24px" }}
+      className={`fixed h-screen overflow-y-auto flex flex-col transition-all duration-300 ${
+        isSidebarCollapsed ? "w-20" : "w-64"
+      } ${isAdminView ? "bg-white text-slate-700 border-r border-gray-100" : "bg-white text-gray-800 shadow-lg"}`}
+      style={{ padding: isSidebarCollapsed ? "12px" : isAdminView ? "24px 20px" : "24px" }}
     >
       {/* Logo Section */}
       <div className="flex items-center justify-between mb-8">
-        <div
-          className="flex items-center gap-2 cursor-pointer"
-          onClick={() => navigate("/")}
-        >
+        <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
           <img src={logo} alt="MicroJobs Logo" className="h-8 w-8" />
-          {!isCollapsed && (
-            <span className="text-xl font-bold text-black">MicroJobs</span>
-          )}
+          {!isSidebarCollapsed && <span className="text-xl font-bold text-black">MicroJobs</span>}
         </div>
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="text-gray-600 hover:text-gray-900 transition text-lg"
-          title={isCollapsed ? "Expand" : "Collapse"}
-        >
-          {isCollapsed ? "›" : "‹"}
-        </button>
+        {!isAdminView && (
+          <button
+            onClick={() => {
+              if (onToggleCollapse) {
+                onToggleCollapse();
+              } else {
+                setIsCollapsed(!isCollapsed);
+              }
+            }}
+            className="text-gray-600 hover:text-gray-900 transition text-lg"
+            title={isSidebarCollapsed ? "Expand" : "Collapse"}
+          >
+            {isSidebarCollapsed ? "›" : "‹"}
+          </button>
+        )}
       </div>
 
       {/* Navigation Menu */}
-      <nav className="space-y-1 flex-1 flex flex-col">
+      <nav className={`flex-1 flex flex-col ${isAdminView ? "gap-2" : "space-y-1"}`}>
         {/* Main Section */}
-        <div className="space-y-1 pb-4 border-b border-gray-200">
+        <div className={isAdminView ? "space-y-2" : "space-y-1 pb-4 border-b border-gray-200"}>
           {/* Role Selector */}
-          {!isCollapsed && (
+          {!isSidebarCollapsed && userRoleFromAuth !== "admin" && userRoleFromAuth !== "superadmin" && (
             <div className="mb-3">
               {userRoleFromAuth === "both" ? (
                 <>
@@ -196,24 +299,32 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </>
               ) : (
                 <div className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-sky-50 text-sky-700 font-semibold border border-sky-100">
-                  <span>{userRoleFromAuth === "hire" ? "Employer" : "Worker"}</span>
+                  <span>
+                    {userRoleFromAuth === "hire"
+                      ? "Employer"
+                      : userRoleFromAuth === "admin"
+                      ? "Admin"
+                      : userRoleFromAuth === "superadmin"
+                      ? "System Admin"
+                      : "Worker"}
+                  </span>
                 </div>
               )}
             </div>
           )}
-          {/* Dashboard Button (hide for employer) */}
-          {effectiveRole !== "hire" && (
+          {/* Dashboard Button (hide for employer/admin; admin has its own menu) */}
+          {effectiveRole !== "hire" && effectiveRole !== "admin" && effectiveRole !== "superadmin" && (
             <button
               onClick={() => navigate("/dashboard")}
-              className={`w-full flex items-center justify-center lg:justify-start gap-3 px-4 py-3 rounded-lg font-semibold transition relative ${
+              className={`w-full flex items-center ${isSidebarCollapsed ? "justify-center" : "justify-start"} gap-3 px-4 py-3 rounded-lg font-semibold transition relative ${
                 location.pathname === "/dashboard"
                   ? "text-blue-600 bg-blue-50"
                   : "text-gray-700 hover:bg-gray-100"
-              } ${isCollapsed ? "px-2" : ""}`}
-              title={isCollapsed ? "Dashboard" : ""}
+              } ${isSidebarCollapsed ? "px-2" : ""}`}
+              title={isSidebarCollapsed ? "Dashboard" : ""}
             >
               {renderIcon("dashboard")}
-              {!isCollapsed && <span>Dashboard</span>}
+              {!isSidebarCollapsed && <span>Dashboard</span>}
             </button>
           )}
 
@@ -222,39 +333,35 @@ const Sidebar: React.FC<SidebarProps> = ({
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`w-full flex items-center justify-center lg:justify-start gap-3 px-4 py-3 rounded-lg font-semibold transition relative ${
-                location.pathname === item.path
-                  ? "text-blue-600 bg-blue-50"
-                  : "text-gray-700 hover:bg-gray-100"
-              } ${isCollapsed ? "px-2" : ""}`}
-              title={isCollapsed ? item.label : ""}
+              className={`${menuButtonBase} ${
+                location.pathname === item.path ? menuButtonActive : menuButtonInactive
+              }`}
+              title={isSidebarCollapsed ? item.label : ""}
             >
               {renderIcon(item.icon)}
-              {!isCollapsed && <span>{item.label}</span>}
+              {!isSidebarCollapsed && <span>{item.label}</span>}
               {item.notification && (
-                <span className={`w-2 h-2 bg-blue-600 rounded-full ${isCollapsed ? "absolute right-2 top-2" : ""}`}></span>
+                <span className={`w-2 h-2 bg-blue-600 rounded-full ${isSidebarCollapsed ? "absolute right-2 top-2" : ""}`}></span>
               )}
             </button>
           ))}
         </div>
 
         {/* Bottom Section */}
-        <div className="space-y-1 py-4 border-b border-gray-200">
+        <div className={isAdminView ? "space-y-2 mt-4" : "space-y-1 py-4 border-b border-gray-200"}>
           {bottomMenuItems.map((item) => (
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`w-full flex items-center justify-center lg:justify-start gap-3 px-4 py-3 rounded-lg font-semibold transition relative ${
-                location.pathname === item.path
-                  ? "text-blue-600 bg-blue-50"
-                  : "text-gray-700 hover:bg-gray-100"
-              } ${isCollapsed ? "px-2" : ""}`}
-              title={isCollapsed ? item.label : ""}
+              className={`${menuButtonBase} ${
+                location.pathname === item.path ? menuButtonActive : menuButtonInactive
+              }`}
+              title={isSidebarCollapsed ? item.label : ""}
             >
               {renderIcon(item.icon)}
-              {!isCollapsed && <span>{item.label}</span>}
+              {!isSidebarCollapsed && <span>{item.label}</span>}
               {item.notification && (
-                <span className={`w-2 h-2 bg-blue-600 rounded-full ${isCollapsed ? "absolute right-2 top-2" : ""}`}></span>
+                <span className={`w-2 h-2 bg-blue-600 rounded-full ${isSidebarCollapsed ? "absolute right-2 top-2" : ""}`}></span>
               )}
             </button>
           ))}
@@ -264,15 +371,17 @@ const Sidebar: React.FC<SidebarProps> = ({
             onClick={() => {
               setShowLogoutConfirm(true);
             }}
-            className="w-full flex items-center justify-center lg:justify-start gap-3 px-4 py-3 rounded-lg font-semibold text-red-600 hover:bg-red-50 transition relative"
-            title={isCollapsed ? "Logout" : ""}
+            className={`w-full flex items-center ${
+              isSidebarCollapsed ? "justify-center px-2" : "justify-start px-4"
+            } gap-3 rounded-2xl py-3 font-semibold text-red-600 hover:bg-red-50 transition relative`}
+            title={isSidebarCollapsed ? "Logout" : ""}
           >
             {renderIcon("logout")}
-            {!isCollapsed && <span>Logout</span>}
+            {!isSidebarCollapsed && <span>Logout</span>}
           </button>
 
           {/* Logout Confirmation - Inside Sidebar */}
-          {showLogoutConfirm && !isCollapsed && (
+          {showLogoutConfirm && !isSidebarCollapsed && (
             <div className="mt-3 rounded-lg border border-red-300 bg-red-50 p-3">
               <p className="text-sm text-red-800 font-semibold mb-3">Confirm logout?</p>
               <div className="flex gap-2">
@@ -302,22 +411,20 @@ const Sidebar: React.FC<SidebarProps> = ({
       </nav>
 
       {/* User Profile */}
-      <div className="border-t border-gray-200 pt-6">
-        <button className="w-full flex items-center justify-between lg:justify-start gap-3 hover:opacity-80 transition">
+      <div className="border-t border-gray-100 pt-6">
+        <button className="w-full flex items-center justify-between gap-3 rounded-2xl px-2 py-2 hover:bg-gray-50 transition">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-lg flex-shrink-0">
-              👨
+            <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
+              {getInitials(userName)}
             </div>
-            {!isCollapsed && (
+            {!isSidebarCollapsed && (
               <div className="text-left">
-                <p className="text-gray-600 text-xs">Welcome back 👋</p>
-                <p className="font-bold text-gray-900 text-sm">{userName}</p>
+                <p className="text-gray-500 text-xs">Welcome back 👋</p>
+                <p className="font-semibold text-gray-900 text-base">{userName}</p>
               </div>
             )}
           </div>
-          {!isCollapsed && (
-            <span className="text-gray-400">›</span>
-          )}
+          {!isSidebarCollapsed && <span className="text-gray-400 text-xl leading-none">›</span>}
         </button>
       </div>
     </div>

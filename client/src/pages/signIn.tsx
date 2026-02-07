@@ -14,6 +14,14 @@ const SignIn: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate("/");
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -121,6 +129,15 @@ const SignIn: React.FC = () => {
 
         {/* Right Side - Sign In Form */}
         <div className="bg-white rounded-3xl shadow-2xl p-10 order-1 lg:order-2 form-animate">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="text-sm text-gray-500 hover:text-gray-700 font-semibold flex items-center gap-2 mb-4"
+            aria-label="Go back"
+          >
+            <span className="text-lg">←</span>
+            Back
+          </button>
           <h3 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back!</h3>
           <p className="text-gray-600 mb-8">Sign in to continue your journey</p>
 

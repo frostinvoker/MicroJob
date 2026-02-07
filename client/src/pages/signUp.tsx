@@ -20,6 +20,14 @@ const SignUp: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate("/");
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -132,6 +140,15 @@ const SignUp: React.FC = () => {
 
         {/* Right Side - Sign Up Form */}
         <div className="bg-white rounded-3xl shadow-2xl p-8 order-1 lg:order-2 form-animate">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="text-sm text-gray-500 hover:text-gray-700 font-semibold flex items-center gap-2 mb-4"
+            aria-label="Go back"
+          >
+            <span className="text-lg">←</span>
+            Back
+          </button>
           <h3 className="text-3xl font-bold text-gray-900 mb-2 text-center">Get Started</h3>
           <p className="text-gray-600 mb-8 text-center">Create your account today</p>
 

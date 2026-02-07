@@ -68,6 +68,11 @@ export default function SignIn({
 
   return (
     <View style={styles.container}>
+      {/* Back Button */}
+      <TouchableOpacity style={styles.backButton} onPress={onBack}>
+        <Text style={styles.backIcon}>←</Text>
+      </TouchableOpacity>
+
       {/* Card */}
       <View style={styles.card}>
         {/* Icon */}
@@ -148,6 +153,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backIcon: {
+    fontSize: 24,
+    color: '#fff',
   },
   card: {
     backgroundColor: '#fff',

@@ -3,18 +3,21 @@ import { Outlet } from "react-router-dom";
 import Sidebar from "../Sidebar";
 import { useAuth } from "../../hooks/useAuth";
 
-const SidebarLayout: React.FC = () => {
+const AdminSidebarLayout: React.FC = () => {
   const authUser = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const roleOverride = authUser?.role === "superadmin" ? "superadmin" : "admin";
+  const userName = authUser ? `${authUser.firstName} ${authUser.lastName}` : "Admin User";
+  const userEmail = authUser?.email || "admin@example.com";
 
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar
-        userName={authUser?.firstName + " " + authUser?.lastName || "Jonas Enriquez"}
-        userEmail={authUser?.email || "jonas@example.com"}
+        userName={userName}
+        userEmail={userEmail}
         balance="₱67.67"
         messageCount={2}
-        userRole={authUser?.role || "work"}
+        userRole={roleOverride}
         isCollapsed={isCollapsed}
         onToggleCollapse={() => setIsCollapsed((prev) => !prev)}
       />
@@ -28,4 +31,4 @@ const SidebarLayout: React.FC = () => {
   );
 };
 
-export default SidebarLayout;
+export default AdminSidebarLayout;
