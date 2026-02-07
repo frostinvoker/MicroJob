@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.page-transition {
+	animation: page-slide-left 700ms ease;
+	will-change: opacity, transform;
+}
+
+@keyframes page-slide-left {
+	from {
+		opacity: 0;
+		transform: translateX(24px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
