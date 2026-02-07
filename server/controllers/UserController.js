@@ -26,7 +26,7 @@ function getEmailTransporter() {
 
 export async function getUserList(req, res) {
     try {
-        const users = await User.find({});
+        const users = await User.find({}).select('-passwordHashed');
         res.status(200).json(users);
     } catch (error) {
         res.status(500).json({ message: "Failed to retrieve users." });
@@ -36,6 +36,7 @@ export async function getUserList(req, res) {
 export async function register(req, res) {
     try {
         const { phoneNumber, email, firstName, lastName, username, password, role } = req.body;
+        const normalizedPhone = phoneNumber ? String(phoneNumber).replace(/\D/g, "") : "";
 
         let finalFirstName = firstName;
         let finalLastName = lastName;
@@ -54,8 +55,12 @@ export async function register(req, res) {
             finalLastName = finalFirstName;
         }
 
-        if (phoneNumber) {
-            const phoneExists = await User.findOne({ phoneNumber });
+        if (normalizedPhone) {
+            if (!/^\d{10,15}$/.test(normalizedPhone)) {
+                return res.status(400).json({ message: "Phone number must be 10-15 digits." });
+            }
+
+            const phoneExists = await User.findOne({ phoneNumber: normalizedPhone });
             if (phoneExists) {
                 return res.status(409).json({ message: "Phone Number is already registered." });
             }
@@ -71,7 +76,7 @@ export async function register(req, res) {
         console.log("Register - User role being set to:", userRole);
 
         const user = new User({
-            phoneNumber,
+            phoneNumber: normalizedPhone || undefined,
             email,
             firstName: finalFirstName,
             lastName: finalLastName,
@@ -97,7 +102,7 @@ export async function login(req, res) {
         const identifier = emailOrUsername || email || phone;
         const normalizedIdentifier = identifier && identifier.includes('@')
             ? identifier.toLowerCase().trim()
-            : identifier?.trim();
+            : identifier?.replace(/\D/g, "").trim() || identifier?.trim();
         
         console.log("Identifier:", identifier, "Password present:", !!password);
         
@@ -267,5 +272,57 @@ export async function verifyOtp(req, res) {
     } catch (error) {
         console.error("Verify OTP error:", error);
         return res.status(500).json({ message: "Failed to verify OTP." });
+    }
+}
+
+export async function updateUserStatus(req, res) {
+    try {
+        const { userId } = req.params;
+        const { status } = req.body;
+
+        const allowedStatuses = ["active", "pending", "disabled"];
+        if (!allowedStatuses.includes(status)) {
+            return res.status(400).json({ message: "Invalid status value." });
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { status },
+            { new: true }
+        ).select("-passwordHashed");
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        return res.status(200).json({
+            message: "User status updated.",
+            user: updatedUser,
+        });
+    } catch (error) {
+        console.error("Update user status error:", error);
+        return res.status(500).json({ message: "Failed to update user status." });
+    }
+}
+
+export async function deleteUser(req, res) {
+    try {
+        const { userId } = req.params;
+
+        if (req.user?.id === userId) {
+            return res.status(400).json({ message: "You cannot delete your own account." });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        await user.deleteOne();
+
+        return res.status(200).json({ message: "User deleted." });
+    } catch (error) {
+        console.error("Delete user error:", error);
+        return res.status(500).json({ message: "Failed to delete user." });
     }
 }

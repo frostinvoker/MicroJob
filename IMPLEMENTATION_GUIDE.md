@@ -1,5 +1,9 @@
 # Backend Job Application System - Implementation Summary
 
+## Requirements
+
+- Node.js 22.12.0+ (run `nvm use` in the repo root; `.nvmrc` and `.node-version` are provided)
+
 ## What Was Created
 
 ### 1. New Models
@@ -232,7 +236,7 @@ db.categories.insertMany([
 
 1. **Apply for a job:**
 ```bash
-POST http://localhost:5000/api/jobs/{jobId}/apply
+POST http://localhost:5001/api/jobs/{jobId}/apply
 Headers: Authorization: Bearer {token}
 Body: {
   "resume": "path/to/resume.pdf",
@@ -242,13 +246,13 @@ Body: {
 
 2. **Get user applications:**
 ```bash
-GET http://localhost:5000/api/applications
+GET http://localhost:5001/api/applications
 Headers: Authorization: Bearer {token}
 ```
 
 3. **Filter jobs:**
 ```bash
-GET http://localhost:5000/api/jobs?category=123&jobType=Fulltime,Remote&search=React
+GET http://localhost:5001/api/jobs?category=123&jobType=Fulltime,Remote&search=React
 ```
 
 ## Next Steps

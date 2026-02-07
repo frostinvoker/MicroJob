@@ -31,7 +31,7 @@ async function request<T>(
 }
 
 // Auth APIs
-export function registerUser(payload: { username: string; email: string; password: string; role?: string }) {
+export function registerUser(payload: { username?: string; firstName?: string; lastName?: string; phoneNumber?: string; email: string; password: string; role?: string }) {
   return request<AuthResponse>('/users/register', { method: 'POST', body: payload });
 }
 
@@ -108,4 +108,12 @@ export function changeJobStatus(jobId: string, status: string) {
 // User APIs
 export function getUserList() {
   return request<any[]>('/users/userlist', { method: 'GET' });
+}
+
+export function updateUserStatus(userId: string, status: 'active' | 'pending' | 'disabled') {
+  return request(`/users/${userId}/status`, { method: 'PATCH', body: { status } });
+}
+
+export function deleteUser(userId: string) {
+  return request(`/users/${userId}`, { method: 'DELETE' });
 }

@@ -47,7 +47,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   const authUser = useAuth();
   
   // Get role from auth user (backend source of truth), allow prop override
-  const userRoleFromAuth = userRole ?? authUser?.role ?? "work";
+  const userRoleFromAuth: NonNullable<SidebarProps["userRole"]> =
+    userRole ?? authUser?.role ?? "work";
   
   // Debug logging
   console.log("[Sidebar] Full authUser object:", authUser);
@@ -299,15 +300,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </>
               ) : (
                 <div className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-sky-50 text-sky-700 font-semibold border border-sky-100">
-                  <span>
-                    {userRoleFromAuth === "hire"
-                      ? "Employer"
-                      : userRoleFromAuth === "admin"
-                      ? "Admin"
-                      : userRoleFromAuth === "superadmin"
-                      ? "System Admin"
-                      : "Worker"}
-                  </span>
+                  <span>{userRoleFromAuth === "hire" ? "Employer" : "Worker"}</span>
                 </div>
               )}
             </div>

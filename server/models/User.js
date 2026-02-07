@@ -9,7 +9,7 @@ const UserSchema = new mongoose.Schema(
             unique: true,
             sparse: true, // Allows multiple null values for unique field
             minlength: 10,
-            maxlength: 10,
+            maxlength: 15,
         },
         email: {
             type: String,

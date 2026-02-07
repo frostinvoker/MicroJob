@@ -9,7 +9,7 @@ const app = express();
 
 //Connection Config
 const config = {
-    PORT: process.env.PORT || 5000,
+    PORT: process.env.PORT || 5001,
     MONGO_URI: process.env.MONGO_URI,
     ORIGIN: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
     DB_NAME: 'MicroJob',
