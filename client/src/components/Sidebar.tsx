@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/MicroIcon.png";
 import bagIcon1 from "../assets/dashboard/bagIcon1.png";
@@ -35,11 +35,30 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [roleSelectorOpen, setRoleSelectorOpen] = useState(false);
+  const [profilePhotoPreview, setProfilePhotoPreview] = useState("");
   const [activeRole, setActiveRole] = useState<"work" | "hire">(() => {
     const stored = localStorage.getItem("sidebar_active_role");
     return stored === "hire" ? "hire" : "work";
   });
   const authUser = useAuth();
+
+  const loadProfilePhoto = () => {
+    try {
+      const storedRaw = localStorage.getItem("profile_settings");
+      const stored = storedRaw ? JSON.parse(storedRaw) : {};
+      const preview = stored.personal?.profilePhotoPreview || "";
+      setProfilePhotoPreview(preview);
+    } catch {
+      setProfilePhotoPreview("");
+    }
+  };
+
+  useEffect(() => {
+    loadProfilePhoto();
+    const handleProfileUpdate = () => loadProfilePhoto();
+    window.addEventListener("profile_settings_updated", handleProfileUpdate);
+    return () => window.removeEventListener("profile_settings_updated", handleProfileUpdate);
+  }, []);
   
   // Get role from auth user (backend source of truth)
   const userRoleFromAuth = authUser?.role || "work";
@@ -305,9 +324,17 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className="border-t border-gray-200 pt-6">
         <button className="w-full flex items-center justify-between lg:justify-start gap-3 hover:opacity-80 transition">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-lg flex-shrink-0">
-              👨
-            </div>
+            {profilePhotoPreview ? (
+              <img
+                src={profilePhotoPreview}
+                alt="Profile"
+                className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+              />
+            ) : (
+              <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-lg flex-shrink-0">
+                👨
+              </div>
+            )}
             {!isCollapsed && (
               <div className="text-left">
                 <p className="text-gray-600 text-xs">Welcome back 👋</p>

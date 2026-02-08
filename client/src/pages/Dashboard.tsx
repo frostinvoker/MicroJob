@@ -26,6 +26,32 @@ ChartJS.register(
   Filler
 );
 
+const PROFILE_STORAGE_KEY = "profile_settings";
+
+type ProfileSettings = {
+  personal?: {
+    firstName?: string;
+    lastName?: string;
+    city?: string;
+    province?: string;
+    address?: string;
+    phoneNumber?: string;
+    email?: string;
+    facebook?: string;
+    profilePhotoName?: string;
+  };
+  experience?: {
+    jobPosition?: string;
+    companyName?: string;
+    startDate?: string;
+    endDate?: string;
+    logoName?: string;
+  };
+  resume?: {
+    fileName?: string;
+  };
+};
+
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -38,6 +64,8 @@ const Dashboard: React.FC = () => {
   const [appsLoading, setAppsLoading] = useState(false);
   const [jobs, setJobs] = useState<Array<{ _id: string; title: string; location?: string; salary?: string; jobType?: string; category?: { name?: string }; jobPoster?: { _id?: string; id?: string } }>>([]);
   const [jobsLoading, setJobsLoading] = useState(false);
+  const [profileCompletion, setProfileCompletion] = useState(0);
+  const [isProfileVerified, setIsProfileVerified] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("auth_user");
@@ -58,6 +86,63 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     console.log("Dashboard - authUser from useAuth hook:", authUser);
   }, [authUser]);
+
+  useEffect(() => {
+    const computeProfileStatus = (settings: ProfileSettings | null) => {
+      const personal = settings?.personal || {};
+      const experience = settings?.experience || {};
+      const resume = settings?.resume || {};
+
+      const hasPersonal = Boolean(
+        personal.firstName?.trim() &&
+        personal.lastName?.trim() &&
+        personal.city?.trim() &&
+        personal.province?.trim() &&
+        personal.address?.trim() &&
+        personal.phoneNumber?.trim() &&
+        personal.email?.trim() &&
+        personal.facebook?.trim()
+      );
+      const hasPhoto = Boolean(personal.profilePhotoName);
+      const hasExperience = Boolean(
+        experience.jobPosition?.trim() &&
+        experience.companyName?.trim() &&
+        experience.startDate?.trim() &&
+        experience.endDate?.trim()
+      );
+      const hasResume = Boolean(resume.fileName);
+
+      const total = 4;
+      const completed = [hasPersonal, hasPhoto, hasExperience, hasResume].filter(Boolean).length;
+      const completionPercent = Math.round((completed / total) * 100);
+
+      setProfileCompletion(completionPercent);
+      setIsProfileVerified(completed === total);
+    };
+
+    const loadProfileSettings = () => {
+      const stored = localStorage.getItem(PROFILE_STORAGE_KEY);
+      if (!stored) {
+        computeProfileStatus(null);
+        return;
+      }
+      try {
+        computeProfileStatus(JSON.parse(stored));
+      } catch (err) {
+        console.warn("Failed to parse profile settings", err);
+        computeProfileStatus(null);
+      }
+    };
+
+    loadProfileSettings();
+    window.addEventListener("storage", loadProfileSettings);
+    window.addEventListener("profile_settings_updated", loadProfileSettings);
+
+    return () => {
+      window.removeEventListener("storage", loadProfileSettings);
+      window.removeEventListener("profile_settings_updated", loadProfileSettings);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -143,29 +228,22 @@ const Dashboard: React.FC = () => {
     statusCounts.Rejected || 0,
   ];
 
-  const notifications = [
-    {
-      id: 1,
-      title: "New Application Received",
-      description: "Sarah Chen applied for Senior Frontend Developer position",
-      time: "5 minutes ago",
-      isNew: true,
-    },
-    {
-      id: 2,
-      title: "Application Status Updated",
-      description: "Michael Rodriguez has been moved to interview stage",
-      time: "1 hour ago",
-      isNew: true,
-    },
-    {
-      id: 3,
-      title: "Job Posting Approved",
-      description: "Your Backend Engineer job posting is now live",
-      time: "2 hours ago",
-      isNew: true,
-    },
-  ];
+  const notifications = useMemo(() => {
+    const allowed = new Set(["accepted", "rejected", "reviewed"]);
+    return applications
+      .filter((app) => allowed.has((app.status || "").toLowerCase()))
+      .slice(0, 6)
+      .map((app, index) => {
+        const status = app.status || "Reviewed";
+        return {
+          id: `${app.job?._id || "app"}-${index}`,
+          title: `Application ${status}`,
+          description: `Your application for ${app.job?.title || "a job"} was ${status.toLowerCase()}.`,
+          time: app.createdAt ? new Date(app.createdAt).toLocaleString() : "Just now",
+          isNew: true,
+        };
+      });
+  }, [applications]);
 
   return (
     <div className="p-8 pb-20">
@@ -189,7 +267,19 @@ const Dashboard: React.FC = () => {
                   <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold absolute -top-1 -right-1">
                     {notifications.length}
                   </div>
-                  <span className="text-2xl">🔔</span>
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    className="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5" />
+                    <path d="M9 17a3 3 0 0 0 6 0" />
+                  </svg>
                 </button>
 
                 {/* Notifications Dropdown */}
@@ -295,18 +385,28 @@ const Dashboard: React.FC = () => {
               {/* Profile Verified Section */}
               <div className="bg-white rounded-xl p-6 shadow-sm text-center">
                 <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center">
-                  <div className="w-20 h-20 rounded-full border-4 border-blue-600 flex items-center justify-center">
-                    <span className="text-4xl font-bold text-blue-600">100</span>
+                  <div className={`w-20 h-20 rounded-full border-4 flex items-center justify-center ${
+                    isProfileVerified ? "border-green-500" : "border-gray-300"
+                  }`}>
+                    <span className={`text-4xl font-bold ${
+                      isProfileVerified ? "text-green-600" : "text-gray-600"
+                    }`}>
+                      {profileCompletion}
+                    </span>
                   </div>
                 </div>
                 <div className="text-center">
                   <p className="text-sm text-gray-500 mb-1">%</p>
                 </div>
                 <h3 className="font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
-                  <span className="text-green-500">✓</span>
-                  Profile Verified
+                  <span className={isProfileVerified ? "text-green-500" : "text-gray-400"}>✓</span>
+                  {isProfileVerified ? "Profile Verified" : "Profile Incomplete"}
                 </h3>
-                <p className="text-gray-600 text-xs">All requirements completed</p>
+                <p className="text-gray-600 text-xs">
+                  {isProfileVerified
+                    ? "All requirements completed"
+                    : "Complete your profile in Settings"}
+                </p>
               </div>
 
               {/* Recent Activities */}

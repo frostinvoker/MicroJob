@@ -1,7 +1,27 @@
+import { markActivity } from "../utils/activityTracker";
+
 const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 
 export type AuthUser = { id: string; username?: string; firstName?: string; lastName?: string; email: string; role?: string };
 export type AuthResponse = { token: string; user: AuthUser; message?: string };
+export type UserProfile = {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phoneNumber?: string;
+  role?: string;
+  city?: string;
+  province?: string;
+  address?: string;
+  facebook?: string;
+  profilePhotoName?: string;
+  jobPosition?: string;
+  companyName?: string;
+  startDate?: string;
+  endDate?: string;
+  logoName?: string;
+  resumeFileName?: string;
+};
 
 type RequestInitInput = Omit<RequestInit, 'body' | 'method'>;
 
@@ -10,7 +30,8 @@ async function request<T>(
   path: string,
   options: RequestInitInput & { body?: unknown; method?: string } = {}
 ): Promise<T> {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('auth_token');
+  markActivity();
   
   const res = await fetch(`${API_BASE}${path}`, {
     method: options.method || 'GET',
@@ -108,4 +129,12 @@ export function changeJobStatus(jobId: string, status: string) {
 // User APIs
 export function getUserList() {
   return request<any[]>('/users/userlist', { method: 'GET' });
+}
+
+export function getUserProfile() {
+  return request<{ profile: UserProfile }>('/users/profile', { method: 'GET' });
+}
+
+export function updateUserProfile(payload: Partial<UserProfile>) {
+  return request<{ profile: UserProfile }>('/users/profile', { method: 'PUT', body: payload });
 }

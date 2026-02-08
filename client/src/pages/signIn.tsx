@@ -19,18 +19,18 @@ const SignIn: React.FC = () => {
     setError(null);
     setLoading(true);
     try {
-      const { token, user } = await loginUser({ emailOrUsername: email, password });
-      console.log("SignIn - Response from login:", { token, user });
-      console.log("SignIn - User role from API:", user?.role);
-      console.log("SignIn - User object:", user);
-      // Store user info and token for authentication
-      localStorage.setItem("auth_user", JSON.stringify(user));
-      console.log("SignIn - Stored in localStorage:", localStorage.getItem("auth_user"));
-      console.log("SignIn - Role in localStorage:", JSON.parse(localStorage.getItem("auth_user") || '{}').role);
-      localStorage.setItem("auth_token", token);
-        window.dispatchEvent(new Event("auth_user_updated"));
-      // Redirect to dashboard
-      navigate("/dashboard", { replace: true });
+      const { user } = await loginUser({ emailOrUsername: email, password });
+      const userEmail = user?.email?.toLowerCase();
+      if (!userEmail) {
+        setError("No email found on your account. Please contact support.");
+        return;
+      }
+
+      localStorage.removeItem("auth_user");
+      localStorage.removeItem("auth_token");
+      window.dispatchEvent(new Event("auth_user_updated"));
+      localStorage.setItem("pending_verification_email", userEmail);
+      navigate("/email-verification", { replace: true });
     } catch (err: any) {
       setError(err?.message || "Unable to sign in");
     } finally {

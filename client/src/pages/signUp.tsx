@@ -40,7 +40,7 @@ const SignUp: React.FC = () => {
       localStorage.setItem("pending_verification_email", email.trim().toLowerCase());
       setSuccess("Account created! Redirecting to sign in...");
       // Redirect to signin after successful registration
-      setTimeout(() => navigate("/phone-verification", { replace: true }), 1500);
+      setTimeout(() => navigate("/email-verification", { replace: true }), 1500);
     } catch (err: any) {
       console.error("SignUp - Registration failed:", err);
       setError(err?.message || "Unable to sign up");
